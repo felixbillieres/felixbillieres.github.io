@@ -10,7 +10,7 @@ Welcome to the TryHackMe CTF Documentation page! Here, you'll find writeups and 
 
 ### Easy Challenges
 
-1. [Download GamingServer](ctfwriteup/GamingServer)
+1. [Download GamingServer](GamingServer)
 2. [Download CTF Challenge - Easy 2](tryhackme/ctf/easy/challenge2.md)
 3. [Download CTF Challenge - Easy 3](tryhackme/ctf/easy/challenge3.md)
 
