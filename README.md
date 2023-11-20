@@ -1,5 +1,5 @@
 # Welcome to the documentation! 🚀
-[Start Now](https://felixbillieres.github.io/sections)
+[Learn Here](https://felixbillieres.github.io/sections)
 
 ## About This Repository
 
