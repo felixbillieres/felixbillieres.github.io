@@ -10,7 +10,7 @@ Welcome to the "All Sections" page of the CyberSec Learning Hub! This space is c
 
 🔍 **Explore Capture The Flag (CTF) Challenges:** Sharpen your skills by solving real-world scenarios. Check out our collection of writeups that walk you through the steps, thought processes, and solutions to various CTF challenges.
 
-- [Tryhackme CTF Writeups](ctf/writeups/challenge1.md)
+- [Tryhackme CTF Writeups](https://felixbillieres.github.io/ctfwriteup/tryhackme)
 
 More writeups coming soon!
 
