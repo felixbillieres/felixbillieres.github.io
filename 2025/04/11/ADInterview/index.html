@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+
+
+<html theme="dark" showBanner="true" hasBanner="true" > 
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet">
+<script src="/js/color.global.min.js" ></script>
+<script src="/js/load-settings.js" ></script>
+<head>
+  <meta charset="utf-8">
+  
+  
+  
+
+  
+  <title>[Active Directory] Interview Prep Handbook | Félix Billières</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="preload" href="/css/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+  <link rel="preload" href="/css/fonts/Roboto-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+
+  <meta name="description" content="S&#x2F;OAll this documentation was made possible thanks to this Website that goes way deeper in everything listed below, I tried to make it shorter and question-based but for the technical guys here y">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[Active Directory] Interview Prep Handbook">
+<meta property="og:url" content="https://felixbillieres.github.io/2025/04/11/ADInterview/index.html">
+<meta property="og:site_name" content="Félix Billières">
+<meta property="og:description" content="S&#x2F;OAll this documentation was made possible thanks to this Website that goes way deeper in everything listed below, I tried to make it shorter and question-based but for the technical guys here y">
+<meta property="og:locale" content="fr_FR">
+<meta property="article:published_time" content="2025-04-11T15:18:20.000Z">
+<meta property="article:modified_time" content="2025-04-11T17:39:43.383Z">
+<meta property="article:author" content="Félix Billières">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Félix Billières" type="application/atom+xml">
+  
+  
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: light)" href="/images/favicon-light-192.png" sizes="192x192">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-32.png" sizes="32x32">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-128.png" sizes="128x128">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-180.png" sizes="180x180">
+    <link rel="icon" media="(prefers-color-scheme: dark)" href="/images/favicon-dark-192.png" sizes="192x192">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  
+  
+    
+<div id="banner" class="">
+  <img src="/images/banner2.jpg" itemprop="image">
+  <div id="banner-dim"></div>
+</div>
+ 
+   
+  <div id="main-grid" class="  ">
+    <div id="nav" class=""  >
+      <navbar id="navbar">
+  <nav id="title-nav">
+    <a href="/">
+      <div id="vivia-logo">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div>Félix Billières </div>
+    </a>
+  </nav>
+  <nav id="main-nav">
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+      <a class="main-nav-link" href="/friends">Friends</a>
+    
+  </nav>
+  <nav id="sub-nav">
+    <a id="theme-btn" class="nav-icon">
+      <span class="light-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M438.5-829.913v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-829.913Zm0 747.826v-48q0-17.452 11.963-29.476 11.964-12.024 29.326-12.024 17.363 0 29.537 12.024t12.174 29.476v48q0 17.452-11.963 29.476-11.964 12.024-29.326 12.024-17.363 0-29.537-12.024T438.5-82.087ZM877.913-438.5h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537t29.476-12.174h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T877.913-438.5Zm-747.826 0h-48q-17.452 0-29.476-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T82.087-521.5h48q17.452 0 29.476 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T130.087-438.5Zm660.174-290.87-34.239 32q-12.913 12.674-29.565 12.174-16.653-.5-29.327-13.174-12.674-12.673-12.554-28.826.12-16.152 12.794-28.826l33-35q12.913-12.674 30.454-12.674t30.163 12.847q12.709 12.846 12.328 30.826-.38 17.98-13.054 30.653ZM262.63-203.978l-32 34q-12.913 12.674-30.454 12.674t-30.163-12.847q-12.709-12.846-12.328-30.826.38-17.98 13.054-30.653l33.239-31q12.913-12.674 29.565-12.174 16.653.5 29.327 13.174 12.674 12.673 12.554 28.826-.12 16.152-12.794 28.826Zm466.74 33.239-32-33.239q-12.674-12.913-12.174-29.565.5-16.653 13.174-29.327 12.673-12.674 28.826-13.054 16.152-.38 28.826 12.294l35 33q12.674 12.913 12.674 30.454t-12.847 30.163q-12.846 12.709-30.826 12.328-17.98-.38-30.653-13.054ZM203.978-697.37l-34-33q-12.674-12.913-13.174-29.945-.5-17.033 12.174-29.707t31.326-13.293q18.653-.62 31.326 13.054l32 34.239q11.674 12.913 11.174 29.565-.5 16.653-13.174 29.327-12.673 12.674-28.826 12.554-16.152-.12-28.826-12.794ZM480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 100-70 170t-170 70Zm-.247-82q65.703 0 111.475-46.272Q637-414.544 637-480.247t-45.525-111.228Q545.95-637 480.247-637t-111.475 45.525Q323-545.95 323-480.247t45.525 111.975Q414.05-322 479.753-322ZM481-481Z"/></svg></span>
+      <span class="dark-mode-icon"><svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M480.239-116.413q-152.63 0-258.228-105.478Q116.413-327.37 116.413-480q0-130.935 77.739-227.435t206.304-125.043q43.022-9.631 63.87 10.869t3.478 62.805q-8.891 22.043-14.315 44.463-5.424 22.42-5.424 46.689 0 91.694 64.326 155.879 64.325 64.186 156.218 64.186 24.369 0 46.978-4.946 22.609-4.945 44.413-14.076 42.826-17.369 62.967 1.142 20.142 18.511 10.511 61.054Q807.174-280 712.63-198.206q-94.543 81.793-232.391 81.793Zm0-95q79.783 0 143.337-40.217 63.554-40.218 95.793-108.283-15.608 4.044-31.097 5.326-15.49 1.283-31.859.805-123.706-4.066-210.777-90.539-87.071-86.473-91.614-212.092-.24-16.369.923-31.978 1.164-15.609 5.446-30.978-67.826 32.478-108.282 96.152Q211.652-559.543 211.652-480q0 111.929 78.329 190.258 78.329 78.329 190.258 78.329ZM466.13-465.891Z"/></svg></span>
+    </a>
+    
+      <a id="nav-rss-link" class="nav-icon mobile-hide" href="/atom.xml" title="RSS Feed">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M198-120q-25.846 0-44.23-18.384-18.384-18.385-18.384-44.23 0-25.846 18.384-44.23 18.384-18.385 44.23-18.385 25.846 0 44.23 18.385 18.384 18.384 18.384 44.23 0 25.845-18.384 44.23Q223.846-120 198-120Zm538.385 0q-18.846 0-32.923-13.769-14.076-13.769-15.922-33.23-8.692-100.616-51.077-188.654-42.385-88.039-109.885-155.539-67.5-67.501-155.539-109.885Q283-663.462 182.385-672.154q-19.461-1.846-33.23-16.23-13.769-14.385-13.769-33.846t14.076-32.922q14.077-13.461 32.923-12.23 120.076 8.692 226.038 58.768 105.961 50.077 185.73 129.846 79.769 79.769 129.846 185.731 50.077 105.961 58.769 226.038 1.231 18.846-12.538 32.922Q756.461-120 736.385-120Zm-252 0q-18.231 0-32.423-13.461t-18.653-33.538Q418.155-264.23 348.886-333.5q-69.27-69.27-166.501-84.423-20.077-4.462-33.538-18.961-13.461-14.5-13.461-33.346 0-19.076 13.884-33.23 13.884-14.153 33.115-10.922 136.769 15.384 234.384 112.999 97.615 97.615 112.999 234.384 3.231 19.23-10.538 33.115Q505.461-120 484.385-120Z"/></svg>
+      </a>
+    
+    <div id="nav-menu-btn" class="nav-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M177.37-252.282q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Zm0-186.218q-17.453 0-29.477-11.963-12.024-11.964-12.024-29.326 0-17.363 12.024-29.537T177.37-521.5h605.26q17.453 0 29.477 11.963 12.024 11.964 12.024 29.326 0 17.363-12.024 29.537T782.63-438.5H177.37Zm0-186.217q-17.453 0-29.477-11.964-12.024-11.963-12.024-29.326t12.024-29.537q12.024-12.174 29.477-12.174h605.26q17.453 0 29.477 11.964 12.024 11.963 12.024 29.326t-12.024 29.537q-12.024 12.174-29.477 12.174H177.37Z"/></svg>
+    </div>
+  </nav>
+</navbar>
+<div id="nav-dropdown" class="hidden">
+  <div id="dropdown-link-list">
+    
+      <a class="nav-dropdown-link" href="/">Home</a>
+    
+      <a class="nav-dropdown-link" href="/archives">Archives</a>
+    
+      <a class="nav-dropdown-link" href="/about">About</a>
+    
+      <a class="nav-dropdown-link" href="/friends">Friends</a>
+    
+    
+      <a class="nav-dropdown-link" href="/atom.xml" title="RSS Feed">RSS</a>
+     
+    </div>
+</div>
+<script>
+  let dropdownBtn = document.getElementById("nav-menu-btn");
+  let dropdownEle = document.getElementById("nav-dropdown");
+  dropdownBtn.onclick = function() {
+    dropdownEle.classList.toggle("hidden");
+  }
+</script>
+    </div>
+    <div id="sidebar-wrapper">
+      <sidebar id="sidebar">
+  
+    <div class="widget-wrap">
+  <div class="info-card">
+    <div class="avatar">
+      
+        <image src=/images/harry.jpg></image>
+      
+      <div class="img-dim"></div>
+    </div>
+    <div class="info">
+      <div class="username">Félix Billières </div>
+      <div class="dot"></div>
+      <div class="subtitle">Pentester Jr </div>
+      <div class="link-list">
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://x.com/Elliot_belt" title="Twitter"><i class="fa-brands fa-twitter"></i></a>
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://store.steampowered.com" title="Steam"><i class="fa-brands fa-steam"></i></a>
+        
+          <a class="link-btn" target="_blank" rel="noopener" href="https://github.com/felixbillieres" title="GitHub"><i class="fa-brands fa-github"></i></a>
+         
+      </div>  
+    </div>
+  </div>
+</div>
+
+  
+    
+
+
+  <div class="widget-wrap">
+    <div class="widget">
+      <h3 class="widget-title">Categories</h3>
+      <div class="category-box">
+            <a class="category-link" href="/categories/active-directory/">
+                Active Directory
+                <div class="category-count">1</div>
+            </a>
+        
+            <a class="category-link" href="/categories/web/">
+                Web
+                <div class="category-count">1</div>
+            </a>
+        </div>
+    </div>
+  </div>
+
+
+  
+  <div class="sticky">
+    
+      
+
+    
+  </div>
+</sidebar>
+    </div>
+    <div id="content-body">
+       
+
+
+<article id="post-ADInterview" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+    
+   
+  <div class="article-inner">
+    <div class="article-main">
+      <header class="article-header">
+        
+<div class="main-title-bar">
+  <div class="main-title-dot"></div>
+  
+    
+      <h1 class="p-name article-title" itemprop="headline name">
+        [Active Directory] Interview Prep Handbook
+      </h1>
+    
+  
+</div>
+
+        <div class='meta-info-bar'>
+          <div class="meta-info">
+  <time class="dt-published" datetime="2025-04-11T15:18:20.000Z" itemprop="datePublished">2025-04-11</time>
+</div>
+          <div class="need-seperator meta-info">
+            <div class="meta-cate-flex">
+  
+  <a class="meta-cate-link" href="/categories/active-directory/">Active Directory</a>
+   
+</div>
+  
+          </div>
+          <div class="wordcount need-seperator meta-info">
+            56k words 
+          </div>
+        </div>
+        
+      </header>
+      <div class="e-content article-entry" itemprop="articleBody">
+        
+          <h3 id="S-O"><a href="#S-O" class="headerlink" title="S&#x2F;O"></a>S&#x2F;O</h3><p>All this documentation was made possible thanks to this Website that goes way deeper in everything listed below, I tried to make it shorter and question-based but for the technical guys here you can go and check out : <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/">https://zer1t0.gitlab.io/posts/attacking_ad&#x2F;</a></p>
+<h3 id="Disclaimer"><a href="#Disclaimer" class="headerlink" title="Disclaimer:"></a>Disclaimer:</h3><p>English is not my native language, so there may be grammar mistakes in this document. Additionally, as I’m not a cybersecurity professional, there might be technical inaccuracies present. If you notice any mistakes or have suggestions for improvement, please don’t hesitate to reach out. I’m committed to promptly fixing any errors to enhance the quality of the document.</p>
+<h4 id="Game-Plan-4-week-AD-rush"><a href="#Game-Plan-4-week-AD-rush" class="headerlink" title="Game Plan, 4 week AD rush"></a>Game Plan, 4 week AD rush</h4><p><strong>Week 1: Understanding the Basics</strong></p>
+<ul>
+<li>Milestone 1 (End of Week 1):<ul>
+<li>Have a general understanding of the following sections:<ul>
+<li>Domains</li>
+<li>Trusts</li>
+<li>Users</li>
+<li>Groups</li>
+<li>Computers</li>
+<li>Authentication</li>
+<li>Authorization</li>
+</ul>
+</li>
+<li>Be able to explain the basic concepts of each section.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Week 2: Deepening Knowledge</strong></p>
+<ul>
+<li>Milestone 2 (End of Week 2):<ul>
+<li>Have a detailed understanding of the following sections:<ul>
+<li>Trust types</li>
+<li>Trust key</li>
+<li>User properties</li>
+<li>Important groups</li>
+<li>Windows computers connection</li>
+<li>NTLM</li>
+<li>ACLs</li>
+</ul>
+</li>
+<li>Be able to describe the processes and mechanisms involved in each section.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Week 3: Mastering Advanced Concepts</strong></p>
+<ul>
+<li>Milestone 3 (End of Week 3):<ul>
+<li>Have mastery over the following sections:<ul>
+<li>Trust transitivity</li>
+<li>How to query the database?</li>
+<li>Kerberos</li>
+<li>Kerberos Delegation</li>
+<li>Powershell remoting</li>
+<li>SSH tunneling</li>
+</ul>
+</li>
+<li>Be able to explain advanced concepts and apply them to specific scenarios.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Week 4: Review and Consolidation</strong></p>
+<ul>
+<li>Milestone 4 (End of Week 4):<ul>
+<li>Review all articles and sections to consolidate knowledge.</li>
+<li>Practice exercises or simulations to test your understanding.</li>
+<li>Be capable of explaining each article in detail and answering specific questions on each topic.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>What is an Active Directory?</strong></p>
+<ul>
+<li>It’s a system that allows to manage a set of Computers &amp; Users connected in the same network from a central server</li>
+</ul>
+<h3 id="Domain"><a href="#Domain" class="headerlink" title="Domain"></a>Domain</h3><p><strong>What is a Domain?</strong></p>
+<ul>
+<li>A domain is a set of computers connected to the same AD database that is managed by the same central server called <strong>Domain Controller</strong></li>
+</ul>
+<p><strong>What is a Domain Name?</strong></p>
+<ul>
+<li>every domain has a DNS name, it can be the same as their website (contoso.com) or and internal domain (contoso.local)</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#current user domain </span><br><span class="line">$env:USERDNSDOMAIN</span><br><span class="line">#current computer domain</span><br><span class="line">(Get-WmiObject Win32_ComputerSystem).Domain</span><br></pre></td></tr></table></figure>
+
+<p><strong>What is a NetBIOS name?</strong></p>
+<ul>
+<li>It facilitates communication between computers on a local area network (LAN). Every domain can have it’s NetBIOS name. In the logs, you can identify users with <code>CONTOSO\Administrator</code>, where the first part is the NetBIOS name and the second one is the username.</li>
+</ul>
+<p><strong>What is a Forest?</strong></p>
+<ul>
+<li>A forest is a tree of domains. The name of the forest is the name of the root domain (ex: contoso.com) and it has one or more subdomains:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">            contoso.local</span><br><span class="line">                  |</span><br><span class="line">          .-------&#x27;--------.</span><br><span class="line">          |                |</span><br><span class="line">          |                |</span><br><span class="line">   it.contoso.local hr.contoso.local</span><br><span class="line">          | </span><br><span class="line">          |</span><br><span class="line">          |</span><br><span class="line">webs.it.contoso.local</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>each domain has its own database and its own Domain Controllers. Users from a domain can access ressources in another domain but not in another forest</li>
+</ul>
+<p><strong>What are Functional Modes?</strong></p>
+<ul>
+<li>A functional mode is the version of a domain&#x2F;forest. The modes are named based on the minimum Windows Server operative system required to work with them. Then if, for example, you find a domain&#x2F;forest with Windows2012 mode, you can know that all the Domain Controllers are at least Windows Server 2012.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"> #Get the mode of the forest/domain</span><br><span class="line">(Get-ADForest).ForestMode</span><br><span class="line">#OR</span><br><span class="line">(Get-ADDomain).DomainMode</span><br></pre></td></tr></table></figure>
+
+<h3 id="Trust"><a href="#Trust" class="headerlink" title="Trust"></a><strong>Trust</strong></h3><p><strong>What are Trusts?</strong></p>
+<ul>
+<li>Trust is what links users and allow them to access to other domains in the same forest. <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-r2-and-2008/cc731335(v=ws.10)">A trust is a connection from a domain to another</a>. Not a physical network connection, but a kind of authentication&#x2F;authorization connection.</li>
+</ul>
+<p><strong>What is trust direction?</strong></p>
+<ul>
+<li>A trust direction is a one sided trust that allows the trusted users to access the trusted domains resources</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">(trusting)         trusts        (trusted)</span><br><span class="line"> Domain A  --------------------&gt;  Domain B</span><br><span class="line">      outgoing               incoming</span><br><span class="line">      outbound               inbound</span><br><span class="line">                   access</span><br><span class="line">           &lt;--------------------</span><br></pre></td></tr></table></figure>
+
+<p><strong>Difference between inbound and outbound connection:</strong></p>
+<ul>
+<li>If the trust is directed towards your current domain, it’s an incoming (also called inbound) connection. If it goes from your domain to the other, it’s an outcoming (also called outbound) connection.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#Trust of your current domain</span><br><span class="line">nltest /domain_trusts</span><br></pre></td></tr></table></figure>
+
+<p><strong>What is Trust transitivity?</strong></p>
+<ul>
+<li>A <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-r2-and-2008/cc754612(v=ws.10)">trust can be transitive or nontransitive</a>, a non-transitive trust indicates that the trust is not extended beyond the immediate relationship. In other words, just because entity A trusts entity B and entity B trusts entity C, it does not mean that entity A automatically trusts entity C whereas transitive trust means that trust is passed from one entity to another through a chain of trust relationships. Entity A trusts entity B, and entity B trusts entity C, then entity A also implicitly trusts entity C</li>
+</ul>
+<p>transitive trust:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">     (trusting)   trusts   (trusted)  (trusting)   trusts   (trusted)</span><br><span class="line">Domain A  -------------------&gt;  Domain B --------------------&gt; Domain C</span><br><span class="line">                  access                          access</span><br><span class="line">          &lt;-------------------           &lt;--------------------</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>In a domain, to be able to access all the resources, you need all the parents and children to be connected by a bidirectional transitive trust:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">            contoso.local</span><br><span class="line">             ^  v   v  ^  </span><br><span class="line">        .----&#x27;  |   |  &#x27;----.</span><br><span class="line">        |  .----&#x27;   &#x27;----.  |</span><br><span class="line">        ^  v             v  ^</span><br><span class="line">   it.contoso.local hr.contoso.local</span><br><span class="line">        ^  v </span><br><span class="line">        |  |</span><br><span class="line">        ^  v</span><br><span class="line">webs.it.contoso.local</span><br></pre></td></tr></table></figure>
+
+<p><strong>What are the different Trust types?</strong></p>
+<ul>
+<li><strong>Parent-Child</strong>: The default trusts created between a parent domain and its child.</li>
+<li><strong>Forest</strong>: A trust to share resources between forests. This way any domain of the forest can access to any domain on the other forest (if the direction and transitivity of the trust allow it). If a forest trust is misconfigured, then it can allow to <a target="_blank" rel="noopener" href="http://www.harmj0y.net/blog/redteaming/not-a-security-boundary-breaking-forest-trusts/">take control of the other forest</a>.</li>
+<li><strong>External</strong>: A trust to connect to a specific domain that is in a non trusted forest.</li>
+<li><strong>Realm</strong>: A special trust to connect Active Directory and a non-Windows domain.</li>
+<li><strong>Shortcut</strong>: When two domains within the forest communicate often but are not directly connected, you can avoid jumping over many trusts by creating a direct shortcut trust.</li>
+</ul>
+<p><strong>Explain Trust Keys:</strong></p>
+<p>When you communicate through trust, there is a communication between the domain controller of your domain and the domain controller of the target domain and the domain controllers needs to share a key to keep the communications secure.</p>
+<h3 id="Users"><a href="#Users" class="headerlink" title="Users"></a>Users</h3><p><strong>Explain User Identifiers;</strong></p>
+<ul>
+<li>User identifiers are what we use to distinguish users. it can be the username (stored in the <strong>SamAccountName</strong> attribute) or the <strong>SID</strong> (a combination of the domain SID plus the user RID (Relative Identifier), which is the last number that appears in the user SID)</li>
+</ul>
+<p><strong>What is User Secrets</strong>?</p>
+<ul>
+<li><p>For the Domain Controller to be able to authenticate the user, the database stores the sensitive data but not in plaintext. The following secrets are saved:</p>
+<ul>
+<li>NT hash (and LM hash for the older accounts)<ul>
+<li>The hashes are stored both in Windows local <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Security_Account_Manager">SAM</a> and Active Directory NTDS databases</li>
+</ul>
+</li>
+<li>Kerberos keys</li>
+</ul>
+<p>you need administrator privileges (or equivalent) to <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#domain-database-dumping">dump the domain database</a> with a dcsync attack or grabbing the <code>C:\Windows\NTDS\ntds.dit</code> file from the Domain Controller.</p>
+</li>
+</ul>
+<p><strong>What can you do with those hashes?</strong></p>
+<ul>
+<li><p>LM hashes are not used a lot because often obsolete. NT hashes can be used to perform <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#pass-the-hash">Pass-The-Hash</a> or <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#pass-the-key">Overpass-the-Hash</a> attacks in order to impersonate users in remote machines.</p>
+<p>Additionally, you can try to crack the LM and NT hashes with <a target="_blank" rel="noopener" href="https://hashcat.net/">hashcat</a> to recover the original password. If you are lucky and the LM hash is present, this should be quickly.</p>
+</li>
+</ul>
+<p><strong>What can you do with kerberos keys?</strong></p>
+<ul>
+<li>The keys can be used to ask for a Kerberos ticket that represents the user in Kerberos authentication. It can be used in a <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#pass-the-key">Pass-The-Key</a> attack to retrieve a ticket for the impersonated user.</li>
+</ul>
+<p><strong>What is UserAccountControl?</strong></p>
+<ul>
+<li>It’s a proprety in the user class tha contains a <strong>series of flags</strong> that are very relevant for the security and the domain and used in many attacks (flags: <a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/useraccountcontrol-manipulate-account-properties">https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/useraccountcontrol-manipulate-account-properties</a>)</li>
+</ul>
+<p><strong>What are some Important Users and how to list them?</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">net user /domain</span><br><span class="line">#or</span><br><span class="line">Get-ADUser -Filter * | select SamAccountName</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Administrator</code> user is the most privileged account of the domain, <code>krbtgt</code> account is very important too. Its secrets (NT hash and Kerberos keys) are used to encrypt the tickets (specifically the TGTs) used by Kerberos that allows to authenticate users. If you are able to compromise the <code>krbtgt</code> account, you will be able of creating <a target="_blank" rel="noopener" href="https://en.hackndo.com/kerberos-silver-golden-tickets/">Golden Tickets</a>.</li>
+</ul>
+<p><strong>What are Computer accounts and difference with user accounts?</strong></p>
+<ul>
+<li>The difference between user accounts and computers accounts is that the firsts are stored as instances of <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-user">User class</a> in the database whereas the others are stored as instances of <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-computer">Computer class</a> (which is a subclass of User class). Moreover the computer accounts names are the computer hostname finished with a dollar sign <code>$</code>.</li>
+</ul>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">PS</span> C:\&gt; <span class="built_in">Get-ADObject</span> <span class="literal">-LDAPFilter</span> <span class="string">&quot;objectClass=User&quot;</span> <span class="literal">-Properties</span> SamAccountName | <span class="built_in">select</span> SamAccountName</span><br><span class="line"></span><br><span class="line">SamAccountName</span><br><span class="line"><span class="literal">--------------</span></span><br><span class="line">Administrator</span><br><span class="line">Guest</span><br><span class="line">DC01<span class="variable">$</span></span><br><span class="line">krbtgt</span><br><span class="line">anakin</span><br><span class="line">WS01<span class="literal">-10</span><span class="variable">$</span></span><br><span class="line">WS02<span class="literal">-7</span><span class="variable">$</span></span><br><span class="line">DC02<span class="variable">$</span></span><br><span class="line">han</span><br><span class="line">POKEMON<span class="variable">$</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>What are Trust accounts?</strong></p>
+<ul>
+<li>It’s good to know that you can have a normal user that finishes with a $, but when a trust is established, an associated user object is created in each domain to store the trust key. The name of the user is the NetBIOS name of the other domain, finished in $</li>
+<li>For example, in case of the trust between the domains FOO and BAR, the FOO domain would store the trust key in the BAR$ user, and the BAR domain would store it in the FOO$ user.</li>
+</ul>
+<h3 id="Groups"><a href="#Groups" class="headerlink" title="Groups"></a>Groups</h3><p><strong>What are groups?</strong></p>
+<ul>
+<li>Rather than managing each of the users file permissions, you put them in groups to handle the policy of all the users in a same group. the groups are stored in the domain database. And, in the same way, they can be identified by the <code>SamAccountName or the SID</code></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Get-ADGroup -Filter * | select SamAccountName</span><br></pre></td></tr></table></figure>
+
+<p><strong>Explain Administrative groups:</strong></p>
+<ul>
+<li>There are many <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#default-security-groups">default groups</a> defined for different roles in the domain&#x2F;forest. As attacker, one of the most juicy groups is the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#bkmk-domainadmins">Domain Admins</a> group, that gives administrator privileges to its members in the domain</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Get-ADGroup &quot;Domain Admins&quot; -Properties members,memberof</span><br></pre></td></tr></table></figure>
+
+<p><strong>What are other interesting groups:</strong></p>
+<ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#bkmk-entadmins">Enterprise Admins</a> group, which provides administrator privileges in all the forest. It’s a group that only exists in the root domain of the forest, but is added by default to the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#administrators">Administrators</a> group of the all the domains in the forest. There is also the the <code>Domain Admins</code> group that is added to the <code>Administrators</code> group of the domain, as well as the <code>Administrators</code> groups of the domain computers.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">                        .------------------------.</span><br><span class="line">                        |     contoso.local      |</span><br><span class="line">       .-------------------------------------------------------------.</span><br><span class="line">       |                                                             |</span><br><span class="line">       |                   .----------------.                        |  </span><br><span class="line">       |               .--&gt;| Administrators |&lt;-.   .-&gt;Administrators |</span><br><span class="line">       |               |   &#x27;----------------&#x27;  |   |     ____        | </span><br><span class="line">       |               |    .---------------.  |   |    |    |       |</span><br><span class="line">       |               |    | Domain Admins |&gt;-&#x27;---&#x27;    |____|       |</span><br><span class="line">       |               |    &#x27;---------------&#x27;           /::::/       |</span><br><span class="line">       |               |   .-------------------.                     |</span><br><span class="line">       |               &#x27;--&lt;| Enterprise Admins |                     |</span><br><span class="line">       |                   &#x27;-------------------&#x27;                     |</span><br><span class="line">       |                             v v                             |</span><br><span class="line">       &#x27;-----------------------------|-|-----------------------------&#x27;  </span><br><span class="line">                           |         | |      |                         </span><br><span class="line">                           |         | |      |                         </span><br><span class="line">                 .---------&#x27;         | |      &#x27;-----------.             </span><br><span class="line">                 |                   v v                  |             </span><br><span class="line">.----------------------------------. | | .----------------------------------.</span><br><span class="line">|        it.contoso.local          | | | |        hr.contoso.local          |</span><br><span class="line">|----------------------------------| | | |----------------------------------|</span><br><span class="line">|                                  | v v |                                  |</span><br><span class="line">|        .----------------.        | | | |        .----------------.        |</span><br><span class="line">|     .-&gt;| Administrators |&lt;---------&#x27; &#x27;---------&gt;| Administrators |&lt;-.     |</span><br><span class="line">|     |  &#x27;----------------&#x27;        |     |        &#x27;----------------&#x27;  |     |</span><br><span class="line">|     |  .---------------.         |     |        .---------------.   |     |</span><br><span class="line">|     &#x27;-&lt;| Domain Admins |         |     |        | Domain Admins |&gt;--&#x27;     |</span><br><span class="line">|        &#x27;---------------&#x27;         |     |        &#x27;---------------&#x27;         |</span><br><span class="line">|                |                 |     |                |                 |</span><br><span class="line">|        .-------&#x27;---------.       |     |        .-------&#x27;---------.       |</span><br><span class="line">|        |                 |       |     |        |                 |       |</span><br><span class="line">|        v                 v       |     |        v                 v       |</span><br><span class="line">| Administrators    Administrators |     | Administrators    Administrators |</span><br><span class="line">|       ____              ____     |     |      ____              ____      |</span><br><span class="line">|      |    |            |    |    |     |     |    |            |    |     |</span><br><span class="line">|      |____|            |____|    |     |     |____|            |____|     |</span><br><span class="line">|      /::::/            /::::/    |     |     /::::/            /::::/     |</span><br><span class="line">&#x27;----------------------------------&#x27;     &#x27;----------------------------------&#x27;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>other <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=3700">important groups</a> to be taken into account</li>
+</ul>
+<p><strong>What are different Group Scopes?</strong></p>
+<ul>
+<li>There are 3 different groups based on their scope:<ul>
+<li><strong>Universal</strong> groups can include members from any domain within a forest or trusted forests and grant permissions within the same forest or trusted forests. The Enterprise Admins group is an example of a Universal group.</li>
+<li><strong>Global</strong> groups can include members only from the same domain and grant permissions within domains of the same forest or trusting domains or forests. The Domain Admins group is an example of a Global group.</li>
+<li><strong>DomainLocal</strong> groups can include members from the domain or any trusted domain and grant permissions only within their domains. The Administrators group is an example of a DomainLocal group.</li>
+</ul>
+</li>
+</ul>
+<h3 id="Computers"><a href="#Computers" class="headerlink" title="Computers "></a>Computers <a href="#computers" id="computers"></a></h3><p><strong>Different types of Computers within a domain:</strong></p>
+<ul>
+<li><strong>Domain Controllers</strong>: The central servers that manage the domain. They are Windows Server machines.</li>
+<li><strong>Workstations</strong>: The personal computers used by people every day. These machines are usually Windows 10 or 7 machines.</li>
+<li><strong>Servers</strong>: The computers that offers services such as webs, files or databases. They are usually Linux or Windows Server machines.</li>
+</ul>
+<p><strong>What is a domain controller?</strong></p>
+<ul>
+<li>The domain controller is the <strong>central server of a domain</strong>, that is running the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview">Active Directory Domain Service</a> (AD DS). It keeps the domain DB stored in ths ntds.dit file.</li>
+</ul>
+<p><strong>What is Domain database dumping?</strong></p>
+<ul>
+<li>When we become domain admin, in order to read sensitive files like krbtgt user creds or create Golden tickets, we can dump the DB of the DC</li>
+<li>One way of doing this is <a target="_blank" rel="noopener" href="https://www.ired.team/offensive-security/credential-access-and-credential-dumping/ntds.dit-enumeration#no-credentials-ntdsutil">dumping the NTDS.dit file</a> locally with <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc753343(v=ws.11)">ntdsutil</a> or <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-gb/windows-server/administration/windows-commands/vssadmin">vssadmin</a> or remote with the <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/secretsdump.py">impacket secretsdump.py</a> script.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">secretsdump.py &#x27;contoso.local/Administrator@192.168.100.2&#x27; -just-dc-user krbtgt</span><br></pre></td></tr></table></figure>
+
+<p><strong>How to discover Windows computers in a domain or network?</strong></p>
+<ul>
+<li>(<a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#netbios-name-service">NetBIOS name service</a> listens in the port 137) We can scan the network and perform a NetBIOS scan by using a tool like <a target="_blank" rel="noopener" href="http://www.unixwiz.net/tools/nbtscan.html">nbtscan</a> or nmap <a target="_blank" rel="noopener" href="https://nmap.org/nsedoc/scripts/nbstat.html">nbtstat</a> script.</li>
+<li>(<a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#smb">SMB</a> listens in the port 445) We can take advantage of the NTLM authentication negotiation to retrieve the machine name. You can perform an scan with <a target="_blank" rel="noopener" href="https://github.com/Zer1t0/ntlm-info">ntlm-info</a> or nmap <a target="_blank" rel="noopener" href="https://nmap.org/nsedoc/scripts/smb-os-discovery.html">smb-os-discovery</a> script.</li>
+</ul>
+<p><strong>How to connect with RPC&#x2F;SMB</strong></p>
+<ul>
+<li>If you have port 445 open, you can use tools such as <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/sysinternals/downloads/psexec">PsExec</a> and the impacket examples <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/psexec.py">psexec.py</a>, <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/wmiexec.py">wmiexec.py</a> (<a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/wmiexec.py">wmiexec.py</a> will also need the port 135)</li>
+<li>You can also perform Pass-the-hash with the NT or LM hash directly with impacket tools:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">psexec.py contoso.local/Anakin@192.168.100.10 -hashes :cdeae556dc28c24b5b7b14e9df5b6e21</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>With the PsExec tool, <a target="_blank" rel="noopener" href="https://stealthbits.com/blog/passing-the-hash-with-mimikatz/">inject the NT hash in the Windows session with mimikatz</a>.</li>
+</ul>
+<p>With those techniques we connect via NTLM auth, but by default Kerberos is used and we would need to provide a kerberos tickets with those tools</p>
+<ul>
+<li>in Windows we will need to <a target="_blank" rel="noopener" href="https://gist.github.com/TarlogicSecurity/2f221924fef8c14a1d8e29f3cb5c5c4a#using-ticket-in-windows">inject the ticket in the session</a> by using <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz">mimikatz</a> or <a target="_blank" rel="noopener" href="https://github.com/GhostPack/Rubeus">Rubeus</a>.</li>
+</ul>
+<p>Windows and linux use different ticket formay that we can convert using <a target="_blank" rel="noopener" href="https://github.com/Zer1t0/ticket_converter">ticket_converter</a> or <a target="_blank" rel="noopener" href="https://github.com/Zer1t0/cerbero#convert">cerbero</a>.</p>
+<p><strong>How to use Powershell Remoting to connect</strong></p>
+<p>to connect to a Windows machine and get a Powershell session in the remote machine</p>
+<ul>
+<li>From windows we need to use <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/powershell/scripting/learn/ps101/08-powershell-remoting?view=powershell-7.1">CmdLets and parameters</a><ul>
+<li>if we have a Kerberos ticket or a NT hash, we will need to inject them by using <a target="_blank" rel="noopener" href="https://github.com/GhostPack/Rubeus">Rubeus</a> or <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz">mimikatz</a>.</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">.\Rubeus.exe asktgt /user:Administrator /rc4:b73fdfe10e87b4ca5c0d957f81de6863 /ptt</span><br><span class="line"></span><br><span class="line">   ______        _</span><br><span class="line">  (_____ \      | |</span><br><span class="line">   _____) )_   _| |__  _____ _   _  ___</span><br><span class="line">  |  __  /| | | |  _ \| ___ | | | |/___)</span><br><span class="line">  | |  \ \| |_| | |_) ) ____| |_| |___ |</span><br><span class="line">  |_|   |_|____/|____/|_____)____/(___/</span><br><span class="line"></span><br><span class="line">  v1.6.1</span><br><span class="line"></span><br><span class="line">[*] Action: Ask TGT</span><br><span class="line"></span><br><span class="line">[*] Using rc4_hmac hash: b73fdfe10e87b4ca5c0d957f81de6863</span><br><span class="line">[*] Building AS-REQ (w/ preauth) for: &#x27;contoso.local\Administrator&#x27;</span><br><span class="line">[+] TGT request successful!</span><br><span class="line">[*] base64(ticket.kirbi):</span><br><span class="line"></span><br><span class="line">      doIFQjCCBT6gAwIBBaEDAgEWooIETzCCBEthggRHMIIEQ6ADAgEFoQ8bDUNPTlRPU08uTE9DQUyiIjAg</span><br><span class="line">      oAMCAQKhGTAXGwZrcmJ0Z3QbDWNvbnRvc28ubG9jYWyjggQFMIIEAaADAgESoQMCAQKiggPzBIID7xK3</span><br><span class="line">      &lt;!--stripped--&gt;</span><br><span class="line">      ERgPMjAyMTA1MDgwMjQzMjZapxEYDzIwMjEwNTE0MTY0MzI2WqgPGw1DT05UT1NPLkxPQ0FMqSIwIKAD</span><br><span class="line">      AgECoRkwFxsGa3JidGd0Gw1jb250b3NvLmxvY2Fs</span><br><span class="line">[+] Ticket successfully imported!</span><br><span class="line"></span><br><span class="line">  ServiceName           :  krbtgt/contoso.local</span><br><span class="line">  ServiceRealm          :  CONTOSO.LOCAL</span><br><span class="line">  UserName              :  Administrator</span><br><span class="line">  UserRealm             :  CONTOSO.LOCAL</span><br><span class="line">  StartTime             :  07/05/2021 18:43:26</span><br><span class="line">  EndTime               :  08/05/2021 04:43:26</span><br><span class="line">  RenewTill             :  14/05/2021 18:43:26</span><br><span class="line">  Flags                 :  name_canonicalize, pre_authent, initial, renewable, forwardable</span><br><span class="line">  KeyType               :  rc4_hmac</span><br><span class="line">  Base64(key)           :  95a1NmgYXwOmiyCa3qlplA==</span><br><span class="line"></span><br><span class="line">PS C:\&gt; Enter-PSSession -ComputerName dc01</span><br><span class="line">[dc01]: PS C:\Users\Administrator\Documents&gt; whoami</span><br><span class="line">contoso\administrator</span><br><span class="line">[dc01]: PS C:\Users\Administrator\Documents&gt; hostname</span><br><span class="line">dc01</span><br><span class="line">[dc01]:</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>From a Linux machine you can use <a target="_blank" rel="noopener" href="https://github.com/Hackplayers/evil-winrm">evil-winrm</a>.</li>
+</ul>
+<p><strong>How to connect with RDP</strong></p>
+<ul>
+<li>From windows we can use <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/mstsc">mstsc</a></li>
+<li>From Linux we can use <a target="_blank" rel="noopener" href="http://www.rdesktop.org/">rdesktop</a>, <a target="_blank" rel="noopener" href="https://www.freerdp.com/">freerdp</a> or <a target="_blank" rel="noopener" href="https://remmina.org/">remmina</a><ul>
+<li>Unlike RPC&#x2F;SMB, RDP transmits the password in plain text and allows the remote computer to cache the user’s credentials. it enables the user to log in to the remote system without having to enter their password again at each connection thus simulating the experience of being physically logged into their own machine. This makes it impossible to use pass-the-hash attacks</li>
+<li>But there is a mode called Restricted Admin, when enabled, you don’t send plain text so it’s then possible to perform pass the hash connections.<ul>
+<li>From Linux, you can <a target="_blank" rel="noopener" href="https://www.kali.org/blog/passing-hash-remote-desktop/">use freerdp to perform a Pass-The-Hash with RDP</a></li>
+<li>And from Windows you can <a target="_blank" rel="noopener" href="https://shellz.club/pass-the-hash-with-rdp-in-2019/">inject a NT hash or Kerberos ticket with mimikatz or Rubeus and then use <code>mstsc.exe /restrictedadmin</code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Windows computers credentials</strong></p>
+<p><strong>Explain LSASS credentials</strong></p>
+<ul>
+<li>On windows machine -&gt; common place to find creds -&gt; LSASS Process (lsass.exe) in charge of user auth</li>
+<li>when user logs in -&gt; credentials cached in lsass process in order to use SSO -&gt; credentials caches by some <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#windows-ssps">SSPs</a> (Security Support Providers) each one uses different auth methods, example:<ul>
+<li>The <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#kerberos-ssp">Kerberos SSP</a></li>
+<li>The <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#digest-ssp">Digest SSP</a></li>
+<li>The <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#ntlm-ssp">NTLMSSP</a></li>
+</ul>
+</li>
+<li>We can extract LSASS credentials using <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz">mimikatz</a>. We can launch mimikatz directly in the target machine, or <a target="_blank" rel="noopener" href="https://www.deepinstinct.com/2021/01/24/lsass-memory-dumps-are-stealthier-than-ever-before/">dumping the LSASS memory</a> with some tool like <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/sysinternals/downloads/procdump">procdump</a>, <a target="_blank" rel="noopener" href="https://lolbas-project.github.io/lolbas/Libraries/Comsvcs/">comsvcs.dll</a> or <a target="_blank" rel="noopener" href="https://www.deepinstinct.com/2021/02/16/lsass-memory-dumps-are-stealthier-than-ever-before-part-2/">werfault.exe</a> and then process the generated memory dump with mimikatz or <a target="_blank" rel="noopener" href="https://github.com/skelsec/pypykatz">pypikatz</a>. can also to use <a target="_blank" rel="noopener" href="https://github.com/Hackndo/lsassy">lsassy</a> to read a dump remotely avoiding to have to download the entire memory dump, that can take several megabytes.</li>
+</ul>
+<p><strong>Explain Registry credentials</strong></p>
+<ul>
+<li>Other location to find credentials is the registry. One of the places where sensible credentials are stored is in the <a target="_blank" rel="noopener" href="https://passcape.com/index.php?section=docsys&cmd=details&id=23">LSA secrets</a>.</li>
+<li>In the LSA secrets you can find:<ul>
+<li><strong>Domain Computer Account:</strong> To be part of the domain, the computer must have a user account in the domain with available username and password. They are stored in the LSA secrets</li>
+<li><strong>Service users passwords:</strong> If you want to run some services as the user, the computer needs to store the password but it does not store the user</li>
+<li><strong>Auto-logon password:</strong> If windows <a target="_blank" rel="noopener" href="https://keithga.wordpress.com/2013/12/19/sysinternals-autologon-and-securely-encrypting-passwords/">auto-logon is enabled</a>, the password can be stored in the LSA secrets. The other alternative is that it is saved in <code>HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon</code> registry key under the key <code>DefaulUserName</code>.</li>
+<li><strong>DPAPI master keys:</strong> The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/dotnet/standard/security/how-to-use-data-protection">data protection API</a> (DPAPI) is used to allow users encrypt sensible data without need to worry about cryptographic keys. If you are able to retrieve the master keys, then you <a target="_blank" rel="noopener" href="https://book.hacktricks.xyz/windows/windows-local-privilege-escalation/dpapi-extracting-passwords">can decrypt users data</a>.</li>
+</ul>
+</li>
+</ul>
+<p><strong>How to dump registry credentials:</strong></p>
+<p>To get the credentials from the SECURITY and SAM hives, we can read them from memory by using mimikatz.</p>
+<p>execute <code>token::elevate</code> to acquire a <code>SYSTEM</code> session to read the credentials.</p>
+<p><code>privilege::debug</code> if required to enable the SeDebugPrivilege.</p>
+<p>other commands:</p>
+<ul>
+<li><code>lsadump::secrets</code>: Get the LSA secrets.</li>
+<li><code>lsadump::cache</code>: Retrieve the cached domain logons.</li>
+<li><code>lsadump::sam</code>: Fetch the local account credentials.</li>
+</ul>
+<p>We can also save a copy of the hive files with <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/reg-save">reg save</a> command, move them to our machine, and finally to get the content with <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/secretsdump.py">impacket secretsdump</a> script or mimikatz.</p>
+<p><strong>Linux computers</strong></p>
+<p><strong>How to discover linux machines on a network?:</strong></p>
+<p>Since Linux computers don’t have any characteristic port opened by default, however many Linux machines are used as servers that are remotely administrate. In order to administrate Linux computers, usually the <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#SSH">SSH</a> protocol is used. The SSH server service listens in the port 22</p>
+<p>Moreover, older Linux machines may have <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Telnet">Telnet</a> enabled on port 23.</p>
+<p><strong>where to find linux computer credentials</strong></p>
+<p>Linux machines usually have a Kerberos client that is configured with the domain computer account. You can find the credentials in the keytab (<code>/etc/krb5.keytab)</code>or specified in the <a target="_blank" rel="noopener" href="https://web.mit.edu/kerberos/krb5-1.12/doc/admin/conf_files/krb5_conf.html">Kerberos configuration file</a> in <code>/etc/krb5.conf.</code></p>
+<p>You can use the keys stored to <a target="_blank" rel="noopener" href="https://www.tarlogic.com/en/blog/how-to-attack-kerberos/">ask for a Kerberos ticket</a> an impersonate the user.</p>
+<p><strong>What can you say about linux kerberos tickets?</strong></p>
+<ul>
+<li>in order to be identified within the system, the linux machines has kerberos client configured within the computer account. You can find the creds usaully in the <code>/etc/krb5.keytab</code> OR <code>/etc/krb.conf</code> file and you can display it using <code>klist</code> command</li>
+<li>the next step would be to impersonate the user in the domain since, when authentificated, a kerberos ticket is retrieved under the <code>/tmp</code> directory in files with the format <code>krb5cc_%&#123;uid&#125;</code> . it is also possible that tickets are stored in the <a target="_blank" rel="noopener" href="https://man7.org/linux/man-pages/man7/keyrings.7.html">Linux kernel keys</a> instead of files, but you can grab them and convert to files by using <a target="_blank" rel="noopener" href="https://github.com/TarlogicSecurity/tickey">tickey</a>.</li>
+</ul>
+<p><strong>Where are stored the ssh private keys?</strong></p>
+<ul>
+<li>usually they are stored in the .ssh directory in a file called <code>id_rsa</code></li>
+<li>In case the private key doesn’t require a passphrase for using it, then you may can use it to connect to another machines in the domain with this syntax:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ssh -i id_ed25519_foo_key foo@db.contoso.local</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>a place worth looking is the bash history located in the <code>.bash_history</code> file of the user directory to find some credentials or command history</li>
+</ul>
+<h3 id="Services"><a href="#Services" class="headerlink" title="Services "></a>Services <a href="#services" id="services"></a></h3><p><strong>What is the difference between active directory service and computer service?</strong></p>
+<p>A windows or linux machine service could be understood as a background process running like a task (ex: database) but it is not obliged for a service to be listening on a port:</p>
+<p>it could simply be a service that for example checks for updates on the system</p>
+<p>on the other hand, active directory services are identifieres that indicates what remote services are or can be available (listening on a port) on a machine. Not all the remote services are registered in the domain database, however, the registration is required for those services that need to authenticate domain users through Kerberos.</p>
+<ul>
+<li>each active directory service stores those informations:<ul>
+<li>The <strong>user</strong> that runs the computer service.</li>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc772815(v=ws.10)#service-principal-names">service class</a>, that indicates what kind of service is, for example web servers are registered like www class.</li>
+<li>The <strong>machine</strong> where the service is hosted.</li>
+</ul>
+</li>
+</ul>
+<p>Since all services dont require to be executed and are stored in AD database, it’s good to know that old services can lead to account takeover using kerberoast</p>
+<h3 id="Database"><a href="#Database" class="headerlink" title="Database "></a>Database <a href="#database" id="database"></a></h3><p>So we know the basics of the database of the domain and some objects stored in it like users, groups etc..</p>
+<p><strong>Can you go more in depth on classes and maybe subclasses?</strong></p>
+<p>We know that there is the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-user">User class</a>, the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-computer">Computer class</a> or the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-group">Group class</a>.</p>
+<p>But a class can have a <strong>subclasse</strong> that allows to inherit propreties. For example, the Computer class is a subclass of User class, therefore the computer objects can have the same properties of the user objects ,like <code>SAMAccountName</code>, and some new custom properties,</p>
+<p>All the classes are subclasses of the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-top">Top</a> class &amp; many of the most relevant classes when performing a pentest, like User and Group, are attached to <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/adschema/c-securityprincipal">Security-Principal</a> auxiliary class, the class that defines the <code>SAMAccountName</code> and <code>SID</code> properties.</p>
+<p><strong>What do you know about properties of a class?</strong></p>
+<p>Usually, properties are stored as a string value like <em>name</em> or something else. There are some properties that contain sensitive data that are marked as <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/windows-security/mark-attribute-as-confidential">confidential properties</a></p>
+<p>for example, the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/f3adda9f-89e1-4340-a3f2-1f0a6249f1f8">UserPassword</a> and <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-ada3/71e64720-be27-463f-9cc5-117f4bc849e1">UnicodePwd</a> propreties cannot be read, only written. When a <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-US/troubleshoot/windows/win32/change-windows-active-directory-user-password">password change</a> is required, these properties can be written in order to modify the user password.</p>
+<p>Only authorized users can retrieve the confidential properties.</p>
+<p>There are some properties that require to meet certain conditions before being written.</p>
+<p><strong>Define principals in active directory?</strong></p>
+<p>In Active Directory, a <strong>principal is a security entity</strong>. The most common <strong>principals are users, groups and computers</strong>.</p>
+<p><strong>What are 3 kinds of SIDs in active directory?</strong></p>
+<p><strong>Domain SID:</strong> used to identify the domain, as well as the base for SIDs of the domain principals.</p>
+<p><strong>Principal SID:</strong> used to identify principals. It is compose by the domain SID and a principal RID</p>
+<p><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/security-identifiers-in-windows"><strong>Well-known SIDs</strong></a> that identify abstract entities for special situations. Some of them are:</p>
+<ul>
+<li><strong>Authenticated Users</strong></li>
+<li><strong>Principal Self</strong></li>
+<li><strong>Administrator</strong></li>
+<li><strong>Domain Admins</strong></li>
+</ul>
+<p><strong>What are Distinguished Names?</strong></p>
+<p>The distinguished name is like a path that indicates the object position in the database hierarchy</p>
+<p>It’s used to identify objects in the db and reference objects (ex. the members of a group are referenced by its <code>DistinguishedName</code>.</p>
+<p>It’s composed by:</p>
+<ul>
+<li>Domain Component (DC) -&gt; for <code>it.domain.com</code> the DC part will be <code>DC=it,DC=domain,DC=com</code>.</li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Active_Directory#Organizational_units">Organizational Unit</a> (OU)</li>
+<li>Common Name (CN) -&gt; in <code>CN=Administrator,CN=Users,DC=contoso,DC=local</code>, the <code>CN=Users</code> identifies the Users container.</li>
+</ul>
+<p><strong>What does the term Partitions refer to in AD databases?</strong></p>
+<p>The databases are divided by partitions:</p>
+<ul>
+<li><strong>Domain</strong>: Stores the domain objects.</li>
+<li><strong>Configuration</strong>: Stores configuration of the domain, such as the <code>HOST</code> service alias or <code>Well-known</code> SIDs that we have seen before.</li>
+<li><strong>Schema</strong>: Stores the definition of the classes and properties used by the database.</li>
+<li><strong>Domain DNS Zones</strong>: Stores the DNS records of the domain and subdomains.</li>
+<li><strong>Forest DNS Zones</strong>: Stores the DNS records of the rest of the forest, including parent domains.</li>
+</ul>
+<p><strong>How would you define Global Catalog?</strong></p>
+<p>To speed up searches through objects in other domains, some domain controllers have a read-only partitions with a subset of objects of other domains. These Domains Controllers can be called <a target="_blank" rel="noopener" href="https://docs.microsoft.com/pt-pt/previous-versions/windows/server/cc737410(v=ws.10)#domain-controller-and-global-catalog-server-structure">Global Catalogs</a></p>
+<p><strong>Explain querying with LDAP &amp; ADWS</strong></p>
+<p>To be able to interract with the domain controller database and it’s data, we wan use different protocoles&#x2F;services -&gt;</p>
+<p><strong>LDAP</strong> allows to filter objects, interact and edit them in the db via a query syntax and you can go more in depth and retrieve propreties from the objects you interract with like the name (can check out more on <a target="_blank" rel="noopener" href="https://ldapwiki.com/">LDAP wiki</a>). We can pretty much interract with anything that is not highly sensitive. When enumerating active directory, ldap is a go to, you can use <a target="_blank" rel="noopener" href="https://linux.die.net/man/1/ldapsearch">ldapsearch</a> and <a target="_blank" rel="noopener" href="https://linux.die.net/man/1/ldapmodify">ldapmodify</a> tools (on linux). since we can modify objects we could imagine adding a user.</p>
+<p>On the other hand there is <strong>ADWS</strong> (Active Directory Web Services), it also manipulates domain objects but it’s based on <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/SOAP">SOAP</a> messages. It works very well with LDAP and is compatible with LDAP filters. So much that when used, the DC internally uses LDAP reqs to retrieve results</p>
+<p><strong>Other protocols worth to know</strong></p>
+<ul>
+<li>The <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Domain_Name_System">DNS</a> protocol</li>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/MS-SAMR/4df07fab-1bbc-452f-8e92-7853a3c7e380">SAMR</a> (Security Account Manager Remote) protocol</li>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/f977faaa-673e-4f66-b9bf-48c640241d47">DRSR</a> (Directory Replication Service Remote) protocol</li>
+<li>The <a target="_blank" rel="noopener" href="https://www.tarlogic.com/en/blog/how-kerberos-works/">Kerberos</a> authentication protocol</li>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-nrpc/ff8f970f-3e37-40f7-bd4b-af7336e4792f">Netlogon</a> protocol</li>
+</ul>
+<h2 id="Security"><a href="#Security" class="headerlink" title="Security"></a>Security</h2><p>the 3 main topics in the security realm of Active Directory are:</p>
+<p><strong>Address resolution; Authentication and Authentication</strong></p>
+<h3 id="Address-resolution"><a href="#Address-resolution" class="headerlink" title="Address resolution "></a>Address resolution <a href="#address-resolution" id="address-resolution"></a></h3><p><strong>What are some dangers related to misconfigured address resolution?</strong></p>
+<p>The main danger is if a user or program can be tricked into connecting to an erroneous machine. Some common attacks are :</p>
+<ul>
+<li>Person-in-The-Middle (PitM) where the attacker interecpts the communication of the user and maybe interract with it if not encrypted</li>
+<li><a target="_blank" rel="noopener" href="https://en.hackndo.com/ntlm-relay/">NTLM Relay</a> attack, using NTLM authentification from a victim and redirect it to a malicious server</li>
+<li><a target="_blank" rel="noopener" href="https://0xdf.gitlab.io/2019/01/13/getting-net-ntlm-hases-from-windows.html">NTLM crack</a> attack where the attacker just tries to crack the NTLM hash</li>
+</ul>
+<p><strong>What are the 3 types of addresses that need to be resolved?</strong></p>
+<p><strong>MAC address -&gt;</strong> unique identifier of each computer in the world. Sends messages via the ethernet protocol (can be altered with spoofing)</p>
+<p><strong>IP address -&gt;</strong> used by the IP protocol on the internet layer. Allows communication via different computers in a same network (can read more about IP address attribution with <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#dhcp">DHCP</a> or static IPs)</p>
+<p><strong>Hostnames -&gt;</strong> Just like websites and DNS, Hostnames help us memorize and interract with computers with human-friendly names like <code>computerOfFelix</code> rather than just an IP that is hard to remember</p>
+<p><strong>What are some vital processes for computers when it comes to finding the correct address to comunicate?</strong></p>
+<p><strong>Hostname-IP resolution</strong></p>
+<ul>
+<li>to map a hostname to it’s ip, computers can ask ask central server for hostname resolution which is used by DNS or they can send broadcast request asking all the computers to identify themselves (used by netBIOS, LLMNR, mDNS)</li>
+</ul>
+<p><strong>IP-MAC resolution</strong></p>
+<ul>
+<li>Once we find an IP, we can broadcast to all to tell the network card of the computer to identify itself by asking for the MAC address related to the IP using the ARP protocol</li>
+</ul>
+<p><strong>IP configuration</strong></p>
+<ul>
+<li>Either it’s done manually or dynamically using DHCP, we need to configure the IP of a computer. The danger if done dynamically is that the computer is not configured and asks blindly to the DHCP server using broadcast and can be tricked if an attacker has a fake DNS server</li>
+</ul>
+<p><strong>What is ARP?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Address_Resolution_Protocol">ARP</a> (Address Resolution Protocol) allows to map the relation between the IP address of a computer and its MAC (Media Access Control) address.</p>
+<p>the client machine sends t broadcast ARP request to the local network, asking for the one that has the target IP address. Then the computer with that IP should respond identifying its MAC. Finally the client sends the application packets to that Ethernet address.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">                                                  .---.</span><br><span class="line">                                                 /   /|</span><br><span class="line">                                                .---. |</span><br><span class="line">                                      .-------&gt; |   | &#x27;</span><br><span class="line">                                      |         |   |/ </span><br><span class="line">                                      |         &#x27;---&#x27;  </span><br><span class="line">  .---.                               |</span><br><span class="line"> /   /|                               |           .---.</span><br><span class="line">.---. |    1) Who is 192.168.1.5?     |          /   /|</span><br><span class="line">|   | &#x27; &gt;--------&gt;&gt;-------------------.-------&gt; .---. |</span><br><span class="line">|   |/                                |         |   | &#x27;</span><br><span class="line">&#x27;---&#x27;   &lt;---------.                   |         |   |/ </span><br><span class="line">                  |                   |         &#x27;---&#x27;  </span><br><span class="line">                  |                   |</span><br><span class="line">                  |                   |           .---.</span><br><span class="line">                  |                   |          /   /|</span><br><span class="line">                  |                   &#x27;-------&gt; .---. |</span><br><span class="line">                  |                             |   | &#x27;</span><br><span class="line">                  &#x27;-&lt;&lt;------------------------&lt; |   |/ </span><br><span class="line">                    2)  I am 192.168.1.5        &#x27;---&#x27;  </span><br><span class="line">                     (MAC 01:02:03:04:05:06)</span><br></pre></td></tr></table></figure>
+
+<p><strong>Explain ARP Spoofing</strong></p>
+<p>An attacker could try to respond to all ARP requests to impersonate other computers. To add a layer of security, rather than sending ARP requests every time they communicate, computers keep the old responses in their ARP cache to reduce the number of requests needed.</p>
+<p><strong>Explain how DHCP works</strong></p>
+<p>DHCP helps configure dynamic IP addresses to the computers of a network. When new to a network, the foreign computer will look for the DHCP server to get a config that allows them to interract with the network, it works in 4 steps:</p>
+<p>-&gt; Broadcast from the client to the server to find DHCP server</p>
+<p>-&gt; Server responds to request with valid IP</p>
+<p>-&gt; client receives IP and sends message to server to request it</p>
+<p>-&gt; Server confirms client can use the IP and config params like IP renewal time</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">client        server</span><br><span class="line">    |             |</span><br><span class="line">    |  discovery  |</span><br><span class="line">    | ----------&gt; |</span><br><span class="line">    |             |</span><br><span class="line">    |    offer    |</span><br><span class="line">    | &lt;---------- |</span><br><span class="line">    |             |</span><br><span class="line">    |   request   |</span><br><span class="line">    | ----------&gt; |</span><br><span class="line">    |             |</span><br><span class="line">    | acknowledge |</span><br><span class="line">    | &lt;---------- |</span><br><span class="line">    |             |</span><br></pre></td></tr></table></figure>
+
+<p><strong>What is a Rogue DHCP server</strong></p>
+<p>A rogue DHCP server is a device on a network that, without permission, gives out IP addresses and network settings to devices, which can cause network problems and security risks. Therefore the perfect tool for an attacker could create a rogue DHCP server in order to set a custom configuration in the clients and redirect them to fake computers or domains controlled by the attacker</p>
+<p><strong>Explain DHCP Starvation attack:</strong></p>
+<p>It’s a DOS attack where a fake client requests all the available IPs the DHCP server has to offer and make it impossible for legitimate users to obtain an IP:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ dhcpstarv -i enp7s0</span><br><span class="line">08:03:09 11/30/20: got address 192.168.100.7 for 00:16:36:99:be:21 from 192.168.100.2</span><br><span class="line">08:03:09 11/30/20: got address 192.168.100.8 for 00:16:36:25:1f:1d from 192.168.100.2</span><br><span class="line">08:03:09 11/30/20: got address 192.168.100.9 for 00:16:36:c7:79:f2 from 192.168.100.2</span><br></pre></td></tr></table></figure>
+
+<h3 id="DNS"><a href="#DNS" class="headerlink" title="DNS"></a><strong>DNS</strong></h3><p><strong>What is DNS?</strong></p>
+<p>DNS is a protocol that resolves DNS names of a computer to it’s address (port 53). (it can also be used with mapping an IP to its name or resolving the aliases for a name)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">  client                     DNS server</span><br><span class="line">  .---.   A elFelixio.oscp?     .---.</span><br><span class="line"> /   /| ------------------&gt;  /   /|</span><br><span class="line">.---. |                     .---. |</span><br><span class="line">|   | &#x27;   185.199.111.153   |   | &#x27;</span><br><span class="line">|   |/  &lt;------------------ |   |/ </span><br><span class="line">&#x27;---&#x27;                       &#x27;---&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><strong>What are DNS zones?</strong></p>
+<p>DNS is hierarchical, each zone keeps record for it’s domain and the subdomains attached to it. Let’s take 2 zones for example:</p>
+<p><em>Zone contoso.com</em></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">contoso.com</span><br><span class="line">mail.contoso.com</span><br><span class="line">www.contoso.com</span><br></pre></td></tr></table></figure>
+
+<p><em>Zone internal.contoso.com</em></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">internal.contoso.com</span><br><span class="line">it.internal.contoso.com</span><br><span class="line">admin.internal.contoso.com</span><br><span class="line">hr.internal.contoso.com</span><br></pre></td></tr></table></figure>
+
+<p>Those are 2 independent zones, it makes it easier to keep track. The DNS server will comunicate with those zones in order to privide information to other zones</p>
+<p>With the <code>www.contoso.com</code> IP address, the DNS server needs to communicate with contoso authoritative DNS server, that manages the contoso.com zone, in order to retrieve this information.</p>
+<p><strong>Explain DNS exfiltration:</strong></p>
+<p>Let’s say we have a server that is isolated and has no internet access, but it can perform DNS queries. If the local DNS performs requests to other DNS servers on the internet, it can be abused: let’s say i have the DNS server <code>malicious.com</code> , every query made to be or other subdomains will reach my server. An attacker could query a subdomain like <code>felix.malicious.com</code> and technically, the query should go through the parent domain, thus, retrivieng informations. (attacker can use a tool like <a target="_blank" rel="noopener" href="https://github.com/yarrick/iodine">iodine</a> or <a target="_blank" rel="noopener" href="https://github.com/iagox86/dnscat2">dnscat2</a>)</p>
+<p><strong>How can DNS zone transfer be dangerous?</strong></p>
+<p>We know that zone transfer replicates all DNS server records. If misconfigured, anyone could perform zone transfers</p>
+<p>If just one DC allows to perform the zone transfer whereas the rest of DCs refuse the zone transfer, the misconfigured DCcould lead to anyone being able to perform zone transfers, thus recolecting all the DNS information without require any credentials.</p>
+<p><strong>What to do if zone transfers aren’t allowed?</strong></p>
+<p>Since DNS records are stored in the AD database, we can read it using LDAP as any domain user to then dump all the DNS records, we can use <a target="_blank" rel="noopener" href="https://github.com/dirkjanm/adidnsdump">adidnsdump</a> to do so and it will save the output un <em>records.csv</em> file</p>
+<p><strong>What is ADIDNS?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.thehacker.recipes/ad/movement/mitm-and-coerced-authentications/adidns-spoofing">ADIDNS Spoofing (thehacker.recipes)</a></p>
+<p><strong>ADIDNS</strong> is the Active Directory’s implementation of DNS. In this setup, the role of the DNS server is assumed by the Domain Controller (DC). This is because the Active Directory database contains the DNS names of the computers within the domain as well as other DNS records. This integration allows for seamless name resolution and management of DNS entries within the Active Directory environment.</p>
+<p><strong>What are DNS dynamic updates?</strong></p>
+<p>Dynamic updates allows clients to create&#x2F;modify&#x2F;delete DNS records. Since any user can create a DNS record, the user that created the record becomes the owner of this record, thus, only authorized users of a certain record can update of modify&#x2F;delete the record</p>
+<p><strong>How Could be abuse Dynamic updates?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://www.netspi.com/blog/technical-blog/network-penetration-testing/exploiting-adidns/">Exploiting ADIDNS (NetSPI Blog)</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.netspi.com/blog/technical-blog/network-penetration-testing/adidns-revisited/">ADIDNS Revisited (NetSPI Blog)</a></p>
+<p>Since DNS records are stored in the Active Directory database, they can be created&#x2F;modify&#x2F;deleted by using LDAP.</p>
+<p>Registering a wildcard record (*) could be interesting since it’s used to specify a default IP address that is used to resolve those queries that doesn’t match any other record. It could lead to <a target="_blank" rel="noopener" href="https://blog.netspi.com/exploiting-adidns/">perform PitM attacks</a> if it is used to point to a computer controlled by us.</p>
+<p><strong>What is NETBIOS?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/NetBIOS">NetBIOS</a> (Network Basic Input&#x2F;Output System) helps applications in the same LAN (Local Area Network) communicate between them. Howerever it was not able to communicate them on different networks so this led to the creation of NBT protocol (NetBIOS over TCP&#x2F;IP) to make NetBIOS work over TCP and UDP protocols and allow applications that used NetBIOS to communicate over internet.</p>
+<p><strong>What are the 3 services used by NETBIOS?</strong></p>
+<ul>
+<li><strong>NetBIOS Datagram Service -&gt;</strong> used as transport layer for application protocols that requires a connectionless communication.</li>
+<li><strong>NetBIOS Session Service -&gt;</strong> used as transport for connected-oriented communications</li>
+<li><strong>NetBIOS Name Service -&gt;</strong> This one is very interesting for pentesting, it allows to:<ul>
+<li>Resolve NetBIOS name to an IP address</li>
+<li>Known the status of a NetBIOS node</li>
+<li>Register&#x2F;Release a NetBIOS name</li>
+</ul>
+</li>
+</ul>
+<p><strong>What is the NBNS protocol and how does it work?</strong></p>
+<p>The NBNS was implemented as <a target="_blank" rel="noopener" href="https://web.archive.org/web/20031010135027/http://www.neohapsis.com:80/resources/wins.htm#sec4sub4sub4">WINS</a> (Windows Internet Name Service). In a network, each Windows computer has a WINS database that stores the available network resources, netbios and domain name.</p>
+<p>So in order to resolve a NetBIOS name we can query using the WINS server or If this is not possible, then the query can be sent to the IP broadcast address, waiting for the answer from the target computer (but dangerous since anyone can respond, this is used by <a target="_blank" rel="noopener" href="https://github.com/lgandx/Responder">responder.py</a>)</p>
+<p><strong>What is LLMNR?</strong></p>
+<p>LLMNR is a descentralized application protocol that allows to resolve hostnames in the same local network. A common vuln with LLMNR is it is used to resolve names in local link by sending A DNS querie that anyone could repond to, responder.py also abuses this feature</p>
+<p><strong>What is mDNS?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a> (multicast DNS) is a descentralized application protocol, similar to LLMNR that allows to resolve names in local networks</p>
+<p><strong>What is WPAD?</strong></p>
+<p>The <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Web_Proxy_Auto-Discovery_Protocol">WPAD</a> (Web Proxy Auto-Discovery) is a protocol for browsers to get dynamically a file that indicates the proxies they should use.</p>
+<p><strong>What is the difference between those protocols?</strong></p>
+<p>While they all perform name resolution, the primary difference lies in their order of preference for resolving names:</p>
+<ol>
+<li><strong>DNS (Domain Name System)</strong></li>
+<li><strong>mDNS (Multicast DNS)</strong></li>
+<li><strong>LLMNR (Link-Local Multicast Name Resolution)</strong></li>
+<li><strong>NBNS (NetBIOS Name Service)</strong></li>
+</ol>
+<p>Each protocol has a specific context and method for resolving names, which dictates its usage priority in network communications.</p>
+<h3 id="Authentication"><a href="#Authentication" class="headerlink" title="Authentication "></a>Authentication <a href="#authentication" id="authentication"></a></h3><p>In Active Directory there are two network authentication protocols available: <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#ntlm">NTLM</a> and <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#kerberos">Kerberos</a>.</p>
+<p>Kerberos is the preferred option to auth domain users but only NTLM can be used to auth local computer users</p>
+<p><strong>What are Windows SSPs?</strong></p>
+<p>SSPs (Security Support Provider), are implemented as dynamic link libraries (DLLs) that are loaded into processes that require security services.</p>
+<p>In an Active Directory environment, SSPs are crucial for:</p>
+<ul>
+<li><strong>User Authentication</strong>: Ensuring that users can securely log in to the network and access resources based on their permissions.</li>
+<li><strong>Service Authentication</strong>: Verifying the identity of services and applications to prevent unauthorized access and ensure secure communication.</li>
+<li><strong>Secure Communication</strong>: Protecting data transmitted over the network through encryption and integrity checks.</li>
+<li><strong>Interoperability</strong>: Supporting different protocols and ensuring compatibility across various systems and applications within the network.</li>
+</ul>
+<p><strong>Give me some names of different SSPs</strong></p>
+<ul>
+<li><strong>Kerberos SSP</strong><ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/microsoft-kerberos">Kerberos SSP</a> (kerberos.dll) manages the Kerberos authentication.</li>
+</ul>
+</li>
+<li><strong>NTLM SSP</strong><ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/microsoft-ntlm">NTLMSSP</a> (msv1_0.dll) manages NTLM authentication.</li>
+</ul>
+</li>
+<li><strong>Negotiate SSP</strong><ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/microsoft-negotiate">Negotiate</a> SSP (secur32.dll) is an intermediary SSP that manages the <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#spnego">SPNEGO</a> negotiation and delegates the authentication to Kerberos SSP or NTLM SSP</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">                                            Kerberos</span><br><span class="line">                                        .-------------------------.</span><br><span class="line">                                        |      kerberos.dll       |</span><br><span class="line">                                        |-------------------------|</span><br><span class="line">                                        .---           .----      |</span><br><span class="line">                  Negotiate       .---&gt; | GSS-API ---&gt; | Kerberos |</span><br><span class="line">                .-------------.   |     &#x27;---           &#x27;----      |</span><br><span class="line">                | secur32.dll |   |     |                         |</span><br><span class="line">                |-------------|   |     &#x27;-------------------------&#x27;</span><br><span class="line">.---------.     .---          |   |</span><br><span class="line">|  user   |----&gt;| GSS-API ----|&gt;--|</span><br><span class="line">| program |     &#x27;---          |   |         NTLM</span><br><span class="line">&#x27;---------&#x27;     |             |   |     .-------------------------.</span><br><span class="line">                &#x27;-------------&#x27;   |     |       msv1_0.dll        |</span><br><span class="line">                                  |     |-------------------------|</span><br><span class="line">                                  |     .---           .----      |</span><br><span class="line">                                  &#x27;---&gt; | GSS-API ---&gt; | NTLM     |</span><br><span class="line">                                        &#x27;---           &#x27;----      |</span><br><span class="line">                                        |                         |</span><br><span class="line">                                        &#x27;-------------------------&#x27;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>Digest SSP</strong><ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/microsoft-digest-ssp">Digest</a> (wdigest.dll) implements the Digest Access protocol. This is the SSP that caches the plaintext password in old operating systems that can be retrieved by mimikatz.</li>
+</ul>
+</li>
+<li><strong>Secure Channel SSP</strong><ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/secure-channel">Secure Channel</a> (schannel.dll) provide encrypted communications.</li>
+</ul>
+</li>
+<li><strong>Cred SSP</strong><ul>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/credential-security-support-provider">CredSSP</a> (credssp.dll) creates a TLS channel, authenticates the client through negotiate SSP, and finally allows the client to send the user full credentials to the server. It is used by <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#rdp">RDP</a>.</li>
+</ul>
+</li>
+</ul>
+<p><strong>What is SPNEGO?</strong></p>
+<p>SPNEGO, or Simple and Protected GSSAPI Negotiation Mechanism, is a standard protocol used for negotiating security mechanisms, it ensures that the most appropriate and secure authentication protocol is used for each connection. Its ability to seamlessly switch between protocols like Kerberos and NTLM</p>
+<p><strong>What is NTLM?</strong></p>
+<p><a target="_blank" rel="noopener" href="http://davenport.sourceforge.net/ntlm.html">NTLM</a> (NT LAN Manager) is an authentication protocol that can be used by Windows services in order to verify the identity of the client. It’s good to know that NTLM is not an isolated protocol that generates network traffic, but must be used embebed in an application protocol, such as <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#smb">SMB</a>, <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#ldap">LDAP</a> or <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#http">HTTP</a>.</p>
+<p><strong>What are the 3 stages of NTLM connection?</strong></p>
+<p>NEGOTIATE, CHALLENGE and AUTHENTICATE.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">client               server</span><br><span class="line">  |                    |</span><br><span class="line">  |                    |</span><br><span class="line">  |     NEGOTIATE      |</span><br><span class="line">  | -----------------&gt; |</span><br><span class="line">  |                    |</span><br><span class="line">  |     CHALLENGE      |</span><br><span class="line">  | &lt;----------------- |</span><br><span class="line">  |                    |</span><br><span class="line">  |    AUTHENTICATE    |</span><br><span class="line">  | -----------------&gt; |</span><br><span class="line">  |                    |</span><br><span class="line">  |    application     |</span><br><span class="line">  |      messages      |</span><br><span class="line">  | -----------------&gt; |</span><br><span class="line">  | &lt;----------------- |</span><br><span class="line">  | -----------------&gt; |</span><br><span class="line">  |                    |</span><br></pre></td></tr></table></figure>
+
+<p><strong>How does NTLM work more in detail?</strong></p>
+<ul>
+<li>Firstly, the client sends a NEGOTIATE message to the server. It indicates security options, like the NTLM version to use.</li>
+<li>The server generates a challenge by calling the NTLM SSP, and sends it to the client within a CHALLENGE message. Also confirms the negotiated options and sends information about its computer name and version and domain name.</li>
+<li>The client receives the challenge and calculates a response by using the client key (NT hash). If it is required, it also creates a session key and encrypts it with a key, known as session base key, derivated from NT hash and sends the response and session key back to the server.</li>
+<li>Finally, the server verifies that the challenge response is correct and sends a session key</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">                        client               server</span><br><span class="line">                          |                    |</span><br><span class="line">AcquireCredentialsHandle  |                    |</span><br><span class="line">          |               |                    |</span><br><span class="line">          v               |                    |</span><br><span class="line">InitializeSecurityContext |                    |</span><br><span class="line">          |               |     NEGOTIATE      |</span><br><span class="line">          &#x27;-------------&gt; | -----------------&gt; | ----------.</span><br><span class="line">                          |     - flags        |           |</span><br><span class="line">                          |                    |           v</span><br><span class="line">                          |                    | AcceptSecurityContext</span><br><span class="line">                          |                    |           |</span><br><span class="line">                          |                    |       challenge</span><br><span class="line">                          |     CHALLENGE      |           |</span><br><span class="line">          .-------------- | &lt;----------------- | &lt;---------&#x27;</span><br><span class="line">          |               |   - flags          |</span><br><span class="line">      challenge           |   - challenge      |</span><br><span class="line">          |               |   - server info    |</span><br><span class="line">          v               |                    |</span><br><span class="line">InitializeSecurityContext |                    |</span><br><span class="line">      |       |           |                    |</span><br><span class="line">   session  response      |                    |</span><br><span class="line">     key      |           |    AUTHENTICATE    |</span><br><span class="line">      &#x27;-------&#x27;---------&gt; | -----------------&gt; | ------.--------.</span><br><span class="line">                          |   - response       |       |        |</span><br><span class="line">                          |   - session key    |       |        |</span><br><span class="line">                          |     (encrypted)    |   response  session</span><br><span class="line">                          |   - attributes     |       |       key</span><br><span class="line">                          |     + client info  |       |        |</span><br><span class="line">                          |     + flags        |       v        v</span><br><span class="line">                          |   - MIC            | AcceptSecurityContext</span><br><span class="line">                          |                    |           |</span><br><span class="line">                          |                    |           v</span><br><span class="line">                          |                    |           OK</span><br><span class="line">                          |                    |</span><br></pre></td></tr></table></figure>
+
+<p><strong>What is the difference between NTLMv1 and NTLMv2?</strong></p>
+<p>In <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-nlmp/464551a8-9fc4-428e-b3d3-bc5bfb2e73a5">NTLMv1</a>, the NTLM response (NTLMv1 hash) to the server challenge is calculated by using the NT hash to encrypt the server challenge with the DES algorithm. The session key is also encrypted with the NT hash directly.</p>
+<p>However, in <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-nlmp/5e550938-91d4-459f-b67d-75d70009e3f3">NTLMv2</a> more data is taken into to protect the integrity of the AUTHENTICATE message</p>
+<p>NTLMv2 concatenates all the additional data and applies an HMAC to calculate the NTLM response, known as NTLMv2 hash.</p>
+<p><strong>How does NTLM interract in Active Directory?</strong></p>
+<p>It’s good to remember that the NT hash is stored in the Active Directory <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#database">database</a>, located in the <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#domain-controllers">Domain Controllers</a></p>
+<p>in order to verify the AUTHENTICATE message for a domain account, the target machine will send a request to the DC asking it to verify the client response to the challenge. The DC verifies this response and returns the necessary information to the machine</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">client            server                          DC</span><br><span class="line">    |                 |                              |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    |    NEGOTIATE    |                              |</span><br><span class="line">    | --------------&gt; |                              |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    |    CHALLENGE    |                              |</span><br><span class="line">    | &lt;-------------- |                              |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    |   AUTHENTICATE  |  NetrLogonSamLogonWithFlags  |</span><br><span class="line">    | --------------&gt; | ---------------------------&gt; |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    |                 |        ValidationInfo        |</span><br><span class="line">    |                 | &lt;--------------------------- |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    |   application   |                              |</span><br><span class="line">    |    messages     |                              |</span><br><span class="line">    | --------------&gt; |                              |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    | &lt;-------------- |                              |</span><br><span class="line">    |                 |                              |</span><br><span class="line">    | --------------&gt; |                              |</span><br><span class="line">    |                 |                              |</span><br></pre></td></tr></table></figure>
+
+<p>It can also be used for machines in other domains, it must ask to the DC to verify the AUTHENTICATE message, and the DC in turn must send the AUTHENTICATE message to the DC of the user account domain (by using a <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#trusts">trust</a>)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> client            server                          DC                      DC</span><br><span class="line">(it.foo.com)     (foo.com)                      (foo.com)         (it.foo.com)</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   |    NEGOTIATE    |                              |                       |</span><br><span class="line">   | --------------&gt; |                              |                       |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   |    CHALLENGE    |                              |                       |</span><br><span class="line">   | &lt;-------------- |                              |                       |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   |   AUTHENTICATE  |  NetrLogonSamLogonWithFlags  |  NetrLogonSamLogonEx  |</span><br><span class="line">   | --------------&gt; | ---------------------------&gt; | --------------------&gt; |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   |                 |      ValidationInfo          |    ValidationInfo     |</span><br><span class="line">   |                 | &lt;--------------------------- | &lt;-------------------- |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   |   application   |                              |                       |</span><br><span class="line">   |    messages     |                              |                       |</span><br><span class="line">   | --------------&gt; |                              |                       |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   | &lt;-------------- |                              |                       |</span><br><span class="line">   |                 |                              |                       |</span><br><span class="line">   | --------------&gt; |                              |                       |</span><br><span class="line">   |                 |                              |                       |</span><br></pre></td></tr></table></figure>
+
+<p><strong>How do we force NTLM authentication over Kerberos?</strong></p>
+<p>A way to force NTLM authentication over Kerberos is to connect to the target machine by using the IP address instead of the hostname, since Kerberos requires the hostname to identify the machine services.</p>
+<p>For example the command <code>dir \\dc01\C$</code> will use Kerberos to authenticate against the remote <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#shares">share</a> while <code>dir \\192.168.100.2\C$</code> will use NTLM.</p>
+<p><strong>How does NTLM brute-force work?</strong></p>
+<p>We now know that NTLM is used for authenticating, so we could use plenty of tools (<a target="_blank" rel="noopener" href="https://github.com/vanhauser-thc/thc-hydra">hydra</a>, <a target="_blank" rel="noopener" href="https://nmap.org/nsedoc/scripts/smb-brute.html">nmap</a>, <a target="_blank" rel="noopener" href="https://github.com/byt3bl33d3r/CrackMapExec/wiki/SMB-Command-Reference#using-usernamepassword-lists">cme</a>, or <a target="_blank" rel="noopener" href="https://github.com/samratashok/nishang/blob/master/Scan/Invoke-BruteForce.ps1">Invoke-Bruteforce.ps1</a>) to test for a working password:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ cme smb 192.168.100.10 -u elfelixio -p passwords.txt </span><br><span class="line">SMB         192.168.100.10  445    WS01-10          [*] Windows 10.0 Build 19041 x64 (name:WS01-10) (domain:contoso.local) (signing:False) (SMBv1:False)</span><br><span class="line">SMB         192.168.100.10  445    WS01-10          [-] contoso.local\anakin:1234 STATUS_LOGON_FAILURE </span><br><span class="line">SMB         192.168.100.10  445    WS01-10          [-] contoso.local\anakin:Vader! STATUS_LOGON_FAILURE </span><br><span class="line">SMB         192.168.100.10  445    WS01-10          [+] contoso.local\anakin:Vader1234! (Pwn3d!)</span><br></pre></td></tr></table></figure>
+
+<p>We also need to remember that in active directory, authentication works by verifying credentials with the DC so this can lead to account block and will lead to a lot of logs</p>
+<p><strong>How does pass the hash woks?</strong></p>
+<p>Since NTLM calculates the NTLM hash and the session key based on the NT hash, we can use this hash to athenticate and impersonate the user even without cleartext password</p>
+<p>On a linux host we could use impacket that accepts the hashes as parameter:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ psexec.py contoso.local/Anakin@192.168.100.10 -hashes :cdeae556dc28c24b5b7b14e9df5b6e21</span><br><span class="line">Impacket v0.9.21 - Copyright 2020 SecureAuth Corporation</span><br><span class="line"></span><br><span class="line">[*] Requesting shares on 192.168.100.10.....</span><br><span class="line">[*] Found writable share ADMIN$</span><br><span class="line">[*] Uploading file WFKqIQpM.exe</span><br><span class="line">[*] Opening SVCManager on 192.168.100.10.....</span><br><span class="line">[*] Creating service AoRl on 192.168.100.10.....</span><br><span class="line">[*] Starting service AoRl.....</span><br><span class="line">[!] Press help for extra shell commands</span><br><span class="line">The system cannot find message text for message number 0x2350 in the message file for Application.</span><br><span class="line"></span><br><span class="line">(c) Microsoft Corporation. All rights reserved.</span><br><span class="line">b&#x27;Not enough memory resources are available to process this command.\r\n&#x27;</span><br><span class="line">C:\Windows\system32&gt;whoami</span><br><span class="line">nt authority\system</span><br></pre></td></tr></table></figure>
+
+<p><strong>How do we extract the NT hashes?</strong></p>
+<p>To extract NT hashes from lsass you can use <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz/wiki/module-~-sekurlsa#logonpasswords">mimikatz sekurlsa::logonpasswords</a> command, <a target="_blank" rel="noopener" href="https://www.c0d3xpl0it.com/2016/04/extracting-clear-text-passwords-using-procdump-and-mimikatz.html">dump the lsass process</a> with tools like <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/sysinternals/downloads/procdump">procdump</a>, <a target="_blank" rel="noopener" href="https://lolbas-project.github.io/#/dump">sqldumper or others</a>, and copy the dump to your local machine to read it with <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz">mimikatz</a>, <a target="_blank" rel="noopener" href="https://github.com/skelsec/pypykatz">pypykatz</a> or <a target="_blank" rel="noopener" href="https://en.hackndo.com/remote-lsass-dump-passwords/">read the dump remotely</a> with <a target="_blank" rel="noopener" href="https://github.com/Hackndo/lsassy">lsassy</a>, extract the hashes <a target="_blank" rel="noopener" href="https://www.hackingarticles.in/credential-dumping-sam/">from the local SAM database</a> or the <a target="_blank" rel="noopener" href="https://www.hackingarticles.in/credential-dumping-ntds-dit/">NTDS.dit database in Domain Controllers</a></p>
+<p><strong>How does NTLM Relay work?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://en.hackndo.com/ntlm-relay/">NTLM Relay Explained (hackndo)</a></p>
+<p>This attack consists in an attacker redirecting the NTLM authentication to a server of its interest to get an authenticated session (Person-in-The-Middle attack)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">client                 attacker               server</span><br><span class="line">    |                       |                     |</span><br><span class="line">    |                       |                -----|--.</span><br><span class="line">    |     NEGOTIATE         |     NEGOTIATE       |  |</span><br><span class="line">    | --------------------&gt; | ------------------&gt; |  |</span><br><span class="line">    |                       |                     |  |</span><br><span class="line">    |     CHALLENGE         |     CHALLENGE       |  |&gt; NTLM Relay</span><br><span class="line">    | &lt;-------------------- | &lt;------------------ |  |</span><br><span class="line">    |                       |                     |  | </span><br><span class="line">    |     AUTHENTICATE      |     AUTHENTICATE    |  |</span><br><span class="line">    | --------------------&gt; | ------------------&gt; |  |</span><br><span class="line">    |                       |                -----|--&#x27;</span><br><span class="line">    |                       |    application      |</span><br><span class="line">    |                       |     messages        |</span><br><span class="line">    |                       | ------------------&gt; |</span><br><span class="line">    |                       |                     |</span><br><span class="line">    |                       | &lt;------------------ |</span><br><span class="line">    |                       |                     |</span><br><span class="line">    |                       | ------------------&gt; |</span><br><span class="line">    |                       |                     |</span><br></pre></td></tr></table></figure>
+
+<p>Even after getting authenticated, the attacker does not know the session key so if signing is negotiated between client and server, the attacker won’t be able to generate valid signatures for the application messages</p>
+<p><strong>How to crack NTLM hashes?</strong></p>
+<p>When trying to do Person-in-The-Middle attacks we could use <a target="_blank" rel="noopener" href="https://github.com/lgandx/Responder">Responder.py</a> or <a target="_blank" rel="noopener" href="https://github.com/Kevin-Robertson/Inveigh">Inveigh</a> to try and grab the hash</p>
+<p><a target="_blank" rel="noopener" href="https://felix-billieres.gitbook.io/felix-billieres/certification-prep/cpts/active-directory-enumeration-and-attacks/sniffing-out-a-foothold#start-using-inveigh">Exemple Inveigh (GitBook)</a><br>You can find some examples here</p>
+<p>Then we could crack the hash using hashcat and the mode 5600</p>
+<p><a target="_blank" rel="noopener" href="https://felix-billieres.gitbook.io/felix-billieres/certification-prep/cpts/active-directory-enumeration-and-attacks/sniffing-out-a-foothold#using-responder">Exemple Cracking (GitBook)</a><br>you can also find examples of hash cracking here</p>
+<p>It’s good to know that NTLMv1 hashes are faster to crack than NTLMv2 hashes since they are created with weaker algorithms.</p>
+<h3 id="Kerberos"><a href="#Kerberos" class="headerlink" title="Kerberos "></a>Kerberos <a href="#kerberos" id="kerberos"></a></h3><p><strong>Whart are kerberos principal types?</strong></p>
+<p>A principal is a unique identity to which Kerberos can assign tickets. Principals typically represent users, services, or hosts within the Kerberos realm. There are three principal types that can be used to request for a service: <strong>NT-SRV-INST, NT-SRV-HST or NT-SRV-XHST</strong></p>
+<p><strong>What is a ticket in kerberos?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://tools.ietf.org/html/rfc4120#section-5.3">Tickets</a> are structures partially encrypted that contain:</p>
+<ul>
+<li>The target principal (usually a service) for which the ticket applies</li>
+<li>Information related to the client, such as the name and domain</li>
+<li>A key to establish secure channels between the client and the service</li>
+<li>Timestamps to determine the period in which the ticket is valid</li>
+</ul>
+<p><strong>What is the PAC in active directory?</strong></p>
+<p>The Privileged Attribute Certificate (PAC) is an extension to Kerberos service tickets that holds information about the user and their privileges. It is added by a domain controller in an Active Directory domain when the user authenticates.</p>
+<p><strong>What informations does the PAC contain?</strong></p>
+<p>The PAC includes informations about the client:</p>
+<ul>
+<li>domain name and <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#sid">SID</a></li>
+<li>The username and user <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/f2ef15b6-1e9b-48b5-bf0b-019f061d41c8#gt_df3d0b61-56cd-4dac-9402-982f1fedc41c">RID</a></li>
+<li>The <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/f2ef15b6-1e9b-48b5-bf0b-019f061d41c8#gt_df3d0b61-56cd-4dac-9402-982f1fedc41c">RIDs</a> (GroupIds) of those domain groups to which the user belongs.</li>
+<li>other <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/78eb9013-1c3a-4970-ad1f-2b1dad588a25">SIDs</a> (ExtraSids) of non-domain groups, that can be applied for inter-domain authentications</li>
+</ul>
+<p>And also <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/6e95edd3-af93-41d4-8303-6c7955297315">several signatures</a> used to verify the integrity of the PAC and ticket data:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/a194aa34-81bd-46a0-a931-2e05b87d1098">Server signature</a> (created with the same key used to encrypt the ticket)</li>
+<li><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/3122bf00-ea87-4c3f-92a0-91c0a99f5eec">KDC signature</a>: A signature of the Server signature created with the KDC key. This could be used to check that the PAC was created by the KDC and prevent <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#golden-silver-ticket">Silver ticket</a> attacks, but is not checked.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/76c10ef5-de76-44bf-b208-0d8750fc2edd">Ticket signature</a>: A signature of the ticket content created with the KDC key. This signature was recently introduced to prevent the <a target="_blank" rel="noopener" href="https://blog.netspi.com/cve-2020-17049-kerberos-bronze-bit-theory/">Bronze bit attack</a>.</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.lepide.com/blog/what-is-privileged-attribute-certificate-pac/">What is Privileged Attribute Certificate (PAC)? (Lepide Blog)</a></p>
+<p><strong>What are the 3 actors Kerberos uses to authenticate users against services</strong></p>
+<ul>
+<li><strong>The client,</strong> it’s the user that recieves the ticket and gains access to a service in the domain</li>
+<li>The <strong>service or Application server,</strong> that is the machine that offers the sevice a user wants to access</li>
+<li>The <strong>KDC</strong> (Key Distribution Center), the entity that has access to the databse required to authenticate users</li>
+</ul>
+<p><strong>What are the 2 types of tickets?</strong></p>
+<p><strong>STs</strong> (Service tickets), that a client presents to a AP&#x2F;service&#x2F;principal in order to get access to it. The KDC issues the STs for clients that request for them.</p>
+<p>We need to be aware that TGSs are not STs, according to <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc4120/">rfc4120</a> the TGS refers to the service that provides the service tickets.</p>
+<p>The other type of ticket is the <strong>TGT</strong>. In order to get a ST from the KDC, we need to present our TGT.</p>
+<p>TGTs are encrypted with the key of the <code>krbtgt</code> account of the domain, known as the KDC key. Therefore, if you can retrieve the key of the <code>krbtgt</code> (stored in the <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#domain-database-dumping">domain database</a>), you could create custom TGTs known as <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#golden-silver-ticket">Golden tickets</a>.</p>
+<p><strong>How are tickets issued?</strong></p>
+<p><strong>What are some kerberos services related to kerberos on port 88 and 464</strong></p>
+<p>The DC listens Kerberos in the port 88&#x2F;TCP and 88&#x2F;UDP.</p>
+<p>Another service called kpasswd can be found in the port 464&#x2F;TCP and 464&#x2F;UDP of the DCs that allows to change the password of the users in the domain</p>
+<p><strong>What happens to the Kerberos keys when you change your password?</strong></p>
+<p>By changing the password, the user changes the Kerberos keys used for encrypting the Kerberos messages and tickets.</p>
+<p><strong>Basic Attacks</strong></p>
+<p><a target="_blank" rel="noopener" href="https://gist.github.com/TarlogicSecurity/2f221924fef8c14a1d8e29f3cb5c5c4a">Kerberos Attack Scenarios (Gist)</a></p>
+<p><strong>What are some Kerberos erros related to Brute Force?</strong></p>
+<ul>
+<li>KDC_ERR_PREAUTH_FAILED: Incorrect password</li>
+<li>KDC_ERR_C_PRINCIPAL_UNKNOWN: Invalid username</li>
+<li>KDC_ERR_WRONG_REALM: Invalid domain</li>
+<li>KDC_ERR_CLIENT_REVOKED: Disabled&#x2F;Blocked user</li>
+</ul>
+<p><strong>What are some tools used for kerberos bruteforce?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/GhostPack/Rubeus#brute">Rubeus brute</a>, <a target="_blank" rel="noopener" href="https://github.com/ropnop/kerbrute">kerbrute (Go)</a>, <a target="_blank" rel="noopener" href="https://github.com/TarlogicSecurity/kerbrute">kerbrute (Python)</a> or <a target="_blank" rel="noopener" href="https://github.com/Zer1t0/cerbero#brute">cerbero</a></p>
+<p><strong>What is kerberoasting?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://felix-billieres.gitbook.io/felix-billieres/certification-prep/cpts/active-directory-enumeration-and-attacks/kerberoasting">Kerberoasting (GitBook)</a></p>
+<p>Most services are registered in machine accounts, which have auto-generated passwords of <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=280">120 characters that changes every month</a> so cracking &#x3D; impossible. But some services are assigned to regular user so the ST is encrypted with their personal password that is (normally) not 120 chars, so, far more crackable</p>
+<p>The <a target="_blank" rel="noopener" href="https://en.hackndo.com/kerberoasting/">Kerberoast attack</a> consist on requests STs for the services of regular user accounts and try to crack them to get the user passwords. Usually, the users that have services also have privileges, so these are juicy accounts.</p>
+<p>For this attack we can use <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetUserSPNs.py">impacket GetUserSPNs.py</a> script, the <a target="_blank" rel="noopener" href="https://github.com/GhostPack/Rubeus#kerberoast">Rubeus kerberoast</a> command, or the <a target="_blank" rel="noopener" href="https://github.com/EmpireProject/Empire/blob/master/data/module_source/credentials/Invoke-Kerberoast.ps1">Invoke-Kerberoast.ps1</a> script</p>
+<p><strong>What is ASREProasting?</strong></p>
+<p>Asreproasting tool from the goat: <a target="_blank" rel="noopener" href="https://github.com/Yaxxine7/ASRepCatcher/">https://github.com/Yaxxine7/ASRepCatcher/</a></p>
+<p>When Kerberos pre-authentication is disabled, anyone can impersonate those accounts by sending a AS-REQ message, and an <a target="_blank" rel="noopener" href="https://tools.ietf.org/html/rfc4120#section-5.4.2">AS-REP response</a> will be returned from the KDC</p>
+<p>We could use tools such as <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetNPUsers.py">impacket GetNPUsers.py</a> script, the <a target="_blank" rel="noopener" href="https://github.com/GhostPack/Rubeus#asreproast">Rubeus asreproast</a> command or the <a target="_blank" rel="noopener" href="https://github.com/HarmJ0y/ASREPRoast">ASREPRoast.ps1</a> script then crack the hash locally</p>
+<p><strong>Explain Pass the Key&#x2F;Over Pass the Hash.</strong></p>
+<p><a target="_blank" rel="noopener" href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/over-pass-the-hash-pass-the-key">Over Pass The Hash &#x2F; Pass The Key (HackTricks)</a></p>
+<p>To request a TGT we don’t need a password but a Kerberos key, if we can steal a key we can request a TGT as the user.</p>
+<p><strong>What is Pass the Ticket?</strong></p>
+<p>The Pass the Ticket technique consists on steal a ticket and the associated session key and use them to impersonate the user in order to access to resources or services.</p>
+<p><strong>What are Golden&#x2F;Silver tickets?</strong></p>
+<p>In Active Directory, the Kerberos TGTs are encrypted with the <code>krbtgt</code> account keys. In case of knowing the keys, custom TGTs, known as <a target="_blank" rel="noopener" href="https://en.hackndo.com/kerberos-silver-golden-tickets/#golden-ticket">Golden Tickets</a>, can be created.</p>
+<p>To get the <code>krbtgt</code> keys, you need to access to the Active Directory database. You can do this by performing a remote <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=1729">dcsync attack</a>, with <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz/wiki/module-~-lsadump#dcsync">mimikatz lsadump::dsync</a> command or the <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/secretsdump.py">impacket secretsdump.py</a> script, or by <a target="_blank" rel="noopener" href="https://www.ired.team/offensive-security/credential-access-and-credential-dumping/ntds.dit-enumeration#no-credentials-ntdsutil">dumping the NTDS.dit file</a> locally with <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc753343(v=ws.11)">ntdsutil</a> or <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-gb/windows-server/administration/windows-commands/vssadmin">vssadmin</a>.</p>
+<p><a target="_blank" rel="noopener" href="https://felix-billieres.gitbook.io/felix-billieres/active-directory/attacking-vectors/methodology/compromised-the-domain-now-what/golden-ticket-attacks">Golden Ticket Attacks (GitBook)</a></p>
+<p><strong>How does kerberos work with services accross domains?</strong></p>
+<p>A KDC (DC) only can issue STs for the services in its domain. So accros domains we have to ask for a ST to the external domain DC, and for that we require a TGT for that server. The TGT for an external KDC, known as <strong>inter-realm TGT,</strong> is issued by our KDC when we ask for a ST for a service in another domain.</p>
+<p>here is the schema:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">KDC foo.com                                                    KDC bar.com</span><br><span class="line">  .---.                                                          .---.</span><br><span class="line"> /   /|                       .---4) TGS-REQ (TGT bar)-------&gt;  /   /|</span><br><span class="line">.---. |                       |    + SPN: HTTP\srvbar          .---. |</span><br><span class="line">|   | &#x27;                       |    + TGT client &gt; bar.com      |   | &#x27;</span><br><span class="line">|   |/                        |                                |   |/ </span><br><span class="line">&#x27;---&#x27;                         |   .--5) TGS-REP--------------&lt; &#x27;---&#x27;</span><br><span class="line">v  ^                          |   | + ST client &gt; HTTP/srvbar</span><br><span class="line">|  |                          |   |</span><br><span class="line">|  |                          ^   v                                   .---.</span><br><span class="line">|  &#x27;-2) TGS-REQ (TGT foo)--&lt;  _____                                  /   /|</span><br><span class="line">|   + SPN: HTTP\srvbar       |     | &lt;----------1) SPNEGO---------&gt; .---. |</span><br><span class="line">|   + TGT client &gt; foo.com   |_____|                                |   | &#x27;</span><br><span class="line">|                            /:::::/ &gt;----6) AP-REQ---------------&gt; |   |/</span><br><span class="line">&#x27;--3) TGS-REP--------------&gt; client     + ST client &gt; HTTP/srvbar   &#x27;---&#x27;  </span><br><span class="line">  + TGT client &gt; bar.com    (foo.com)                               srvbar</span><br><span class="line">                                                                  (bar.com)</span><br></pre></td></tr></table></figure>
+
+<p><strong>Can you tell me more about Inter-realm TGTs?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology#forest-privilege-escalation-domain-trusts">Forest Privilege Escalation - Domain Trusts (HackTricks)</a></p>
+<p>This TGT is exactly like a normal one, except that it is encrypted with the inter-realm trust key, which is a secret key that allows to both sides of a trust to comunicate between them.</p>
+<p>You can get the inter-realm trust key, you just need <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#domain-database-dumping">to dump the domain database</a>.</p>
+<p>Finally, once you get the trust key, to <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=1588">create a inter-realm ticket</a>, you can use the <a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz/wiki/module-~-kerberos#golden--silver">mimikatz kerberos::golden</a> command or the <a target="_blank" rel="noopener" href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/ticketer.py">impacket ticketer.py</a> script. Then you can use it as any ticket.</p>
+<p><strong>Kerberos Delegation</strong></p>
+<p><strong>Can you explain kerberos delegation?</strong></p>
+<p>Let’s say we are a user on a website. When we make a request the webserver goes and fetch the document we’re looking for but how does it know what we own on the file server. The delegation will make it possible for the web server to “impersonate” the user and athenticate as the user to go and fetch the ressources. The file server will think that it’s the user that directly made the request:</p>
+<p><strong>What’s the difference between Contstrained and Unconstrained Delegation?</strong></p>
+<p>In <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=1667">Kerberos Unconstrained Delegation</a> the service can impersonate the client user since this sends its own TGT to the service. Then, the service can use the user TGT (without any constrain) to ask for new STs for other services in behalf of the client.</p>
+<p>To create a more secure way of delegation, Microsoft develop two Kerberos extensions known as <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-sfu/3bff5864-8135-400e-bdd9-33b552051d94">Service for User</a> (S4U). By using these extensions, services can be restricted to only perform delegation against a set of allowed third-services, and no user TGT is required, preventing it from being stored on the service server. This is known as constrained delegation.</p>
+<h3 id="Logon-types"><a href="#Logon-types" class="headerlink" title="Logon types "></a>Logon types <a href="#logon-types" id="logon-types"></a></h3><p><strong>Explain why there are different logon types.</strong></p>
+<p>In order to logon users, both locally and remotely, Windows defines different types of logons. It’s good to know not every logons can be used by any user and <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows-server/identity/securing-privileged-access/reference-tools-logon-types">many logons cache credentials in the lsass process</a> , or even in the LSA secrets. That can be interestin as a pentester to recover that.</p>
+<p><strong>Can you explain the different logon types?</strong></p>
+<ol>
+<li><strong>Interactive Logon</strong>: An interactive logon occurs when a user logs on to a system or network using a username and password, usually through a graphical user interface (GUI) or command-line interface (CLI). This type of logon allows the user to interact with the system, access files, and perform tasks.</li>
+<li><strong>Network Logon</strong>: A network logon is a type of logon that occurs when a system or device connects to a network using a username and password. This type of logon allows the system or device to access network resources, such as shared folders, printers, or internet connectivity.</li>
+<li><strong>Batch Logon</strong>: A batch logon is a type of logon that occurs when a program or script runs on a system using a username and password. This type of logon is often used for automated tasks, such as batch processing, data backups, or system maintenance.</li>
+<li><strong>Service Logon</strong>: A service logon is a type of logon that occurs when a system service or daemon starts up and runs under a specific username and password. This type of logon allows the service to perform its intended function, such as providing network services, managing system resources, or running background processes.</li>
+<li><strong>NetworkCleartext Logon</strong>: A NetworkCleartext logon is a type of logon that occurs when a system or device connects to a network using a username and password in plain text. This type of logon is considered insecure as it transmits sensitive information, such as passwords, in an unencrypted format.</li>
+<li><strong>NewCredentials Logon</strong>: A NewCredentials logon is a type of logon that occurs when a user logs on to a system or network using a new set of credentials, such as a new username and password. This type of logon is often used for authentication and authorization purposes, such as when a user changes their password or when a new user is added to a system.</li>
+<li><strong>RemoteInteractive Logon</strong>: A RemoteInteractive logon is a type of logon that occurs when a user logs on to a system or network remotely using a username and password, often through a remote desktop protocol (RDP) or virtual private network (VPN). This type of logon allows the user to interact with the system as if they were physically present at the system.</li>
+</ol>
+<h3 id="Authorization"><a href="#Authorization" class="headerlink" title="Authorization "></a>Authorization <a href="#authorization" id="authorization"></a></h3><p>We are now athenticated on the domain. Now technically the domain, service or programs must be aware of our permissions and can decide thanks to those if we can have access to certain objects -&gt;</p>
+<p><strong>What are security descriptors?</strong></p>
+<p>Security descriptors are associated to each object in the Active Directory. It’s checked when we have to verify if a user has access to a certain object of the Active Directory. It is stored in a <a target="_blank" rel="noopener" href="https://www.gabescode.com/active-directory/2019/07/25/nt-security-descriptors.html">binary format</a>, but it can also be translated to a <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthz/security-descriptor-string-format">Security Descriptor String Format</a>.</p>
+<p><strong>What is the difference between ACLs and ACEs?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://book.hacktricks.xyz/v/fr/windows-hardening/windows-local-privilege-escalation/acls-dacls-sacls-aces">ACLs, DACLs, SACLs, ACEs (HackTricks)</a></p>
+<ul>
+<li><strong>ACLs (Access Control Lists)</strong>: These are lists that specify the permissions granted or denied to different users and groups for a particular object. They define who can access the object and what actions they can perform.</li>
+<li><strong>ACEs (Access Control Entries)</strong>: These are individual entries within an ACL. Each ACE defines the permissions for a specific user or group. Multiple ACEs make up the ACL for an object.</li>
+</ul>
+<p>ACLs provide the overall permission structure for an object, and ACEs define the specific permissions for each user or group within that structure.</p>
+<p><strong>Privileges</strong></p>
+<p><strong>What are some dangers of misconfigured privileges?</strong></p>
+<p>In AD, <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=3700">some privileges can be also abused</a> and lead to malicious actions like the <strong>SeBackupPrivilege that</strong> allows to read any file of a domain controller, in order to backup it, which could be used to read the domain database.</p>
+<p><strong>SeDebugPrivilege</strong> which allows to debug any process in the machine, so we could inject code in any process, which could lead to privilege escalation or <strong>SeRestorePrivilege</strong> that allows to write any file on the domain controller from a backup. This could allow an attacker to modify the database of the domain.</p>
+<p>Here is an interesting article with POCs about privilege abuse: <a target="_blank" rel="noopener" href="https://github.com/hatRiot/token-priv/blob/master/abusing_token_eop_1.0.txt">https://github.com/hatRiot/token-priv/blob/master/abusing_token_eop_1.0.txt</a></p>
+<h3 id="Group-Policy"><a href="#Group-Policy" class="headerlink" title="Group Policy "></a>Group Policy <a href="#group-policy" id="group-policy"></a></h3><p><strong>What are Group policies?</strong></p>
+<p>The <a target="_blank" rel="noopener" href="https://adsecurity.org/?p=2716">Group Policy</a> is a mechanism that allows to apply a set of rules&#x2F;actions to the Active Directory network users and computers. In order to define the rules, you can create Group Policy Objects (GPOs). Each GPO defines a series of policies that can be applied to specific machines of the domains.</p>
+<p><strong>What are some actions you can make through Group policies?</strong></p>
+<ul>
+<li>Disable NTLM</li>
+<li>Require password complexity</li>
+<li>Execute an scheduled or immediate task</li>
+<li>Create local users in computers</li>
+<li>Set a default wallpaper</li>
+<li>Synchronize files with OneDrive</li>
+</ul>
+<h4 id="Communication-Protocols"><a href="#Communication-Protocols" class="headerlink" title="Communication Protocols "></a>Communication Protocols <a href="#communication-protocols" id="communication-protocols"></a></h4><p><strong>What do you know about SMB?</strong></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Server_Message_Block#SMB_/_CIFS_/_SMB1">SMB</a> (Server Message Block) is a protocol used to share files and communicate between machines on <strong>port 445</strong></p>
+<p>From a pentester POV it’s an interesting protocol since shares can contain valuable informations.</p>
+<p>Shares are like folders that a machine shares in order to be accessed by other computers&#x2F;users in the network.</p>
+<p><strong>What do you know about HTTP in an active directory context?</strong></p>
+<p>HTTP is the protocol of the web.</p>
+<p>It is used as transport protocol by many other application protocols that are present in a Active Directory domain like <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#winrm">WinRM</a> (and thus <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#powershell-remoting">Powershell Remoting</a>), <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#rpc">RPC</a> or <a target="_blank" rel="noopener" href="https://zer1t0.gitlab.io/posts/attacking_ad/#adws">ADWS</a> (Active Directory Web Services).</p>
+<p>HTTP supports authentication with both NTLM and Kerberos. This is important from a security perspective since it implies that HTTP connections are susceptible of suffering from Kerberos Delegation or <a target="_blank" rel="noopener" href="https://en.hackndo.com/ntlm-relay/#what-can-be-relayed">NTLM Relay</a> attacks.</p>
+<p><strong>What can you say about RPC?</strong></p>
+<p>Remote Procedure Call (RPC) is a protocol used in Active Directory (AD) for communication between client and server systems, as well as between different services within the AD infrastructure. RPC allows a program on one computer to execute code on a remote system, facilitating various functions and services essential to AD operations.</p>
+<p><strong>What can you say about WinRM</strong></p>
+<p>Windows Remote Management (WinRM) is a protocol used for remote management of Windows-based systems, including those within an Active Directory (AD) environment. WinRM is based on the Web Services-Management (WS-Man) protocol, which provides a standard way for systems to interact with each other over a network.</p>
+<p>WinRM enables administrators to perform remote management tasks, such as running scripts, accessing event logs, and managing services on remote systems within an AD domain.</p>
+<p><strong>What can you say about SSH?</strong></p>
+<p>SSH (Secure Shell) is a protocol used for accessing and managing Unix systems like Linux. Even if it is not related with Active Directory directly, usually many Linux machines deployed in a domain could be accessed through SSH. It allows the user get a shell on a remote system, transfer files (with the <a target="_blank" rel="noopener" href="https://linux.die.net/man/1/scp">scp</a> utility) and establishing SSH tunnels.</p>
+<p><strong>What are 3 types of port forwarding with SSH?</strong></p>
+<p>Local Port Forwarding</p>
+<ul>
+<li>The goal of local port forwarding is ccessing a service running on a remote server as if it were running locally. Imagine you want to access a web server running on <code>remote_host</code>‘s port 80 through your local port 8080. After performing the port forwarding, accessing <code>http://localhost:8080</code> in your browser would connect to <code>remote_host</code>‘s web server.</li>
+</ul>
+<p>Remote Port Forwarding</p>
+<ul>
+<li>The goal of remote port forwarding is to Redirect a remote port to a local destination and allowing access to a local service from a remote server. Imagine You want a remote user to access a web server running on your local machine’s port 8080. After executing the command, accessing <code>http://ssh_server:8080</code> would connect to your local machine’s web server.</li>
+</ul>
+<p>Dynamic Port Forwarding</p>
+<ul>
+<li>The goal of Dynamic port forwarding is to Create a SOCKS proxy that routes multiple connections through an SSH tunnel. The goal is to securely tunnel traffic from various applications through a single SSH connection. Imagine You want to route your web traffic through an SSH server to browse securely. After executing the command, configuring your web browser to use <code>localhost:8080</code> as a SOCKS proxy will route its traffic through the SSH server.</li>
+</ul>
+<p>For now, it is all. More will be added soon after OSCP, stay tuned.</p>
+
+        
+      </div>
+
+         
+    </div>
+    
+     
+  </div>
+  
+    
+<nav id="article-nav">
+  <a class="article-nav-btn left "
+    
+      href="/2025/04/11/serverside/"
+      title="[Training Phreaks] Server Side Attacks"
+     >
+    <i class="fa-solid fa-angle-left"></i>
+    <p class="title-text">
+      
+        [Training Phreaks] Server Side Attacks
+        
+    </p>
+  </a>
+  <a class="article-nav-btn right  disabled "
+     >
+
+    <p class="title-text">
+        
+    </p>
+    <i class="fa-solid fa-angle-right"></i>
+  </a>
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+    </div>
+    <div id="footer-wrapper">
+      <footer id="footer">
+  
+  <div id="footer-info" class="inner">
+    
+    &copy; 2025 Félix Billières<br>
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & Theme <a target="_blank" rel="noopener" href="https://github.com/saicaca/hexo-theme-vivia">Vivia</a>
+  </div>
+</footer>
+
+    </div>
+    <div class="back-to-top-wrapper">
+    <button id="back-to-top-btn" class="back-to-top-btn hide" onclick="topFunction()">
+        <i class="fa-solid fa-angle-up"></i>
+    </button>
+</div>
+
+<script>
+    function topFunction() {
+        window.scroll({ top: 0, behavior: 'smooth' });
+    }
+    let btn = document.getElementById('back-to-top-btn');
+    function scrollFunction() {
+        if (document.body.scrollTop > 600 || document.documentElement.scrollTop > 600) {
+            btn.classList.remove('hide')
+        } else {
+            btn.classList.add('hide')
+        }
+    }
+    window.onscroll = function() {
+        scrollFunction();
+    }
+</script>
+
+  </div>
+  <script src="/js/light-dark-switch.js"></script>
+</body>
+</html>
