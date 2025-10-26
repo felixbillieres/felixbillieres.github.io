@@ -1,0 +1,26 @@
+languageCode = "en"
+languageName = "English"
+weight = 1
+title = "Elliot Belt"
+
+[params]
+  displayName = "English"
+  isoCode = "en"
+  rtl = false
+  dateFormat = "2 January 2006"
+  logo = "Elliot Belt"
+  description = "Personal website of Felix Billières - Pentester under the alias Elliot Belt | Member of Phreaks 2600 | Purple Teamer"
+
+[params.author]
+  name = "Elliot Belt"
+  email = "felix.billieres@ecole2600.com"
+  image = "img/profile.jpg"
+  headline = "Student & Wannabe Pentester"
+  bio = "I'm Felix Billières, pentester under the alias Elliot Belt. I do CTFs with the Phreaks 2600 team and I'm currently a Purple Teamer in internship. Passionate about Active Directory, web pentesting/bug bounty, and creating offensive and defensive tools."
+  links = [
+    { github = "https://github.com/felixbillieres" },
+    { linkedin = "https://www.linkedin.com/in/felix-billieres/" },
+    { twitter = "https://x.com/Elliot_belt" },
+    { email = "mailto:felix.billieres@ecole2600.com" },
+  ]
+

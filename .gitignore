@@ -1,0 +1,53 @@
+# Hugo
+/public/
+/resources/_gen/
+hugo_stats.json
+.hugo_build.lock
+
+# Generated files (should be in public/)
+/index.html
+/404.html
+/about/
+/authors/
+/categories/
+/contact/
+/friends/
+/page/
+/posts/
+/series/
+/tags/
+/css/
+/js/
+/lib/
+/robots.txt
+/sitemap.xml
+/index.xml
+/index.json
+android-chrome-*.png
+apple-touch-icon.png
+favicon*.png
+favicon.ico
+site.webmanifest
+
+# Generated Hugo images
+img/*_hu_*.jpg
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Misc
+*.log
+.cache/
+

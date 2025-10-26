@@ -1,0 +1,8 @@
+/* Custom background for homepage */
+body {
+  background-image: url('/img/newbackground.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
