@@ -93,6 +93,18 @@ FCSC legend and amazing reverser.
 
 ---
 
+### Hatsu
+**Active Directory & Cybersecurity**
+
+<img src="https://avatars.githubusercontent.com/u/161523543?v=4" alt="Hatsu" class="!mt-0 !mb-0 h-24 w-24 rounded-full me-4 medium-zoom-image">
+
+Active Directory chad and brainrot specialist.
+
+**Links:**
+- [GitHub](https://github.com/H4tsuM1ku)
+
+---
+
 ## Want to Collaborate?
 
 Always open to working with talented cybersecurity professionals on interesting projects, research, and knowledge sharing!
