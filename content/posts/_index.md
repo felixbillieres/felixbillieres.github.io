@@ -1,6 +1,8 @@
 ---
 title: "Articles"
 description: "My articles about cybersecurity, CTFs and pentesting"
+featuredImage: "featured.png"
+images: ["featured.png"]
 ---
 
 # Articles
