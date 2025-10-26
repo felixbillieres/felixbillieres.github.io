@@ -1,6 +1,7 @@
 ---
 title: "Home"
-heroImage: "/img/newbackground.png"
+featuredImage: "/img/newbackground.png"
+images: ["/img/newbackground.png"]
 ---
 
 # Welcome
