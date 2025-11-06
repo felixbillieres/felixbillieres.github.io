@@ -7,43 +7,39 @@ body {
 }
 
 /* Custom styles for Hack4Values featured image in cards/previews */
+/* Apply not-prose class to prevent prose styles */
 article[data-slug="hack4values"] .featured-image,
 article:has([href*="hack4values"]) .featured-image,
 .card:has([href*="hack4values"]) .featured-image,
-a[href*="hack4values"] .featured-image,
-a[href*="hack4values"] img[src*="h4values"],
-a[href*="hack4values"] .card-image,
-a[href*="hack4values"] .article-image {
+a[href*="hack4values"] .featured-image {
   position: relative;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: rgb(38 38 38);
-  text-decoration-color: rgb(var(--color-primary-500));
 }
 
-a[href*="hack4values"] .featured-image::before,
-a[href*="hack4values"] img[src*="h4values"]::before,
-a[href*="hack4values"] .card-image::before {
+/* Ensure the image itself is visible */
+a[href*="hack4values"] .featured-image img,
+a[href*="hack4values"] img[src*="h4values"] {
+  display: block !important;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 0;
+}
+
+/* Add before pseudo-element for overlay effect */
+a[href*="hack4values"] .featured-image::before {
   content: "";
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
-a[href*="hack4values"] .featured-image:hover,
-a[href*="hack4values"] img[src*="h4values"]:hover,
-a[href*="hack4values"] .card-image:hover {
+/* Hover effects */
+a[href*="hack4values"] .featured-image:hover {
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-@media (prefers-color-scheme: dark) {
-  a[href*="hack4values"] .featured-image,
-  a[href*="hack4values"] img[src*="h4values"],
-  a[href*="hack4values"] .card-image {
-    color: rgb(250 250 250);
-  }
 }
 
