@@ -6,8 +6,8 @@ description: "Retex of Phreaks 2600 team participation at the Hack4Values Grand 
 summary: "The Phreaks 2600 team actively participated in the Hack4Values Grand Live Hacking Solidaire 2025, contributing to the security of NGOs and associations"
 tags: ["bug-bounty", "hack4values", "phreaks-2600", "ethical-hacking", "retex"]
 categories: ["Bug Bounty", "Events"]
-featuredImage: "h4values.png"
-images: ["h4values.png", "allteam.png", "coffee.png", "traigers.png", "tiboandfelix.png"]
+featuredImage: "featured.png"
+images: ["featured.png", "h4values.png", "allteam.png", "coffee.png", "traigers.png", "tiboandfelix.png"]
 ---
 
 # Retex: Phreaks 2600 at the Hack4Values "Grand Live Hacking Solidaire" 2025

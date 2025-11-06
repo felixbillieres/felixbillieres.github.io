@@ -17,6 +17,7 @@ a[href*="hack4values"] .featured-image {
 
 /* Ensure the image itself is visible */
 a[href*="hack4values"] .featured-image img,
+a[href*="hack4values"] img[src*="featured.png"],
 a[href*="hack4values"] img[src*="h4values"] {
   display: block !important;
   width: 100%;
