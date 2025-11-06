@@ -12,7 +12,7 @@ images: ["h4values.png", "allteam.png", "coffee.png", "traigers.png", "tiboandfe
 
 # Retex: Phreaks 2600 at the Hack4Values "Grand Live Hacking Solidaire" 2025
 
-![Hack4Values Event](h4values.png)
+![Hack4Values Event](./h4values.png)
 
 ## Introduction to the Event
 
@@ -35,11 +35,11 @@ Our **Phreaks 2600** team was present with **7 hunters** on site. The format was
 - P4stis
 - Tibo.wav
 
-![Phreaks 2600 Team](allteam.png)
+![Phreaks 2600 Team](./allteam.png)
 
 What really struck me was the **cohesion and complementarity** of our team. Everyone had their specialties, which allowed us to efficiently cover different types of attacks and validate our findings among ourselves. We maintained a good pace throughout the day, interspersed with welcome breaks to debrief and refuel with coffee ☕.
 
-![Day program](coffee.png)
+![Day program](./coffee.png)
 
 ## Scope and Technical Findings
 
@@ -61,11 +61,11 @@ The combined effort of all the hunters present allowed us to reach the organizat
 
 Little anecdote from the day: we finished writing the report for a vulnerability we judged **High or Critical** just **3 minutes after** the deadline for the final report triage.
 
-![FML](traigers.png)
+![FML](./traigers.png)
 
 It was a bit frustrating at the time, but in the end, the vulnerability was still properly disclosed. The main goal remains securing the NGOs' systems, and that's done!
 
-![Tibo and Felix](tiboandfelix.png)
+![Tibo and Felix](./tiboandfelix.png)
 
 ## Conclusion
 
