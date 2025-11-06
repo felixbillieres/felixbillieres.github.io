@@ -7,7 +7,7 @@ summary: "The Phreaks 2600 team actively participated in the Hack4Values Grand L
 tags: ["bug-bounty", "hack4values", "phreaks-2600", "ethical-hacking", "retex"]
 categories: ["Bug Bounty", "Events"]
 featuredImage: "h4values.png"
-images: ["h4values.png", "allteam.png", "tiboandfelix.png"]
+images: ["h4values.png", "allteam.png", "coffee.png", "traigers.png", "tiboandfelix.png"]
 ---
 
 # Retex: Phreaks 2600 at the Hack4Values "Grand Live Hacking Solidaire" 2025
@@ -21,8 +21,6 @@ The **"Grand Live Hacking Solidaire"** organized by **Hack4Values** is an event 
 The 2025 edition took place on **October 24, 2025**, from 9 AM to 6 PM, in a pretty impressive setting: the **Ministère de l'Économie, des Finances et de la Souveraineté Industrielle et Numérique** (Ministry of Economy, Finance, and Digital Sovereignty) in Paris, at 139 Rue de Bercy. It gives you an idea of how important the government considers this cybersecurity mission.
 
 The organizations that benefited from our work were major players in the nonprofit sector: **AMNESTY INTERNATIONAL**, **HANDICAP INTERNATIONAL**, **ACTION AGAINST HUNGER**, **SOS MEDITERRANEE**, **HABITAT ET HUMANISME**, **WE SIGN IT**, **E-ENFANCE**, and **RCF RADIO**.
-
-
 
 ## Team Phreaks 2600 Participation
 
@@ -43,7 +41,6 @@ What really struck me was the **cohesion and complementarity** of our team. Ever
 
 ![Day program](coffee.png)
 
-
 ## Scope and Technical Findings
 
 The bug bounty scope was intentionally broad, covering multiple web applications, APIs, and digital platforms from the partner NGOs.
@@ -62,11 +59,11 @@ The types of vulnerabilities found were varied:
 
 The combined effort of all the hunters present allowed us to reach the organization's target: **300 points**. To give a bit of context, that represents a good density of verified findings, with Low vulnerabilities earning a few points and Critical ones around 15 points each.
 
-Little anecdote from the day: we finished writing the report for a vulnerability we judged **High or Critical** just **3 minutes after** the deadline for the final report triage. 
+Little anecdote from the day: we finished writing the report for a vulnerability we judged **High or Critical** just **3 minutes after** the deadline for the final report triage.
 
 ![FML](traigers.png)
 
-It was a bit frustrating at the time, but in the end, the vulnerability was still properly disclosed. The main goal remains securing the NGOs' systems, and that's done! 
+It was a bit frustrating at the time, but in the end, the vulnerability was still properly disclosed. The main goal remains securing the NGOs' systems, and that's done!
 
 ![Tibo and Felix](tiboandfelix.png)
 
@@ -80,4 +77,4 @@ A big thank you to Hack4Values for the organization and to the partner NGOs for 
 
 ---
 
-See you soon for another retex - Elliot
+*See you soon for another retex - Elliot*
