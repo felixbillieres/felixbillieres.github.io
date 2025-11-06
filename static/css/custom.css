@@ -6,3 +6,44 @@ body {
   background-attachment: fixed;
 }
 
+/* Custom styles for Hack4Values featured image in cards/previews */
+article[data-slug="hack4values"] .featured-image,
+article:has([href*="hack4values"]) .featured-image,
+.card:has([href*="hack4values"]) .featured-image,
+a[href*="hack4values"] .featured-image,
+a[href*="hack4values"] img[src*="h4values"],
+a[href*="hack4values"] .card-image,
+a[href*="hack4values"] .article-image {
+  position: relative;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgb(38 38 38);
+  text-decoration-color: rgb(var(--color-primary-500));
+}
+
+a[href*="hack4values"] .featured-image::before,
+a[href*="hack4values"] img[src*="h4values"]::before,
+a[href*="hack4values"] .card-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+a[href*="hack4values"] .featured-image:hover,
+a[href*="hack4values"] img[src*="h4values"]:hover,
+a[href*="hack4values"] .card-image:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  a[href*="hack4values"] .featured-image,
+  a[href*="hack4values"] img[src*="h4values"],
+  a[href*="hack4values"] .card-image {
+    color: rgb(250 250 250);
+  }
+}
+
