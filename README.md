@@ -1,6 +1,6 @@
 # Site Personnel - Elliot Belt
 
-Site personnel de Felix Billières (Elliot Belt) - Pentester & Purple Teamer
+Site personnel de Felix Billières (Elliot Belt)
 
 Thème utilisé : [Blowfish](https://blowfish.page/) pour Hugo
 
