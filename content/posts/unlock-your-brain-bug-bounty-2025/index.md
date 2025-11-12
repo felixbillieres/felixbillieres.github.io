@@ -66,26 +66,26 @@ The scope provided by YesWeHack was diverse and interesting, covering approximat
 
 ### Creativity and Cryptography
 
-**lightender** made a significant impact and won two well-deserved awards: **Most Creative Bug** and **Best Write-up**. The vulnerability hinged on forging cookies by exploiting insufficient entropy in their generation, illustrating the classic **CWE-331: Insufficient Entropy** weakness and its predictability risks for authentication flows [[CWE-331]](https://cwe.mitre.org/data/definitions/331.html).
+**Lightender** made a significant impact and won two well-deserved awards: **Most Creative Bug** and **Best Write-up**. The vulnerability hinged on forging cookies by exploiting insufficient entropy in their generation, illustrating the classic **CWE-331: Insufficient Entropy** weakness and its predictability risks for authentication flows [[CWE-331]](https://cwe.mitre.org/data/definitions/331.html).
 
 ### tibo.wav's Haul (3rd Individual)
 
 **tibo.wav**, who finished 3rd overall, was extremely effective, submitting several high-impact vulnerabilities, particularly those related to:
 
-- **Trust Abuse** (exploiting trust relationships between system components).
-- **Leaked Secrets** (exposed configuration files or API keys).
+- **Trust Abuse** (exploiting trust relationships between system components and user related features).
+- **Leaked Secrets** (exposed configuration informations).
 
 ### My Contributions and the Triage Reality
 
-On a personal level (Elliot Belt), I was pleased to have a major vulnerability accepted and rated **8.8 (High)**: a successful **Privilege Escalation (PrivEsc)** that allowed a standard account to gain full administrative rights on the platform.
+On a personal level, I was pleased to have a major vulnerability accepted and rated **8.8 (High)**: a successful **Privilege Escalation** that allowed a standard account to gain full administrative rights on the platform.
 
-I also submitted two **critical 9.9** reports that were ultimately downgraded to *Informative* during triage—always a humbling reminder that context is king in Bug Bounty!
+I also submitted two **critical 9.9** reports that were ultimately downgraded to *Informative* during triage...
 
 ![Recap of the downgraded 9.9 submissions](./9-9.png)
 
 ### The Non-Technical Wins: Wepfen's Awards
 
-Not all victories appear in the leaderboard. **wepfen** secured two unofficial but highly sought-after titles: the **Best RTFS** (Read The F**king Scope) Award and the **Best Meme** Award. His ability to balance relentless enumeration with morale-boosting humour is a competitive edge in itself.
+Not all victories appear in the leaderboard. **wepfen** secured two unofficial but highly sought-after titles: the **Best RTFS** (Read The F**king Scope) Award and the **Best Meme** Award. His ability to balance relentless enumeration with brainrot was quite impressive.
 
 ![Wepfen's legendary meme of the day](./bestMeme.png)
 
@@ -99,4 +99,6 @@ A huge thank you to **BZHunt** for the excellent organization, the great lunch, 
 
 We also thank **YesWeHack** for providing a high-quality scope. We sincerely hope that this discovery-rich day will contribute to the long-term security of the audited platforms.
 
-*Experience feedback from the Phreaks 2600 Team – Elliot*
+---
+
+*See you soon for another retex - Elliot*
