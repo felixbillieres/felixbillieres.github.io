@@ -18,7 +18,7 @@ images: ["featured.png", "unlock.png", "9-9.png", "bestMeme.png"]
 
 The **Unlock Your Brain** event, held in Brest for its second edition, featured a fantastic initiative: a **Bug Bounty dedicated exclusively to cybersecurity students**.
 
-This event was made possible through partnerships with the **YesWeHack** platform and the expert triagers from **BZHunt**. It perfectly embodies the spirit of **UYBHYS** (Unlock Your Brain Hack Your School).
+This event was made possible through partnerships with the **YesWeHack** platform and the expert triagers from **BZHunt**.
 
 ### Educational and Practical Objectives
 
