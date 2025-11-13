@@ -30,8 +30,6 @@ I'm open to:
 - Questions about my writeups or articles
 - Job or internship opportunities (in the cybersecurity field)
 
-**Note**: For security reasons, I don't handle pentesting requests via this contact form. For such requests, please use an appropriate professional channel.
-
 ---
 
 Thanks for your interest!
