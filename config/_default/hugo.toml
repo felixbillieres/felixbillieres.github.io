@@ -1,7 +1,7 @@
 # -- Site Configuration --
 # Configuration Hugo pour le site de Felix Billières (Elliot Belt)
 
-baseURL = "https://elliotbelt.fr"
+baseURL = "https://felixbillieres.github.io/"
 defaultContentLanguage = "en"
 disableLanguages = []
 

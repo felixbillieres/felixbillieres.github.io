@@ -9,7 +9,7 @@
   min = "0.141.0"
   max = "0.152.0"
 
-baseURL = "https://elliotbelt.fr"
+baseURL = "https://felixbillieres.github.io/"
 defaultContentLanguage = "en"
 enableRobotsTXT = true
 summaryLength = 30
