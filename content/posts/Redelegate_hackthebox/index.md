@@ -4,13 +4,13 @@ date: 2025-12-21
 tags: ["HackTheBox", "Windows", "Active Directory", "Kerberos", "Constrained Delegation", "Password Spraying", "BloodHound"]
 categories: ["HackTheBox"]
 description: "A highly technical writeup of the Hard difficulty Windows machine Redelegate from HackTheBox, involving Anonymous FTP access, KeePass cracking, MSSQL enumeration, password spraying, and Kerberos constrained delegation exploitation."
-featuredImage: "redelegate-logo.png"
-images: ["redelegate-logo.png", "bloodhound-acl.png", "helpdesk-membership.png", "helen-privileges.png"]
+featuredImage: "featured.png"
+images: ["featured.png", "bloodhound-acl.png", "helpdesk-membership.png", "helen-privileges.png"]
 ---
 
 # HackTheBox - Redelegate
 
-![Redelegate Machine](./redelegate-logo.png)
+![Redelegate Machine](./featured.png)
 
 *Hard difficulty Windows Active Directory machine - Anonymous FTP access leading to KeePass cracking and Kerberos constrained delegation*
 ## Machine Information
