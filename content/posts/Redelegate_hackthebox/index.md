@@ -4,13 +4,13 @@ date: 2025-12-21
 tags: ["HackTheBox", "Windows", "Active Directory", "Kerberos", "Constrained Delegation", "Password Spraying", "BloodHound"]
 categories: ["HackTheBox"]
 description: "A highly technical writeup of the Hard difficulty Windows machine Redelegate from HackTheBox, involving Anonymous FTP access, KeePass cracking, MSSQL enumeration, password spraying, and Kerberos constrained delegation exploitation."
-featuredImage: "image copy 3.png"
-images: ["image copy 3.png", "image.png", "image copy.png", "image copy 2.png"]
+featuredImage: "redelegate-logo.png"
+images: ["redelegate-logo.png", "bloodhound-acl.png", "helpdesk-membership.png", "helen-privileges.png"]
 ---
 
 # HackTheBox - Redelegate
 
-![Redelegate Machine](./image copy 3.png)
+![Redelegate Machine](./redelegate-logo.png)
 
 *Hard difficulty Windows Active Directory machine - Anonymous FTP access leading to KeePass cracking and Kerberos constrained delegation*
 ## Machine Information
@@ -249,11 +249,11 @@ elliot@exegol:~$ nxc ldap redelegate.vl -u Marie.Curie -p 'Fall2024!' --bloodhou
 The BloodHound data revealed critical ACL information:
 - **Marie.Curie has User-Force-Change-Password rights over the HelpDesk group** - This means I can reset passwords for anyone in the HelpDesk group!
 
-![BloodHound ACL Analysis](./image.png)
+![BloodHound ACL Analysis](./bloodhound-acl.png)
 
 - **Michael.Pontiac is a member of the HelpDesk group** - He's my first target for password reset
 
-![HelpDesk Group Membership](./image copy.png)
+![HelpDesk Group Membership](./helpdesk-membership.png)
 
 - **Helen.Frost has membership in privileged groups and interesting ACL relationships** - She might be worth targeting too
 
@@ -276,7 +276,7 @@ SMB         10.129.234.50   445    DC               [+] Successfully changed pas
 
 Excellent! The password reset worked. Now let me check what Helen Frost's privileges are. From the BloodHound data, I know she has interesting group memberships.
 
-![Helen Frost Privileges](./image copy 2.png)
+![Helen Frost Privileges](./helen-privileges.png)
 
 ### Resetting Helen.Frost Password
 
