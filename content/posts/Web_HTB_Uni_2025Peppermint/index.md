@@ -4,15 +4,15 @@ date: 2025-12-21
 tags: ["HackTheBox", "CTF", "Web", "Node.js", "RCE", "File Upload", "ZIP Parser"]
 categories: ["HackTheBox", "CTF"]
 description: "Complete writeup of the PeppermintRoute challenge from HackTheBox University CTF 2025 - elegant web exploitation with multiple vulnerabilities"
-featuredImage: "logo.png"
-images: ["logo.png", "rank.png"]
+featuredImage: "featured.png"
+images: ["featured.png", "rank.png"]
 ---
 
 # PeppermintRoute: My Journey Through Web Exploitation
 
 Hey there! 👋 Let me walk you through our complete journey solving the PeppermintRoute challenge. This was part of the **HackTheBox University CTF 2025**, an international cybersecurity competition for students where we participated with the **Phreaks 2600** team.
 
-![HTB University CTF 2025 Logo](./logo.png)
+![HTB University CTF 2025 Logo](./featured.png)
 
 We finished **35th place** overall - not the best ranking, but hey, we had an amazing time! I was lucky enough to be **MVP of the team** (lol).
 
@@ -102,7 +102,7 @@ const login = async (req, res) => {
 
 ### The Object Injection Discovery
 
-We remembered a technique we read about in some security research. What if instead of strings, we send **objects** as the username and password?
+I remembered a technique we read about in some security research. What if instead of strings, we send **objects** as the username and password?
 
 **Our Experiment**:
 ```json
