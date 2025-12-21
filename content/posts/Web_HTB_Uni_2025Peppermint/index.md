@@ -8,7 +8,7 @@ featuredImage: "featured.png"
 images: ["featured.png", "rank.png"]
 ---
 
-# PeppermintRoute: My Journey Through Web Exploitation
+# PeppermintRoute: Our Journey Through the challenge
 
 Hey there! 👋 Let me walk you through our complete journey solving the PeppermintRoute challenge. This was part of the **HackTheBox University CTF 2025**, an international cybersecurity competition for students where we participated with the **Phreaks 2600** team.
 
@@ -130,7 +130,7 @@ if (!username || !password)  // Objects are truthy, so this passes!
 
 **Our Reaction**: "Holy crap, that actually worked!"
 
-**Resources We Referenced**:
+**Resources I Referenced**:
 - [Finding an unseen SQL Injection by bypassing escape functions in mysqljs/mysql](https://flatt.tech/research/posts/finding-an-unseen-sql-injection-by-bypassing-escape-functions-in-mysqljs-mysql/)
 - MySQL2 library documentation on object serialization
 
@@ -173,7 +173,7 @@ const fullPath = path.resolve(destDir, zipName);
 **Why the Protection Failed**:
 The code only counted directory depth (`parts.length > 4`) but didn't check for `..` sequences. A path like `../../../server.js` has only 1 part after filtering, so it passes the check!
 
-**Our "Eureka!" Moment**: "We can overwrite the main server.js file! If we replace it with malicious code, we get RCE!"
+**My "Eureka!" Moment**: "We can overwrite the main server.js file! If we replace it with malicious code, we get RCE!"
 
 **Creating the Exploit ZIP**:
 ```python
