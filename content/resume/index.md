@@ -192,19 +192,6 @@ Contributing to documentation and techniques for Active Directory exploitation, 
 
 ---
 
-## Skills & Specializations
-
-| Category | Skills |
-|----------|--------|
-| **Web Security** | Web Exploitation, Bug Bounty Hunting, API Security |
-| **Active Directory** | AD Attacks & Defense, Kerberos Exploitation, Lateral Movement |
-| **Offensive Security** | Penetration Testing, Red Team Operations, Exploit Development |
-| **Purple Teaming** | SOC Analysis, Incident Response, Threat Hunting |
-| **CTF** | Web, Forensics, Pwn, Reverse Engineering |
-| **Development** | Python, PowerShell, Tool Development |
-
----
-
 ## Contact & Links
 
 | Platform | Link |
