@@ -1,32 +1,20 @@
 ---
-title: "About - Felix Billieres"
+title: "Resume"
 layout: page
-menu:
-  main:
-    weight: 4
-    params:
-      icon: user
 description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 4th year student at École 2600."
 featuredImage: "featured.png"
 images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 
-# Felix Billieres
-
-> *Cybersecurity Student & Professional - Offensive Security Enthusiast*
-
----
-
 ## Professional Experience
 
-### Analyste SOC N2 @ ITrust
-*Toulouse & Paris, France*  
-*September 2023 - September 2024*
+### Purple Teamer
+*September 2025 - Present*
 
-- SOC Analyst Level 2 with focus on Blue Team & Red Team skill development
-- Log analysis and incident report writing
-- Team participation in pentest seminars and CTF competitions
-- Internal penetration testing and offensive security
+- Purple Team operations combining offensive and defensive security
+- Security assessment and penetration testing
+- Threat hunting and incident response
+- Security architecture review and hardening
 
 ### Pentester @ Galeries Lafayette
 *Paris, France*  
@@ -37,14 +25,21 @@ images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png",
 - Blue Team training on advanced AD attacks
 - Security assessment and penetration testing
 
+### Analyste SOC N1 & N2 @ ITrust
+*Toulouse & Paris, France*  
+*September 2023 - September 2024*
+
+- SOC Analyst Level 1 & 2 with focus on Blue Team & Red Team skill development
+- Log analysis and incident report writing
+- Team participation in pentest seminars and CTF competitions
+- Internal penetration testing and offensive security
+
 ---
 
 ## Education
 
 **4th Year Cybersecurity Student @ École 2600**  
 *Specializing in offensive security with strong foundations from CTF competitions with Phreaks 2600*
-
-Passionate about **web security** and **Active Directory exploitation**, I'm determined to develop deep expertise in these areas.
 
 ---
 
@@ -71,15 +66,6 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 
 ---
 
-### November 2024
-
-#### Practical Network Penetration Tester - TCM Security
-![PNPT Certificate](./certifications/PNPT.png)
-
-**Skills**: Network Penetration Testing, Active Directory, Post-Exploitation
-
----
-
 ### October 2025
 
 #### Rastalabs Prolab - HackTheBox
@@ -98,12 +84,6 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 
 ---
 
-#### Certified Bug Bounty Hunter - HackTheBox
-![Bug Bounty Hunter Certificate](./certifications/bug_bounty.png)
-
-**Skills**: Bug Bounty Hunting, Web Application Security, Vulnerability Assessment
-
----
 
 ### August 2025
 
@@ -114,15 +94,6 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 
 ---
 
-### June 2024
-
-#### Attacking and Defending Active Directory: Beginner's Edition - Altered Security
-![CRTP Certificate](./certifications/CRTP.png)
-
-**Skills**: Active Directory Security, Attack and Defense Techniques
-
----
-
 ### December 2024
 
 #### University CTF 2024: Binary Badlands - HackTheBox
@@ -130,11 +101,21 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 
 ---
 
-### Path Certifications
+### November 2024
 
-#### Certified Penetration Tester - HackTheBox
+#### Practical Network Penetration Tester - TCM Security
+![PNPT Certificate](./certifications/PNPT.png)
 
-**Skills**: Penetration Testing Methodology, Network Security, Web Application Security, Active Directory
+**Skills**: Network Penetration Testing, Active Directory, Post-Exploitation
+
+---
+
+### June 2024
+
+#### Attacking and Defending Active Directory: Beginner's Edition - Altered Security
+![CRTP Certificate](./certifications/CRTP.png)
+
+**Skills**: Active Directory Security, Attack and Defense Techniques
 
 ---
 
@@ -173,13 +154,41 @@ Active bug bounty hunting across various programs, identifying and reporting sec
 
 ## Tools & Development
 
-### Exegol MCP
+### Open Source Projects
 
-**[Exegol MCP Development](https://github.com/ThePorgs/Exegol-MCP)** - Model Context Protocol integration for Exegol
+#### AuditMapper v2
+**[AuditMapper v2](https://github.com/felixbillieres/AuditMapperV2)** - Security Assessment Suite
+
+Comprehensive penetration testing toolkit presented at WineRump conference in Bordeaux. Features include:
+- Host management with vulnerability tracking
+- Active Directory mindmap renderer
+- Config generators (Kerberos, proxychains, /etc/hosts)
+- Kanban & time tracking for security assessments
+- Live reporting and export capabilities
+
+#### Exegol MCP
+**[Exegol MCP](https://github.com/ThePorgs/Exegol-MCP)** - Model Context Protocol integration for Exegol
 
 - Custom pentest tools for reconnaissance, AD, web security
 - Advanced audit mapping with integrated exploitation for various services
 - Open-source contribution to the Exegol ecosystem
+
+#### pySIDHistory
+**[pySIDHistory](https://github.com/felixbillieres/pySIDHistory)** - SID History Manipulation Tool
+
+A modular Python tool for remotely manipulating SID History attributes in Active Directory environments from Linux hosts.
+
+#### pyGoldenGMSA
+**[pyGoldenGMSA](https://github.com/felixbillieres/pyGoldenGMSA)** - gMSA Exploitation Tool
+
+Python equivalent of the GoldenGMSA tool for exploiting Group Managed Service Accounts (gMSA) in Active Directory.
+
+### Community Contributions
+
+#### The Hacker Recipes
+**Active contributor to [The Hacker Recipes](https://www.thehacker.recipes/)** - Comprehensive offensive security knowledge base
+
+Contributing to documentation and techniques for Active Directory exploitation, web security, and penetration testing methodologies.
 
 ---
 
