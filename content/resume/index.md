@@ -5,9 +5,7 @@ description: "Cybersecurity professional specializing in offensive security, SOC
 featuredImage: "featured.png"
 images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
-
 **[Download Resume (PDF)](/resume.pdf)**
-
 ---
 
 ## Professional Experience
