@@ -6,6 +6,17 @@ featuredImage: "featured.png"
 images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 
+<div style="text-align: center; margin: 20px 0;">
+  <a href="/resume.pdf" download="Felix_Billieres_Resume.pdf" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s;">
+    📄 Download Resume (PDF)
+  </a>
+  <div style="margin-top: 20px;">
+    <iframe src="/resume.pdf" width="100%" height="600px" style="border: 2px solid #ddd; border-radius: 8px;"></iframe>
+  </div>
+</div>
+
+---
+
 ## Professional Experience
 
 ### Purple Teamer
