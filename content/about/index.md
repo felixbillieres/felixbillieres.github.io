@@ -8,20 +8,12 @@ menu:
       icon: user
 description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 4th year student at École 2600."
 featuredImage: "featured.png"
-images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png"]
+images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 
 # Felix Billieres
 
 > *Cybersecurity Student & Professional - Offensive Security Enthusiast*
-
----
-
-## Current Role
-
-**Analyste Purple Team @ Galeries Lafayette**  
-*Paris, France*  
-*September 2025 - Present*
 
 ---
 
@@ -82,6 +74,7 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 ### November 2024
 
 #### Practical Network Penetration Tester - TCM Security
+![PNPT Certificate](./certifications/PNPT.png)
 
 **Skills**: Network Penetration Testing, Active Directory, Post-Exploitation
 
@@ -106,6 +99,7 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 ---
 
 #### Certified Bug Bounty Hunter - HackTheBox
+![Bug Bounty Hunter Certificate](./certifications/bug_bounty.png)
 
 **Skills**: Bug Bounty Hunting, Web Application Security, Vulnerability Assessment
 
@@ -123,6 +117,7 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 ### June 2024
 
 #### Attacking and Defending Active Directory: Beginner's Edition - Altered Security
+![CRTP Certificate](./certifications/CRTP.png)
 
 **Skills**: Active Directory Security, Attack and Defense Techniques
 
@@ -163,11 +158,16 @@ Passionate about **web security** and **Active Directory exploitation**, I'm det
 - **Internal project management** and event organization
 - **CTF Challenge Creator** - Web, Forensics, Pwn challenges
 - **Workshop Developer** - Advanced training labs and web vulnerability exploitation
+
+![Phreaks 2600 Training Workshop](./certifications/training_Phreaks.png)
+
 - **Custom CTF Challenges** - Web workshops for Phreaks 2600 members
 
 ### Bug Bounty Hunter
 
 Active bug bounty hunting across various programs, identifying and reporting security vulnerabilities.
+
+![Bug Bounty Achievements](./certifications/bug_bounty.png)
 
 ---
 
@@ -204,11 +204,5 @@ Active bug bounty hunting across various programs, identifying and reporting sec
 | **HackTheBox** | [ElliotBelt](https://app.hackthebox.com/profile/elliotbelt) |
 | **LinkedIn** | [Felix Billieres](https://linkedin.com/in/felixbillieres) |
 | **RootMe** | [Elliot_Belt](https://www.root-me.org/Elliot_Belt) |
-
----
-
-> *"Security is not a product, but a process."* - Bruce Schneier
-
----
 
 *Last updated: January 2026*
