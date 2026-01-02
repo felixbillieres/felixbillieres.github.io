@@ -1,6 +1,6 @@
 ---
 title: "HackTheBox - Redelegate"
-date: 2025-12-21
+date: 2025-01-02
 tags: ["HackTheBox", "Windows", "Active Directory", "Kerberos", "Constrained Delegation", "Password Spraying", "BloodHound"]
 categories: ["HackTheBox"]
 description: "A highly technical writeup of the Hard difficulty Windows machine Redelegate from HackTheBox, involving Anonymous FTP access, KeePass cracking, MSSQL enumeration, password spraying, and Kerberos constrained delegation exploitation."

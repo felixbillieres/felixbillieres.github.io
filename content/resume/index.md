@@ -47,7 +47,7 @@ images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png",
 
 ### December 2025
 
-#### CRTO (Certified Red Team Operator) - Zero-Point Security
+#### CRTO (Certified Red Team Operator) Training Modules - Zero-Point Security
 ![CRTO Certificate](./certifications/CRTO-1.png)
 
 **Skills**: Cobalt Strike, Adversary Simulation, EDR Bypass

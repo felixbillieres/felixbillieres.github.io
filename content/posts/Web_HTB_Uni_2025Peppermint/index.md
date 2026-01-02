@@ -1,6 +1,6 @@
 ---
 title: "PeppermintRoute - HackTheBox University 2025"
-date: 2025-12-21
+date: 2025-01-02
 tags: ["HackTheBox", "CTF", "Web", "Node.js", "RCE", "File Upload", "ZIP Parser"]
 categories: ["HackTheBox", "CTF"]
 description: "Complete writeup of the PeppermintRoute challenge from HackTheBox University CTF 2025 - elegant web exploitation with multiple vulnerabilities"
