@@ -3,7 +3,7 @@ title: "NetExec Workshop LeHack 2025 - Comprehensive Guide"
 date: 2025-06-28
 draft: false
 description: "A comprehensive guide to Active Directory exploitation with NetExec at LeHack 2025"
-summary: "Guide complet sur l'exploitation Active Directory avec NetExec lors du workshop LeHack 2025"
+summary: "Comprehensive guide to Active Directory exploitation with NetExec at the LeHack 2025 workshop"
 tags: ["ctf", "active-directory", "netexec", "workshop", "writeup"]
 categories: ["CTF", "Active Directory"]
 featuredImage: "featured.png"
@@ -35,7 +35,7 @@ images: ["featured.png"]
 
 > **📌 Note:** The complete writeup of this workshop is available on [@LeandreOnizuka](https://x.com/LeandreOnizuka)'s website at [blog.anh4ckin.ch](https://blog.anh4ckin.ch/posts/netexec-workshop2k25/). He won this edition - huge GG to him! 🏆
 
-On Saturday, June 28th, 2025, I had the privilege of participating in an exceptional **Active Directory penetration testing workshop** at **[LeHack 2025](https://x.com/0xdf_/status/1937820215472971880)**, expertly organized by **[@mpgn_x64](https://x.com/mpgn_x64)**, **[@zblurx](https://x.com/_zblurx)**, and **wil**. This workshop immersed us in a multi-domain Active Directory environment with a captivating Star Wars theme.
+On Saturday, June 28th, 2025, an exceptional **Active Directory penetration testing workshop** took place at **[LeHack 2025](https://x.com/0xdf_/status/1937820215472971880)**, expertly organized by **[@mpgn_x64](https://x.com/mpgn_x64)**, **[@zblurx](https://x.com/_zblurx)**, and **wil**. The workshop immersed participants in a multi-domain Active Directory environment with a captivating Star Wars theme.
 
 **Lab Context:**
 - **Event:** [LeHack 2025 workshop](https://x.com/0xdf_/status/1937820215472971880)
@@ -680,16 +680,16 @@ This NetExec workshop at LeHack 2025 demonstrated the power and versatility of t
 
 ### Future Work
 
-Unfortunatly, **I was only able to reach the discovery of the poe.pfx certificate** before needing to head back home.
+Unfortunately, **progress only reached the discovery of the poe.pfx certificate** before the workshop session ended.
 
 **What we accomplished:**
-- Complete compromise of the empire.local domain
+- Significant foothold in the empire.local domain
 - Initial foothold in rebels.local domain  
 - Discovery of cross-domain trust relationships
 - Identification of certificate-based authentication opportunities
 
 **What's next:**
-I'm eagerly awaiting the **public release of the complete lab** to continue this exploitation chain. The discovery of the poe.pfx certificate suggests we're on the verge of:
+The **public release of the complete lab** is eagerly awaited to continue this exploitation chain. The discovery of the poe.pfx certificate suggests the attack is on the verge of:
 - **Certificate-based authentication** as the poe user
 - **Potential privilege escalation** within rebels.local
 - **Complete cross-domain compromise**
@@ -708,7 +708,6 @@ A huge thank you to **[@mpgn_x64](https://x.com/mpgn_x64)**, **[@zblurx](https:/
 
 GG to **[@anh4ckin3](https://x.com/anh4ckin3)** for completing the full lab! 🎉 For the complete advanced exploitation chain and the rest of this writeup, check out his excellent blog post: **[NetExec Workshop Active Directory Lab Writeup](https://blog.anh4ckin.ch/posts/netexec-workshop2k25/)**
 
-The discovery of the poe.pfx certificate has left me with a perfect cliffhanger - I will finish this writeup when I have the opportunity to get the lab locally and complete the full exploitation chain.
+The discovery of the poe.pfx certificate leaves a perfect cliffhanger - this writeup will be completed once the lab becomes available locally for the full exploitation chain.
 
 ---
-</rewritten_file>

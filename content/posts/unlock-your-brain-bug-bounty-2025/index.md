@@ -66,20 +66,20 @@ The scope provided by YesWeHack was diverse and interesting, covering approximat
 
 ### Creativity and Cryptography
 
-**Lightender** made a significant impact and won two well-deserved awards: **Most Creative Bug** and **Best Write-up**. The vulnerability hinged on forging cookies by exploiting insufficient entropy in their generation, illustrating the classic **CWE-331: Insufficient Entropy** weakness and its predictability risks for authentication flows [[CWE-331]](https://cwe.mitre.org/data/definitions/331.html).
+**Lightender** made a significant impact and won two well-deserved awards: **Most Creative Bug** and **Best Write-up**. The vulnerability hinged on forging cookies by exploiting insufficient entropy in their generation, illustrating the classic **CWE-331: Insufficient Entropy** weakness and its predictability risks for authentication flows [CWE-331](https://cwe.mitre.org/data/definitions/331.html).
 
 ### tibo.wav's Haul (3rd Individual)
 
 **tibo.wav**, who finished 3rd overall, was extremely effective, submitting several high-impact vulnerabilities, particularly those related to:
 
-- **Trust Abuse** (exploiting trust relationships between system components and user related features).
-- **Leaked Secrets** (exposed configuration informations).
+- **Trust Abuse** (exploiting trust relationships between system components and user-related features).
+- **Leaked Secrets** (exposed configuration details).
 
-### My Contributions and the Triage Reality
+### Personal Contributions and the Triage Reality
 
-On a personal level, I was pleased to have a major vulnerability accepted and rated **8.8 (High)**: a successful **Privilege Escalation** that allowed a standard account to gain full administrative rights on the platform.
+On a personal note, a major vulnerability was accepted and rated **8.8 (High)**: a successful **Privilege Escalation** that allowed a standard account to gain full administrative rights on the platform.
 
-I also submitted two **critical 9.9** reports that were ultimately downgraded to *Informative* during triage...
+Two additional **critical 9.9** reports were submitted but ultimately downgraded to *Informative* during triage...
 
 ![Recap of the downgraded 9.9 submissions](./9-9.png)
 

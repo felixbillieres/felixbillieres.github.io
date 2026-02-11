@@ -18,7 +18,7 @@ images: ["featured.png", "h4values.png", "allteam.png", "coffee.png", "traigers.
 
 The **"Grand Live Hacking Solidaire"** organized by **Hack4Values** is an event that brings together the French ethical hacking community around a cause close to our hearts: securing NGOs and associations that often don't have the means to protect themselves against cyber threats. Hack4Values, created in 2021, mobilizes a network of ethical hackers and security researchers to offer a pro bono bug hunting program.
 
-The 2025 edition in a pretty impressive setting: the **Ministère de l'Économie, des Finances et de la Souveraineté Industrielle et Numérique** (Ministry of Economy, Finance, and Digital Sovereignty) in Paris, at 139 Rue de Bercy. It gives you an idea of how important the government considers this cybersecurity mission.
+The 2025 edition took place in a pretty impressive setting: the **Ministère de l'Économie, des Finances et de la Souveraineté Industrielle et Numérique** (Ministry of Economy, Finance, and Digital Sovereignty) in Paris, at 139 Rue de Bercy. This gives an idea of how important the government considers this cybersecurity mission.
 
 The organizations that benefited from our work were major players in the nonprofit sector: **AMNESTY INTERNATIONAL**, **HANDICAP INTERNATIONAL**, **ACTION AGAINST HUNGER**, **SOS MEDITERRANEE**...
 
@@ -37,7 +37,7 @@ Our **Phreaks 2600** team was present with **7 hunters** on site. The format was
 
 ![Phreaks 2600 Team](./allteam.png)
 
-What really struck me was the **cohesion and complementarity** of our team. Everyone had their specialties, which allowed us to efficiently cover different types of attacks and validate our findings among ourselves. We maintained a good pace throughout the day, interspersed with breaks to debrief and refuel with coffee ☕.
+What really stood out was the **cohesion and complementarity** of the team. Everyone had their specialties, which allowed us to efficiently cover different types of attacks and validate our findings among ourselves. We maintained a good pace throughout the day, interspersed with breaks to debrief and refuel with coffee ☕.
 
 ![Day program](./coffee.png)
 
@@ -61,7 +61,7 @@ The combined effort of all the hunters present allowed us to reach the organizat
 
 Little anecdote from the day: we finished writing the report for a vulnerability we judged **High or Critical** just **3 minutes after** the deadline for the final report triage.
 
-![FML](./traigers.png)
+![The triagers at their desks](./traigers.png)
 
 It was a bit frustrating at the time, but in the end, the vulnerability was still properly disclosed. The main goal remains securing the NGOs' systems, and that's done!
 

