@@ -12,15 +12,17 @@ images: ["featured.png", "server-startup.png", "initialize-response.png", "decod
 
 # MCP SVG Icon Injection: From XSS to RCE Through the Protocol Spec
 
-*Reported to Anthropic VDP via HackerOne — closed as Informative. Full disclosure below.*
+> This is the **first article in a series** on MCP (Model Context Protocol) security research. I've been digging into the protocol and its ecosystem for a while now, and there are more findings coming — some of which are currently being coordinated with the Anthropic security team regarding disclosure. Stay tuned.
 
 ---
 
 ## Context and Disclosure
 
-This research was submitted to Anthropic's Vulnerability Disclosure Program on HackerOne. After review, Anthropic closed the report as **Informative**, stating that the MCP specification's use of `MAY` rather than `MUST` for icon sanitization is an **intentional design decision**. Their response (quoted in full at the end of this article) clarifies that it is the responsibility of each client implementation to determine the appropriate level of sanitization based on its own trust model.
+This research was submitted to Anthropic's Vulnerability Disclosure Program on HackerOne. After review, Anthropic closed the report as **Informative**, considering that the MCP specification's use of `MAY` rather than `MUST` for icon sanitization is an **intentional design decision** — the spec is meant to accommodate a range of deployment scenarios, including trusted environments where mandatory sanitization would be unnecessarily restrictive.
 
-With the report closed and no embargo, I'm publishing the full technical details here. The goal is to raise awareness among MCP client developers and help them make informed security decisions for their implementations.
+Anthropic's position is that it is the responsibility of each client implementation to determine the appropriate level of sanitization based on its own trust model and deployment context. They pointed out that clients like Cursor already handle this correctly through Trusted Types and DOMPurify, which demonstrates the ecosystem working as intended.
+
+With the report closed and no embargo in place, I'm publishing the full technical details here. The goal is not to criticize the spec design, but to raise awareness among MCP client developers — especially those building community tools — so they can make informed security decisions for their implementations.
 
 ---
 
@@ -34,11 +36,9 @@ With the report closed and no embargo, I'm publishing the full technical details
 6. [Demonstration: Browser Client](#demonstration-browser-client)
 7. [Demonstration: Cursor (Mitigated)](#demonstration-cursor-mitigated)
 8. [Demonstration: Electron RCE](#demonstration-electron-rce)
-9. [Why This Is Not Self-XSS](#why-this-is-not-self-xss)
-10. [Comparison With Existing CVEs](#comparison-with-existing-cves)
-11. [Mitigations for Client Developers](#mitigations-for-client-developers)
-12. [Anthropic's Full Response](#anthropics-full-response)
-13. [Conclusion](#conclusion)
+9. [Comparison With Existing CVEs](#comparison-with-existing-cves)
+10. [Mitigations for Client Developers](#mitigations-for-client-developers)
+11. [Conclusion](#conclusion)
 
 ---
 
@@ -230,7 +230,7 @@ When the Electron client connects:
 With the RCE payload, the SVG silently executes `id > /tmp/mcp-vuln-07.txt` on the host:
 
 ![Terminal showing RCE proof — id command output](./rce-proof.png)
-*`uid=1000(felix) gid=1000(felix) groups=1000(felix),4(adm),27(sudo),983(docker),128(libvirt)...` — Full RCE. The user has sudo, docker, and libvirt groups.*
+*The `id` command executes successfully on the host — full RCE confirmed as user `felix`.*
 
 The evil server receives the callback with command output:
 
@@ -241,24 +241,6 @@ Meanwhile, the Electron client looks completely normal:
 
 ![Electron client showing normal UI despite silent compromise](./electron-silent.png)
 *3 tools rendered with red icons, descriptions displayed. No visible indication of compromise. The RCE was completely silent.*
-
----
-
-## Why This Is Not Self-XSS
-
-A common initial reaction is "the user chose to connect to that server, so this is self-XSS." Here's why that framing doesn't apply:
-
-| Aspect | Self-XSS | This Vulnerability |
-|:--|:--|:--|
-| **Attacker** | User attacks themselves | Server operator attacks client users |
-| **Victim** | Same person | Any user who connects to the server |
-| **User action** | Must paste malicious code | Just adds a server URL (normal workflow) |
-| **Payload delivery** | Manual | Automatic via protocol response |
-| **Trust boundary** | None crossed | Server-to-client boundary crossed |
-
-The realistic scenario: a developer finds a useful-looking MCP server on GitHub, an awesome-mcp list, or a team shared configuration. They add the URL to their IDE. The server responds with legitimate tools **and** malicious SVG icons. The icons render on connect. The developer sees normal tool icons. The attacker gets code execution.
-
-Users add MCP servers from external sources regularly. This is how the MCP ecosystem is designed to work.
 
 ---
 
@@ -299,22 +281,6 @@ For defense in depth, consider:
 - **Trusted Types** (as Cursor implements) to prevent raw string assignment to `innerHTML`
 - **Content Security Policy** with strict `script-src` to block inline script execution
 - For Electron apps: always use `nodeIntegration: false` and `contextIsolation: true` (Electron's recommended defaults)
-
----
-
-## Anthropic's Full Response
-
-> Thank you for your detailed report and the thorough proof of concept demonstrating SVG script injection via MCP icon fields. We appreciate the time and effort you put into this research.
->
-> After careful review, we've determined that this does not represent a vulnerability we will be addressing. The MCP specification's use of "MAY" rather than "MUST" for icon sanitization is an intentional design decision. The spec is designed to accommodate a range of deployment scenarios, including trusted environments where servers are operated by known parties serving trusted content. In those contexts, mandatory sanitization would be unnecessarily restrictive. It is ultimately the responsibility of each client implementation to determine the appropriate level of sanitization based on its own trust model and deployment context.
->
-> As your research also showed, clients like Cursor already mitigate this through Trusted Types and DOMPurify — demonstrating that the ecosystem is functioning as intended, with individual clients making their own security decisions appropriate to their context. For Electron-based clients specifically, configurations like nodeIntegration: true and contextIsolation: false represent insecure settings that are not recommended defaults, and the responsibility for securing those configurations lies with the client developers.
->
-> We encourage you to report findings like this directly to the specific client implementations that may lack adequate sanitization, as they are best positioned to address rendering security within their own applications.
->
-> — Anthropic (VDP)
-
-This is a fair response. The spec is intentionally flexible, and mature clients like Cursor handle it correctly. The risk lies with newer or community-built clients that may not implement sanitization. If you're building one, now you know what to watch for.
 
 ---
 
