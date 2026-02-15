@@ -7,7 +7,7 @@ summary: "A deep dive into a protocol-level vulnerability in the Model Context P
 tags: ["mcp", "xss", "rce", "svg", "electron", "vulnerability-research", "responsible-disclosure", "bug-bounty"]
 categories: ["Vulnerability Research", "Bug Bounty"]
 featuredImage: "featured.png"
-images: ["featured.png", "server-startup.png", "initialize-response.png", "decoded-svg.png", "tools-list.png", "xss-browser-alert.png", "xss-browser-full.png", "cursor-mcp-config.png", "cursor-connected.png", "cursor-trusted-types.png", "electron-xss.png", "rce-proof.png", "rce-callback.png", "electron-silent.png"]
+images: ["featured.png", "server-startup.png", "initialize-response.png", "decoded-svg.png", "tools-list.png", "XSS.png", "xss-browser-full.png", "cursor-mcp-config.png", "cursor-connected.png", "cursor-trusted-types.png", "electron-xss.png", "rce-proof.png", "rce-callback.png", "electron-silent.png"]
 ---
 
 # MCP SVG Icon Injection: From XSS to RCE Through the Protocol Spec
@@ -176,7 +176,7 @@ The attack follows the normal MCP connection flow. Nothing unusual happens from 
 
 To validate the vulnerability without targeting a specific product, I built a minimal MCP client simulator that renders icons via `innerHTML` — the same pattern used by many React/Electron applications.
 
-![XSS alert firing in browser client simulator](./xss-browser-alert.png)
+![XSS alert firing in browser client simulator](./XSS.png)
 *The client simulator connects to the malicious server. The SVG icon triggers `alert()` immediately on render — no click, no interaction.*
 
 ![Full browser client view showing XSS with connected tools](./xss-browser-full.png)
