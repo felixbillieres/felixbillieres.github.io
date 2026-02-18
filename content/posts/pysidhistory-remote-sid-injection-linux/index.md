@@ -37,31 +37,33 @@ That's [T1134.005](https://attack.mitre.org/techniques/T1134/005/) — SID-Histo
 
 All Windows-only. All require either being on the DC or having a pre-compromised secret.
 
-I wanted to do it **remotely, from a Linux box, with just domain credentials**.
+I wanted to do it **remotely, from any platform (Linux, macOS, Windows), with just domain credentials**.
 
 ---
 
 ## The wall: why "just LDAP-modify it" doesn't work
 
-First thing I tried, obviously. `sIDHistory` is `systemOnly: FALSE` in the AD schema — meaning it's technically writable, unlike `objectSid` which is locked at the schema level.
+The naive approach first. In Active Directory, every attribute in the schema has a [`systemOnly`](https://learn.microsoft.com/en-us/windows/win32/adschema/s-systemonly) flag. When it's set to `TRUE`, the attribute is entirely controlled by the system — no one can write to it, period. That's how `objectSid` works: locked at the schema level, immutable.
 
-So, LDAP `MODIFY_ADD` with a binary SID, right?
+`sIDHistory`? It's `systemOnly: FALSE`. Which means AD treats it as a regular, writable attribute. So the logical assumption is: as a Domain Admin, with full control over an object, a simple LDAP `MODIFY_ADD` with the SID to inject should work.
 
 ```
 insufficientAccessRights
 ```
 
-Even as Domain Admin. Even with explicit `WriteProperty` delegation. Every single time.
+Even as Domain Admin. Even with explicit `WriteProperty` delegation on the attribute. Every single time.
 
-Here's why. Active Directory runs **two access control layers**, and most people only know about the first one:
+### Two layers of access control
+
+The reason this fails is that Active Directory doesn't run a single access check when you modify an attribute — it runs **two**, and most people only know about the first one:
 
 {{< alert >}}
-**Layer 1 — the DSA/LDAP layer** checks your DACL. Got `WriteProperty` on `sIDHistory`? You pass. `GenericAll`? You pass. Domain Admin? You pass.
+**Layer 1 — the DSA/LDAP layer** is the one everyone is familiar with. It checks the [DACL](https://learn.microsoft.com/en-us/windows/win32/secauthz/dacls-and-aces) on the target object — do you have `WriteProperty` on `sIDHistory`? `GenericAll`? Are you a Domain Admin? If yes, you pass this layer. This is the classic permission model that you configure through ACLs, delegations, and Group Policy.
 
-**Layer 2 — the SAM layer** sits behind it and enforces its own rules on SAM-owned attributes. These rules are **not configurable** through ACLs, GPOs, or anything else.
+**Layer 2 — the SAM layer** sits behind the first one and enforces its own rules on attributes it considers "its own". These rules are **hardcoded in the Domain Controller's code** — not configurable through ACLs, GPOs, or anything else. Regardless of your AD permissions, the SAM layer has the final say on its attributes.
 {{< /alert >}}
 
-The SAM layer's verdict on `sIDHistory`:
+And the SAM layer's verdict on `sIDHistory` writes is asymmetric:
 
 ```
 MODIFY_ADD     →  BLOCKED  (always, regardless of permissions)
@@ -69,23 +71,42 @@ MODIFY_REPLACE →  BLOCKED  (same check)
 MODIFY_DELETE  →  ALLOWED  (if Layer 1 passed)
 ```
 
-You can **remove** SIDs from `sIDHistory` via LDAP. You just can't **add** them. That asymmetry is actually what makes [mimikatz's approach](https://github.com/gentilkiwi/mimikatz/blob/master/mimikatz/modules/kuhl_m_sid.c) work — it patches the conditional jumps in `ntdsa.dll` to disable these SAM checks. But that means running on the DC with SYSTEM, and the memory layout has shifted enough since Server 2016 that it's getting unreliable.
+You can **remove** SIDs from `sIDHistory` via LDAP. You just can't **add** them. This asymmetry is deliberate on Microsoft's part — write operations on `sIDHistory` are restricted to a specific API path that enforces additional security checks (auditing, trust validation, etc.), while deletions are considered less sensitive.
 
-So LDAP is a dead end. Time to look elsewhere.
+That's exactly why [mimikatz's `sid::patch`](https://github.com/gentilkiwi/mimikatz/blob/master/mimikatz/modules/kuhl_m_sid.c) takes the approach it does — it patches the conditional jumps in `ntdsa.dll` directly in memory to disable these SAM-layer checks. But that means running on the DC itself with SYSTEM privileges, and the memory layout of `ntdsa.dll` has shifted enough since Server 2016 that it's getting unreliable.
+
+So LDAP is a dead end for adding SIDs. Time to look elsewhere.
 
 ---
 
 ## The backdoor Microsoft left open
 
-Turns out Microsoft actually provides a *supported* way to add SIDs to `sIDHistory`. It's called [`DsAddSidHistory`](https://learn.microsoft.com/en-us/windows/win32/ad/using-dsaddsidhistory), a Win32 API designed for their [Active Directory Migration Tool](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/ad-ds-metadata-cleanup) (ADMT).
+Turns out Microsoft actually provides a *supported* way to add SIDs to `sIDHistory`. It's called [`DsAddSidHistory`](https://learn.microsoft.com/en-us/windows/win32/ad/using-dsaddsidhistory), a Win32 API designed for their [Active Directory Migration Tool](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/ad-ds-metadata-cleanup) (ADMT). When you migrate users from one domain to another, this API is what copies the old SIDs into `sIDHistory` to preserve access to legacy resources.
 
 Under the hood, it makes an RPC call via the [MS-DRSR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/) protocol — specifically [`IDL_DRSAddSidHistory`](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/376230a5-d806-4ae5-970a-f6243ee193c8), **opnum 20** on the DRSUAPI interface.
 
-If DRSUAPI sounds familiar, it should. That's the same RPC interface that [`secretsdump.py`](https://github.com/fortra/impacket/blob/master/impacket/dcerpc/v5/drsuapi.py) uses for [DCSync](https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync) (`DRSGetNCChanges`, opnum 3). Same pipe, different function number.
+### A quick word on opnums
 
-The crucial difference: **DRSAddSidHistory bypasses the SAM layer entirely**. It goes through the DRS replication engine, which has its own authorization model but doesn't enforce SAM-level restrictions on `sIDHistory` writes.
+When a client calls a function on a remote server via [RPC](https://learn.microsoft.com/en-us/windows/win32/rpc/rpc-start-page), it doesn't send the function name as a string — that would be slow and verbose. Instead, every function in an RPC interface is assigned an **operation number** (opnum): a simple integer, indexed from 0. The server receives the number and routes to the corresponding function.
 
-And opnum 20? **Nobody had ever implemented it in Python.** Not [impacket](https://github.com/fortra/impacket), not any other framework. The code simply didn't exist.
+The DRSUAPI interface exposes several functions, each with its own opnum:
+
+```
+Opnum    Function              Usage
+  0      DRSBind               Establish the session
+  3      DRSGetNCChanges       DCSync (dump hashes)
+ 20      DRSAddSidHistory      Inject a SID into sIDHistory
+```
+
+If you've ever run a [DCSync](https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync) attack, you already know this interface — [`secretsdump.py`](https://github.com/fortra/impacket/blob/master/impacket/dcerpc/v5/drsuapi.py) sends opnum 3 on the exact same RPC pipe. pySIDHistory just sends opnum 20 instead.
+
+### Why it bypasses the SAM layer
+
+`DRSAddSidHistory` doesn't go through LDAP — it goes through the DRS replication engine, which has its own authorization model. The replication engine operates at a lower level than the application layers and doesn't enforce SAM-level restrictions on `sIDHistory` writes. It's the same principle that makes DCSync work: AD replication has privileges that normal LDAP operations don't.
+
+### The problem: nobody had implemented it
+
+Opnum 20 didn't exist in any Python framework. Not in [impacket](https://github.com/fortra/impacket), not anywhere else. Impacket defines each RPC function as a Python class with its opnum — `DRSGetNCChanges` is there as opnum 3, but opnum 20 simply had no class. The code had to be written from scratch.
 
 ```
 Attacker (Linux)                        Domain Controller
@@ -102,6 +123,8 @@ Time to build it.
 ---
 
 ## Implementing opnum 20: looks simple, isn't
+
+When you call a function via RPC, the arguments need to be serialized into bytes to travel over the network. The format used by DCE/RPC is called [NDR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rpce/b6090c2b-f44a-47a1-a13b-b82ade0137b2) (Network Data Representation) — think of it as the binary equivalent of JSON for a REST API, except far more strict. Every data type has a precise wire encoding: a pointer, an array, and a string each serialize differently. Get a single type wrong and every byte after it shifts — the DC receives garbage and rejects the whole request.
 
 The [MS-DRSR spec](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/376230a5-d806-4ae5-970a-f6243ee193c8) defines the call like this:
 
@@ -243,24 +266,29 @@ Server DRS flags: 0x3fffff7f
 DRS_EXT_ADD_SID_HISTORY: PRESENT
 ```
 
-`0x3fffff7f` — nearly every flag set. The server supported opnum 20 the whole time. A full day of debugging for a parsing oversight.
+`0x3fffff7f` — nearly every flag set. The server supported opnum 20 the whole time.
+
+This was the most insidious of the three bugs because it wasn't a serialization issue — it was a logic error in response parsing that generated a false conclusion ("the server doesn't support this feature"). A conclusion that could have killed the entire project. A full day of debugging for a parsing oversight.
 
 ---
 
 ## Six errors to success
 
-With the plumbing finally working, the DC started giving me *real* errors. And each one taught me a prerequisite that the [DsAddSidHistory documentation](https://learn.microsoft.com/en-us/windows/win32/ad/using-dsaddsidhistory) mentions in isolation but never ties together:
+With the plumbing finally working, the DC started giving me *real* errors. And each one taught me a prerequisite that the [DsAddSidHistory documentation](https://learn.microsoft.com/en-us/windows/win32/ad/using-dsaddsidhistory) mentions in isolation but never ties together.
 
-| # | Error | What it means | What I did |
-|---|-------|--------------|------------|
-| 1 | **8534** | Source and destination are in the same forest | Switched to cross-forest source domain |
-| 2 | **8536** | Auditing not enabled on destination DC | `auditpol /set /category:"Account Management" /success:enable /failure:enable` |
-| 3 | **5** | Source DC rejected my credentials | Added `--src-username`, `--src-password`, `--src-domain` |
-| 4 | **8552** | Auditing not enabled on *source* DC | Same auditpol command on DC2 |
-| 5 | **1376** | Audit group `LAB1$$$` missing | `net localgroup LAB1$$$ /add` on both DCs |
-| 6 | **0** | **It worked.** | |
+**Error 8534** — `ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD`. Source and destination are in the same forest. `DRSAddSidHistory` is designed for cross-forest migrations — pointing it at a domain within the same forest makes no sense in that context, so the DC rejects it immediately. Fix: use a source domain in a separate forest.
 
-This progression is nowhere in the docs as a coherent sequence. I found it the hard way, one error at a time.
+**Error 8536** — `ERROR_DS_AUDIT_FAILURE` on the destination DC. Auditing isn't enabled. Microsoft requires that every SID injection be logged — it's a traceability safeguard baked into the API. Fix: `auditpol /set /category:"Account Management" /success:enable /failure:enable` on the destination DC.
+
+**Error 5** — `ERROR_ACCESS_DENIED`. The source DC rejected my credentials. `DRSAddSidHistory` doesn't just modify the destination — it also contacts the source DC to verify that the source principal actually exists. It needs valid credentials for that remote domain. Fix: pass `--src-username`, `--src-password`, `--src-domain`.
+
+**Error 8552** — Same audit failure, but on the *source* DC this time. Auditing must be enabled on **both** sides. Same `auditpol` command, run on DC2.
+
+**Error 1376** — `ERROR_NO_SUCH_ALIAS`. Specific local groups are missing on the DCs. `DRSAddSidHistory` expects local groups named `DOMAIN$$$` (the domain name followed by three dollar signs) to exist on both DCs. In production, [ADMT](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/ad-ds-metadata-cleanup) creates them automatically during migrations. In a lab built from scratch, they don't exist. Fix: `net localgroup LAB1$$$ /add` on both DCs.
+
+**Error 0** — **It worked.**
+
+All of these prerequisites are documented by Microsoft — but scattered across the `DsAddSidHistory` docs, the ADMT documentation, and separate KB articles. Never together, never in order. I found them one at a time, blind.
 
 ### The moment it worked
 
