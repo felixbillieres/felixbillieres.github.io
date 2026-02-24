@@ -11,7 +11,7 @@ enableCodeCopy = true
 
 replyByEmail = false
 
-mainSections = ["posts"]
+mainSections = ["posts", "road-to-anthropic"]
 robots = ""
 
 disableImageOptimization = false

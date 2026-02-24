@@ -12,6 +12,11 @@
   weight = 20
 
 [[main]]
+  name = "Road to Anthropic"
+  pageRef = "road-to-anthropic"
+  weight = 25
+
+[[main]]
   name = "Resume"
   pageRef = "resume"
   weight = 30
