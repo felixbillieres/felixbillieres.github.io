@@ -6,6 +6,7 @@ description: "How a gap in the MCP specification allows malicious SVG icons to a
 summary: "A deep dive into a protocol-level vulnerability in the Model Context Protocol (MCP) specification where malicious SVG icons delivered via data: URIs can escalate from XSS to full RCE on Electron clients. Reported to Anthropic VDP, closed as Informative — disclosed here with full technical details."
 tags: ["mcp", "xss", "rce", "svg", "electron", "vulnerability-research", "responsible-disclosure", "bug-bounty"]
 categories: ["Vulnerability Research", "Bug Bounty"]
+series: ["MCP Security Research"]
 featuredImage: "featured.png"
 images: ["featured.png", "server-startup.png", "initialize-response.png", "decoded-svg.png", "tools-list.png", "XSS.png", "xss-browser-full.png", "cursor-mcp-config.png", "cursor-connected.png", "cursor-trusted-types.png", "electron-xss.png", "rce-proof.png", "rce-callback.png", "electron-silent.png"]
 ---

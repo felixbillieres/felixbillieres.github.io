@@ -6,6 +6,7 @@ description: "A malicious MCP server can force any connecting client — includi
 summary: "Second article in my MCP security series. A malicious MCP server returns a 401 with a crafted WWW-Authenticate header pointing resource_metadata at any URL it wants. The MCP SDK fetches that URL without origin validation — blind SSRF, affects both Python and TypeScript SDKs, Claude Desktop, and Claude Code. Reported to Anthropic VDP, closed as duplicate. Full technical details disclosed here."
 tags: ["mcp", "ssrf", "oauth", "vulnerability-research", "responsible-disclosure", "bug-bounty", "python", "typescript"]
 categories: ["Vulnerability Research", "Bug Bounty"]
+series: ["MCP Security Research"]
 featuredImage: "featured.png"
 images: ["featured.png", "poc-overview.png", "canary-hit.png", "client-logs.png", "rogue-server-logs.png", "standalone-proof.png"]
 ---
