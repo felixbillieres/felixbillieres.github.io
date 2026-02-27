@@ -15,8 +15,6 @@ images: ["featured.png", "drsuapi_injection.png", "query.png", "audit.png", "aud
 
 Challenge accepted.
 
-![Before/After pySIDHistory](./featured.png)
-
 ---
 
 ## So, what's sIDHistory?
