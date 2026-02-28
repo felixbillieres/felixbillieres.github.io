@@ -2,9 +2,9 @@
 title: "pySIDHistory - Remote SID History Injection from Linux"
 date: 2026-02-17
 draft: false
-description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux — and why that wasn't enough, leading to DSInternals and DCShadow methods."
-summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. Here's how I proved them wrong with three methods: DRSUAPI, DSInternals, and DCShadow replication."
-tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "dcshadow", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
+description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux — and why that wasn't enough, leading to the DSInternals method."
+summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. Here's how I proved them wrong with two methods: DRSUAPI and DSInternals."
+tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
 categories: ["Active Directory", "Tools"]
 featuredImage: "featured.png"
 images: ["featured.png", "drsuapi_injection.png"]
@@ -381,9 +381,9 @@ python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.16
 | |_) | |_| |___) || | | |_| |  _  | \__ \ || (_) | |  | |_| |
 | .__/ \__, |____/|___||____/|_| |_|_|___/\__\___/|_|   \__, |
 |_|    |___/                                             |___/
-    Remote SID History Injection & Audit Tool  v2
+    Remote SID History Injection & Audit Tool  v3
     DSInternals + DRSUAPI | github.com/felixbillieres
-                                      @felixbillieres
+
 
 [*] Injection target: user1
 [*] SID to inject:   S-1-5-21-1064857176-2493228643-2199314749-512 (Domain Admins)
@@ -430,66 +430,11 @@ SMB  192.168.56.10  445  DC1  DefaultAccount:503:aad3b435b51404ee...:31d6cfe0d16
 
 ---
 
-## The downtime problem
-
-DSInternals works. Privileged SIDs, same-domain, any RID — it solves everything DRSUAPI couldn't. But there's an elephant in the room: **it stops the Domain Controller**.
-
-For ~5-10 seconds, the DC stops processing authentication. In a multi-DC environment, that's fine — the other DCs pick up the slack. But in a single-DC lab (or worse, a production environment with one DC), those 5-10 seconds are an eternity. Kerberos auth fails, LDAP queries time out, clients get disconnected. It's not subtle.
-
-And beyond the operational risk, stopping NTDS leaves a trail: Event 7036 (service state change), Event 7045 (new service installed), PowerShell execution logs, file artifacts on disk. A SOC watching for NTDS service interruptions would catch this immediately.
-
-So the question became: **can we inject privileged SIDs without any NTDS downtime?**
-
-## Down the replication rabbit hole
-
-I started looking at how AD actually propagates changes between Domain Controllers. DC-to-DC replication uses the same DRSUAPI interface I'd already built for opnum 20 — specifically `DRSGetNCChanges` (opnum 3), the same call that [DCSync](https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync) exploits. But DCSync *reads* — it pulls data from the DC. What if you could *push* instead?
-
-That's exactly what [DCShadow](https://www.dcshadow.com/) does. Researched by [Le Toux and Delpy](https://www.dcshadow.com/) (the mimikatz guys), DCShadow ([T1207](https://attack.mitre.org/techniques/T1207/)) flips the replication model: instead of asking a DC for its changes, you **register yourself as a DC** and wait for the legitimate DC to pull changes from *you*. The legitimate DC calls `DRSGetNCChanges` against your rogue DC, and you serve crafted replication data — including whatever attribute modifications you want.
-
-I found [ShutdownRepo's Python implementation](https://github.com/ShutdownRepo/dcshadow) while researching this approach. It proved the concept was viable from Linux, but it was a standalone tool focused on generic attribute modification. I wanted to integrate it as a third injection method in pySIDHistory, specifically optimized for `sIDHistory` injection with full lifecycle management and cleanup.
-
-## Injection — DCShadow (replication)
-
-The DCShadow method works by temporarily turning the attacker machine into a Domain Controller:
-
-```
-Attacker (Linux, root)                       Domain Controller
-  │                                                │
-  │── SAMR ─────────────────────────────────────►│  Create machine account
-  │── LDAP ─────────────────────────────────────►│  Register DNS A record
-  │── LDAP/DRSUAPI ─────────────────────────────►│  Register nTDSDSA + SPNs
-  │                                                │
-  │   [Start EPM (135) + DRSUAPI (1337) servers]   │
-  │                                                │
-  │── DRSUAPI DRSReplicaAdd ───────────────────►│  "Pull changes from me"
-  │◄── DsGetNCChanges ─────────────────────────│  DC connects to us
-  │── Crafted sIDHistory response ──────────────►│  DC applies the change
-  │                                                │
-  │── LDAP ─────────────────────────────────────►│  Cleanup (nTDSDSA, DNS, account)
-```
-
-No NTDS downtime. No disk artifacts on the DC. No service creation. The DC sees a legitimate replication event from what it believes is a peer Domain Controller. The sIDHistory attribute gets modified through the same replication path that propagates any normal AD change.
-
-The implementation required building:
-- **A minimal EPM server** (port 135) — responds to endpoint mapping queries with our DRSUAPI port
-- **A minimal DRSUAPI server** (port 1337) — handles `DRSBind`, serves crafted `DRSGetNCChanges` responses, processes `DRSUpdateRefs`
-- **Server-side Kerberos authentication** — the DC authenticates to our rogue DC via Kerberos, so we need to compute machine account keys and handle AP-REQ/AP-REP
-- **GSS-API wrap/unwrap** — all DRSUAPI traffic is encrypted with PKT_PRIVACY, so we implement both CFX (AES) and legacy (RC4) message protection
-- **Replication data construction** — manually building NDR-encoded `DRS_MSG_GETCHGREPLY_V6` with the crafted sIDHistory attribute and correct metadata (USN, schema prefix table, UPTODATE_CURSOR)
-
-```bash
-# DCShadow injection (requires root for port 135)
-sudo python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
-    --target user1 --inject domain-admins --method dcshadow --attacker-ip 192.168.56.1 --force
-```
-
-The `--attacker-ip` flag specifies the IP address where the rogue DC's RPC servers will listen. The legitimate DC must be able to reach this IP on ports 135 (EPM) and 1337 (DRSUAPI). Port 135 requires root/sudo on Linux.
-
 ## That's a wrap
 
-This whole thing started because someone wrote "there's no way to do this from Linux" and I took it personally. Three versions later, here we are — DRSUAPI for the protocol purists, DSInternals for when you need the big guns, and DCShadow for when you want the DC to do the dirty work for you through its own replication engine.
+This whole thing started because someone wrote "there's no way to do this from Linux" and I took it personally. Two versions later, here we are — DRSUAPI for the protocol purists who want stealth cross-forest injection, and DSInternals for when you need the big guns and want to inject any SID regardless of RID or domain boundaries.
 
-Each one exists because the previous one had a limitation that bugged me enough to keep going. DRSUAPI can't do same-domain? Fine, we'll modify the database directly. DSInternals stops NTDS? Cool, let's become a Domain Controller instead. It's turtles all the way down.
+Each one exists because the previous one had a limitation that bugged me enough to keep going. DRSUAPI can't do same-domain or privileged SIDs? Fine, we'll stop NTDS and modify the database directly.
 
 The code's at [github.com/felixbillieres/pySIDHistory](https://github.com/felixbillieres/pySIDHistory) — lab included if you want to break things safely. Have fun, stay legal, and don't be the reason your SOC has a bad day.
 
@@ -512,6 +457,3 @@ The code's at [github.com/felixbillieres/pySIDHistory](https://github.com/felixb
 | [DSInternals](https://github.com/MichaelGrafnetter/DSInternals) | Offline ntds.dit modification (v2 uses 4.14 for `Add-ADDBSidHistory`) |
 | [MS-SCMR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-scmr/) | Service Control Manager Remote Protocol (v2 service execution) |
 | [Impacket Developer Guide](https://cicada-8.medium.com/impacket-developer-guide-part-1-rpc-4df4fe6d79d7) | Extending impacket with custom RPC |
-| [MITRE ATT&CK T1207](https://attack.mitre.org/techniques/T1207/) | Rogue Domain Controller (DCShadow technique) |
-| [DCShadow](https://www.dcshadow.com/) | Original DCShadow research by Le Toux & Delpy |
-| [ShutdownRepo/dcshadow](https://github.com/ShutdownRepo/dcshadow) | Python DCShadow reference implementation |
