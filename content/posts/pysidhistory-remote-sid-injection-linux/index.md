@@ -7,7 +7,7 @@ summary: "The Hacker Recipes said remote SID History injection from Linux was im
 tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "dcshadow", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
 categories: ["Active Directory", "Tools"]
 featuredImage: "featured.png"
-images: ["featured.png", "drsuapi_injection.png", "query.png", "audit.png", "audit_json.png", "enum_trusts.png", "lookup.png", "list_presets.png"]
+images: ["featured.png", "drsuapi_injection.png"]
 ---
 
 > *"There is currently no way to exploit this technique purely from a distant UNIX-like machine, as it requires some operations on specific Windows processes' memory."*
@@ -430,80 +430,7 @@ SMB  192.168.56.10  445  DC1  DefaultAccount:503:aad3b435b51404ee...:31d6cfe0d16
 
 ---
 
-## Building a lab nobody else had
-
-Here's the thing about testing DRSAddSidHistory: you need **two separate forests with a bidirectional trust**. That's not something [GOAD](https://github.com/Orange-Cyberdefense/GOAD), [DetectionLab](https://github.com/clong/DetectionLab), or any standard AD lab gives you. Their multi-domain setups are parent-child within the same forest — DRSAddSidHistory rejects those with error 8534.
-
-So I built one. Two Windows Server 2019 DCs, fully automated with Vagrant:
-
-| Machine | Domain | IP | Role |
-|---------|--------|----|------|
-| DC1 | lab1.local | 192.168.56.10 | Destination forest |
-| DC2 | lab2.local | 192.168.56.11 | Source forest |
-
-A few things I learned the hard way during setup:
-
-**`netdom trust /add` is a trap.** It creates an [external trust](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/forest-design-models), not a forest trust. External trusts handle SID History differently and won't work for this. The lab uses .NET's `Forest.CreateTrustRelationship()` for a proper [forest trust](https://learn.microsoft.com/en-us/entra/identity/domain-services/concepts-forest-trust), then separately enables SID History with `netdom /enablesidhistory:yes`.
-
-**Audit groups don't exist by default.** DRSAddSidHistory expects local groups named `SRCDOM$$$` and `DSTDOM$$$` on both DCs. In a real environment, [ADMT](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/deploy/ad-ds-metadata-cleanup) creates them during migrations. In a lab, you create them yourself or you get error 1376 forever.
-
-The full lab ships in the `lab/` directory of the repo with a `rollback.sh` script that resets everything for retesting:
-
-```bash
-cd lab/
-vagrant up dc1       # ~15 min
-vagrant up dc2       # ~15 min
-vagrant winrm dc1 -c "powershell -File C:\vagrant\scripts\setup-trust.ps1"
-cd .. && ./lab/rollback.sh --all  # auditing + audit groups
-```
-
----
-
-## What the tool does
-
-The tool now ships three injection methods and a full recon/audit toolkit. Pick your method based on the scenario:
-
-| | DSInternals (default) | DRSUAPI (legacy) | DCShadow (replication) |
-|---|---|---|---|
-| **Privileged SIDs** (DA, EA, krbtgt) | Yes | No (SID-filtered at trust boundary) | Yes |
-| **Same-domain injection** | Yes | No (error 8534) | Yes |
-| **Cross-forest injection** | Yes | Yes | Yes |
-| **Requires** | Domain Admin on the DC | DA + auditing + audit groups + trust | DA + root (port 135) + network reachability |
-| **NTDS downtime** | ~5-10 seconds | None | None |
-| **Stealth** | Lower (stops service, writes to disk) | Medium (pure RPC, no artifacts) | Highest (native replication, no disk artifacts) |
-| **Best for** | Privilege escalation (RID < 1000) | Stealth persistence (RID > 1000) | Zero-downtime injection with full SID control |
-
-Here's the key insight: **DRSUAPI isn't dead — it's just specialized**. SID filtering only strips SIDs with RID < 1000 (the well-known privileged groups: Domain Admins at -512, Enterprise Admins at -519, etc.). Custom groups created in AD get RIDs starting at 1000+. If you inject the SID of a custom high-privilege group from a foreign forest — say, a group that has GenericAll on the domain root — that SID sails through the trust boundary untouched.
-
-The tool keeps all three methods: DSInternals for the loud-but-unrestricted approach (need DA? this is the one), DRSUAPI for stealth cross-forest persistence where you target custom groups, and DCShadow for zero-downtime privileged SID injection via native AD replication.
-
-### Injection — DSInternals (default)
-
-```bash
-# Same-domain: inject Domain Admins into user1
-python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
-    --target user1 --inject domain-admins --force
-
-# Cross-domain: inject Domain Admins of lab2.local via trust resolution
-python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
-    --target user1 --inject domain-admins --inject-domain lab2.local --force
-
-# Raw SID injection
-python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
-    --target user1 --inject S-1-5-21-3522073385-2671856591-2684624930-512 --force
-```
-
-### Injection — DRSUAPI (stealth)
-
-For cross-forest scenarios where stealth matters and you're targeting custom groups (RID > 1000):
-
-```bash
-python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
-    --target user1 --method drsuapi --source-user da-admin2 --source-domain lab2.local \
-    --src-username da-admin2 --src-password 'Password123!' --src-domain lab2.local
-```
-
-### The downtime problem
+## The downtime problem
 
 DSInternals works. Privileged SIDs, same-domain, any RID — it solves everything DRSUAPI couldn't. But there's an elephant in the room: **it stops the Domain Controller**.
 
@@ -513,7 +440,7 @@ And beyond the operational risk, stopping NTDS leaves a trail: Event 7036 (servi
 
 So the question became: **can we inject privileged SIDs without any NTDS downtime?**
 
-### Down the replication rabbit hole
+## Down the replication rabbit hole
 
 I started looking at how AD actually propagates changes between Domain Controllers. DC-to-DC replication uses the same DRSUAPI interface I'd already built for opnum 20 — specifically `DRSGetNCChanges` (opnum 3), the same call that [DCSync](https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync) exploits. But DCSync *reads* — it pulls data from the DC. What if you could *push* instead?
 
@@ -521,7 +448,7 @@ That's exactly what [DCShadow](https://www.dcshadow.com/) does. Researched by [L
 
 I found [ShutdownRepo's Python implementation](https://github.com/ShutdownRepo/dcshadow) while researching this approach. It proved the concept was viable from Linux, but it was a standalone tool focused on generic attribute modification. I wanted to integrate it as a third injection method in pySIDHistory, specifically optimized for `sIDHistory` injection with full lifecycle management and cleanup.
 
-### Injection — DCShadow (replication)
+## Injection — DCShadow (replication)
 
 The DCShadow method works by temporarily turning the attacker machine into a Domain Controller:
 
@@ -558,118 +485,13 @@ sudo python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 1
 
 The `--attacker-ip` flag specifies the IP address where the rogue DC's RPC servers will listen. The legitimate DC must be able to reach this IP on ports 135 (EPM) and 1337 (DRSUAPI). Port 135 requires root/sudo on Linux.
 
-### Verifying it worked — query
+## That's a wrap
 
-After injection, check that the SID actually landed:
+This whole thing started because someone wrote "there's no way to do this from Linux" and I took it personally. Three versions later, here we are — DRSUAPI for the protocol purists, DSInternals for when you need the big guns, and DCShadow for when you want the DC to do the dirty work for you through its own replication engine.
 
-![Query sIDHistory](./query.png)
+Each one exists because the previous one had a limitation that bugged me enough to keep going. DRSUAPI can't do same-domain? Fine, we'll modify the database directly. DSInternals stops NTDS? Cool, let's become a Domain Controller instead. It's turtles all the way down.
 
-Shows the target's `sIDHistory` entries with SID resolution — you can see exactly which principal's SID got injected and from which domain.
-
-### Domain-wide audit
-
-This is honestly where the tool becomes most useful on an ongoing basis. Scans every object in the domain for `sIDHistory` entries and flags risk levels:
-
-![Domain audit](./audit.png)
-
-The **same-domain SID detection** is the real differentiator here. Legitimate `sIDHistory` comes from migrations — different domain. If you see same-domain SIDs in `sIDHistory`, that's almost always an attack artifact. In non-migration environments, this check has essentially zero false positives.
-
-Need to feed the results to a SIEM? JSON export:
-
-![JSON audit output](./audit_json.png)
-
-```bash
-python3 sidhistory.py -d CORP.LOCAL -u admin -p 'Pass123' --dc-ip 10.0.0.1 \
-    --audit -o json --output-file audit.json
-```
-
-### Trust enumeration
-
-Before you even attempt injection, you need to know which trusts allow SID History. This shows all domain trusts with their [SID filtering](https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/) status:
-
-![Enumerate trusts](./enum_trusts.png)
-
-Look for `TREAT_AS_EXTERNAL` (0x40) — that means SID History is allowed across the trust. `QUARANTINED_DOMAIN` (0x04) means [SID filtering](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/forest-recovery-guide/ad-forest-recovery-reset-trust) is active and will strip privileged SIDs at the boundary.
-
-### SID lookup & well-known presets
-
-Quick utilities for identifying targets:
-
-![SID lookup](./lookup.png)
-
-![List presets](./list_presets.png)
-
-The presets list shows well-known privileged SIDs for the target domain — useful for quickly identifying what to look for in `sIDHistory` entries during an audit.
-
----
-
-## For the defenders reading this
-
-### What to watch for
-
-Three Event IDs matter:
-
-| Event ID | What it means | How loud is it? |
-|----------|--------------|-----------------|
-| [**4765**](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4765) | SID History was added | Should be near-zero in production. Investigate immediately. |
-| [**4766**](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4766) | SID History add attempt failed | Someone tried and failed. Also investigate. |
-| **4738** | User account changed | Noisy — fires on any attribute change. Useful for correlation. |
-
-4765 and 4766 are **specific** to SID History operations. Outside of scheduled domain migrations, they should never fire. If they do, something is very wrong.
-
-### v2 (DSInternals) detection
-
-The DSInternals method leaves a different footprint:
-
-| Indicator | What to look for |
-|-----------|-----------------|
-| **Service creation** | Event 7045: A new service `__pySIDHist` was installed (System log) |
-| **NTDS stop/start** | Event 7036: NTDS service entered stopped/running state |
-| **PowerShell execution** | Event 4688: `powershell.exe -ExecutionPolicy Bypass` as SYSTEM |
-| **File artifacts** | `C:\Windows\Temp\__pysidhistory_*` and `C:\Windows\Temp\__DSInternals414\` |
-| **SMB writes to ADMIN$** | Network logs showing file upload to `\\DC\ADMIN$\Temp\` |
-
-NTDS stopping on a production DC outside of scheduled maintenance is a very loud signal. Monitor for it.
-
-### v3 (DCShadow) detection
-
-DCShadow is the stealthiest method but still leaves traces:
-
-| Indicator | What to look for |
-|-----------|-----------------|
-| **Machine account creation** | Event 4742: Computer account created/modified, followed by rapid deletion |
-| **nTDSDSA objects** | Short-lived nTDSDSA objects in `CN=Sites,CN=Configuration` — legitimate DCs don't appear and disappear in seconds |
-| **Unexpected replication** | Event 4929: Active Directory replica source naming context removed |
-| **Directory changes** | Event 4662: Operations on nTDSDSA objects by non-DC accounts |
-| **Network anomalies** | DRSGetNCChanges traffic from non-DC IP addresses |
-
-The key signal is the lifecycle pattern: machine account created → nTDSDSA registered → replication event → immediate cleanup. Legitimate DC promotions don't follow this pattern.
-
-### What to do about it
-
-- **Monitor 4765/4766.** These are high-fidelity indicators for DRSUAPI injection. Alert on them.
-- **Monitor NTDS service events.** Event 7036 with NTDS entering "stopped" state is abnormal in production — alert on it. This catches the DSInternals method.
-- **Run periodic audits.** The `--audit` flag scans the whole domain — schedule it.
-- **Same-domain SIDs are the red flag.** Legitimate migrations produce cross-domain SIDs. Same-domain SIDs in `sIDHistory` are almost always attack artifacts. The DSInternals method makes this trivially easy — it's the primary indicator.
-- **[Enable SID Filtering](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/forest-recovery-guide/ad-forest-recovery-reset-trust)** on every trust where you don't actively need SID History for migrations.
-- **Lock down DA accounts.** Both methods require Domain Admin. Fewer DAs = smaller attack surface.
-- **Audit your trusts.** `--enum-trusts` shows you exactly which trusts are vulnerable.
-
----
-
-## Wrapping up
-
-What started as "I wonder if that quote is actually true" turned into three separate deep dives, each born from the limitations of the previous one.
-
-The first — implementing DRSUAPI opnum 20 from scratch — taught me more about NDR serialization than I ever wanted to know. Three bugs that all returned the same useless error, a flag parsing disaster that almost killed the project, and six prerequisites scattered across Microsoft's documentation like a scavenger hunt. And then the punchline: it all worked perfectly, but SID filtering meant I couldn't actually escalate privileges with it.
-
-So I built v2 — chaining SMB, SCMR, and DSInternals to modify `ntds.dit` offline. Noisier, brief NTDS downtime, but it bypasses every validation layer. Any SID, any domain. Privilege escalation finally worked. But stopping NTDS on a production DC, even for 5 seconds, felt like a problem worth solving.
-
-Which led to DCShadow — the method I'm most proud of technically. Building a rogue Domain Controller from scratch in Python, complete with Kerberos authentication, GSS-API message protection, and hand-crafted NDR replication responses. Zero NTDS downtime, zero disk artifacts on the DC, any SID. The DC thinks it's just replicating normally with a peer.
-
-Three methods, three tradeoffs. DSInternals for reliability when downtime is acceptable. DRSUAPI for stealth cross-forest persistence with custom groups. DCShadow for zero-downtime privileged SID injection through native replication. Pick the right tool for the job.
-
-The tool is at [github.com/felixbillieres/pySIDHistory](https://github.com/felixbillieres/pySIDHistory), lab included. For authorized security testing only.
+The code's at [github.com/felixbillieres/pySIDHistory](https://github.com/felixbillieres/pySIDHistory) — lab included if you want to break things safely. Have fun, stay legal, and don't be the reason your SOC has a bad day.
 
 ---
 
