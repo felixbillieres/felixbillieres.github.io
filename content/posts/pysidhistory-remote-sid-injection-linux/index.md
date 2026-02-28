@@ -2,9 +2,9 @@
 title: "pySIDHistory - Remote SID History Injection from Linux"
 date: 2026-02-17
 draft: false
-description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux — and why that wasn't enough."
-summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. Here's how I proved them wrong, discovered DRSUAPI couldn't actually privesc, and built a second tool that could."
-tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
+description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux — and why that wasn't enough, leading to DSInternals and DCShadow methods."
+summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. Here's how I proved them wrong with three methods: DRSUAPI, DSInternals, and DCShadow replication."
+tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "dcshadow", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
 categories: ["Active Directory", "Tools"]
 featuredImage: "featured.png"
 images: ["featured.png", "drsuapi_injection.png", "query.png", "audit.png", "audit_json.png", "enum_trusts.png", "lookup.png", "list_presets.png"]
@@ -327,7 +327,7 @@ I had built a perfectly functional gun that only fires blanks.
 
 ---
 
-## v2 — doing it the hard way
+## v2 — bypassing every validation layer
 
 The core issue with DRSUAPI is that it operates within Windows' trust and validation model. Every safeguard kicks in: cross-forest requirement, SID filtering, auditing prerequisites. To inject privileged SIDs, I needed to bypass all of that — modify the attribute at a level where none of these checks exist.
 
@@ -461,16 +461,21 @@ cd .. && ./lab/rollback.sh --all  # auditing + audit groups
 
 ## What the tool does
 
-v2 ships both injection methods and a full recon/audit toolkit. Pick your method based on the scenario:
+The tool now ships three injection methods and a full recon/audit toolkit. Pick your method based on the scenario:
 
-| | DSInternals (v2 default) | DRSUAPI (v1 legacy) |
-|---|---|---|
-| **Privileged SIDs** (DA, EA, krbtgt) | Yes | No (SID-filtered at trust boundary) |
-| **Same-domain injection** | Yes | No (error 8534) |
-| **Cross-forest injection** | Yes | Yes |
-| **Requires** | Domain Admin on the DC | DA + auditing + audit groups + trust |
-| **NTDS downtime** | ~5 seconds | None |
-| **Stealth** | Lower (stops service, writes to disk) | Higher (pure RPC) |
+| | DSInternals (default) | DRSUAPI (legacy) | DCShadow (replication) |
+|---|---|---|---|
+| **Privileged SIDs** (DA, EA, krbtgt) | Yes | No (SID-filtered at trust boundary) | Yes |
+| **Same-domain injection** | Yes | No (error 8534) | Yes |
+| **Cross-forest injection** | Yes | Yes | Yes |
+| **Requires** | Domain Admin on the DC | DA + auditing + audit groups + trust | DA + root (port 135) + network reachability |
+| **NTDS downtime** | ~5-10 seconds | None | None |
+| **Stealth** | Lower (stops service, writes to disk) | Medium (pure RPC, no artifacts) | Highest (native replication, no disk artifacts) |
+| **Best for** | Privilege escalation (RID < 1000) | Stealth persistence (RID > 1000) | Zero-downtime injection with full SID control |
+
+Here's the key insight: **DRSUAPI isn't dead — it's just specialized**. SID filtering only strips SIDs with RID < 1000 (the well-known privileged groups: Domain Admins at -512, Enterprise Admins at -519, etc.). Custom groups created in AD get RIDs starting at 1000+. If you inject the SID of a custom high-privilege group from a foreign forest — say, a group that has GenericAll on the domain root — that SID sails through the trust boundary untouched.
+
+The tool keeps all three methods: DSInternals for the loud-but-unrestricted approach (need DA? this is the one), DRSUAPI for stealth cross-forest persistence where you target custom groups, and DCShadow for zero-downtime privileged SID injection via native AD replication.
 
 ### Injection — DSInternals (default)
 
@@ -488,13 +493,70 @@ python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.16
     --target user1 --inject S-1-5-21-3522073385-2671856591-2684624930-512 --force
 ```
 
-### Injection — DRSUAPI (legacy)
+### Injection — DRSUAPI (stealth)
+
+For cross-forest scenarios where stealth matters and you're targeting custom groups (RID > 1000):
 
 ```bash
 python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
     --target user1 --method drsuapi --source-user da-admin2 --source-domain lab2.local \
     --src-username da-admin2 --src-password 'Password123!' --src-domain lab2.local
 ```
+
+### The downtime problem
+
+DSInternals works. Privileged SIDs, same-domain, any RID — it solves everything DRSUAPI couldn't. But there's an elephant in the room: **it stops the Domain Controller**.
+
+For ~5-10 seconds, the DC stops processing authentication. In a multi-DC environment, that's fine — the other DCs pick up the slack. But in a single-DC lab (or worse, a production environment with one DC), those 5-10 seconds are an eternity. Kerberos auth fails, LDAP queries time out, clients get disconnected. It's not subtle.
+
+And beyond the operational risk, stopping NTDS leaves a trail: Event 7036 (service state change), Event 7045 (new service installed), PowerShell execution logs, file artifacts on disk. A SOC watching for NTDS service interruptions would catch this immediately.
+
+So the question became: **can we inject privileged SIDs without any NTDS downtime?**
+
+### Down the replication rabbit hole
+
+I started looking at how AD actually propagates changes between Domain Controllers. DC-to-DC replication uses the same DRSUAPI interface I'd already built for opnum 20 — specifically `DRSGetNCChanges` (opnum 3), the same call that [DCSync](https://www.thehacker.recipes/ad/movement/credentials/dumping/dcsync) exploits. But DCSync *reads* — it pulls data from the DC. What if you could *push* instead?
+
+That's exactly what [DCShadow](https://www.dcshadow.com/) does. Researched by [Le Toux and Delpy](https://www.dcshadow.com/) (the mimikatz guys), DCShadow ([T1207](https://attack.mitre.org/techniques/T1207/)) flips the replication model: instead of asking a DC for its changes, you **register yourself as a DC** and wait for the legitimate DC to pull changes from *you*. The legitimate DC calls `DRSGetNCChanges` against your rogue DC, and you serve crafted replication data — including whatever attribute modifications you want.
+
+I found [ShutdownRepo's Python implementation](https://github.com/ShutdownRepo/dcshadow) while researching this approach. It proved the concept was viable from Linux, but it was a standalone tool focused on generic attribute modification. I wanted to integrate it as a third injection method in pySIDHistory, specifically optimized for `sIDHistory` injection with full lifecycle management and cleanup.
+
+### Injection — DCShadow (replication)
+
+The DCShadow method works by temporarily turning the attacker machine into a Domain Controller:
+
+```
+Attacker (Linux, root)                       Domain Controller
+  │                                                │
+  │── SAMR ─────────────────────────────────────►│  Create machine account
+  │── LDAP ─────────────────────────────────────►│  Register DNS A record
+  │── LDAP/DRSUAPI ─────────────────────────────►│  Register nTDSDSA + SPNs
+  │                                                │
+  │   [Start EPM (135) + DRSUAPI (1337) servers]   │
+  │                                                │
+  │── DRSUAPI DRSReplicaAdd ───────────────────►│  "Pull changes from me"
+  │◄── DsGetNCChanges ─────────────────────────│  DC connects to us
+  │── Crafted sIDHistory response ──────────────►│  DC applies the change
+  │                                                │
+  │── LDAP ─────────────────────────────────────►│  Cleanup (nTDSDSA, DNS, account)
+```
+
+No NTDS downtime. No disk artifacts on the DC. No service creation. The DC sees a legitimate replication event from what it believes is a peer Domain Controller. The sIDHistory attribute gets modified through the same replication path that propagates any normal AD change.
+
+The implementation required building:
+- **A minimal EPM server** (port 135) — responds to endpoint mapping queries with our DRSUAPI port
+- **A minimal DRSUAPI server** (port 1337) — handles `DRSBind`, serves crafted `DRSGetNCChanges` responses, processes `DRSUpdateRefs`
+- **Server-side Kerberos authentication** — the DC authenticates to our rogue DC via Kerberos, so we need to compute machine account keys and handle AP-REQ/AP-REP
+- **GSS-API wrap/unwrap** — all DRSUAPI traffic is encrypted with PKT_PRIVACY, so we implement both CFX (AES) and legacy (RC4) message protection
+- **Replication data construction** — manually building NDR-encoded `DRS_MSG_GETCHGREPLY_V6` with the crafted sIDHistory attribute and correct metadata (USN, schema prefix table, UPTODATE_CURSOR)
+
+```bash
+# DCShadow injection (requires root for port 135)
+sudo python3 sidhistory.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
+    --target user1 --inject domain-admins --method dcshadow --attacker-ip 192.168.56.1 --force
+```
+
+The `--attacker-ip` flag specifies the IP address where the rogue DC's RPC servers will listen. The legitimate DC must be able to reach this IP on ports 135 (EPM) and 1337 (DRSUAPI). Port 135 requires root/sudo on Linux.
 
 ### Verifying it worked — query
 
@@ -569,6 +631,20 @@ The DSInternals method leaves a different footprint:
 
 NTDS stopping on a production DC outside of scheduled maintenance is a very loud signal. Monitor for it.
 
+### v3 (DCShadow) detection
+
+DCShadow is the stealthiest method but still leaves traces:
+
+| Indicator | What to look for |
+|-----------|-----------------|
+| **Machine account creation** | Event 4742: Computer account created/modified, followed by rapid deletion |
+| **nTDSDSA objects** | Short-lived nTDSDSA objects in `CN=Sites,CN=Configuration` — legitimate DCs don't appear and disappear in seconds |
+| **Unexpected replication** | Event 4929: Active Directory replica source naming context removed |
+| **Directory changes** | Event 4662: Operations on nTDSDSA objects by non-DC accounts |
+| **Network anomalies** | DRSGetNCChanges traffic from non-DC IP addresses |
+
+The key signal is the lifecycle pattern: machine account created → nTDSDSA registered → replication event → immediate cleanup. Legitimate DC promotions don't follow this pattern.
+
 ### What to do about it
 
 - **Monitor 4765/4766.** These are high-fidelity indicators for DRSUAPI injection. Alert on them.
@@ -583,11 +659,15 @@ NTDS stopping on a production DC outside of scheduled maintenance is a very loud
 
 ## Wrapping up
 
-What started as "I wonder if that quote is actually true" turned into two separate deep dives. The first — implementing DRSUAPI opnum 20 from scratch — taught me more about NDR serialization than I ever wanted to know. Three bugs that all returned the same useless error, a flag parsing disaster that almost killed the project, and six prerequisites scattered across Microsoft's documentation like a scavenger hunt.
+What started as "I wonder if that quote is actually true" turned into three separate deep dives, each born from the limitations of the previous one.
 
-And then the punchline: it all worked perfectly, but SID filtering meant I couldn't actually escalate privileges with it. The SID was in the attribute. The access token didn't care.
+The first — implementing DRSUAPI opnum 20 from scratch — taught me more about NDR serialization than I ever wanted to know. Three bugs that all returned the same useless error, a flag parsing disaster that almost killed the project, and six prerequisites scattered across Microsoft's documentation like a scavenger hunt. And then the punchline: it all worked perfectly, but SID filtering meant I couldn't actually escalate privileges with it.
 
-v2 took a completely different approach — chaining SMB, SCMR, and DSInternals to modify `ntds.dit` offline. Noisier, more moving parts, brief NTDS downtime. But it bypasses every validation layer that made v1 a dead end for privilege escalation: no cross-forest requirement, no SID filtering, no restricted RIDs. Any SID, any domain, one command.
+So I built v2 — chaining SMB, SCMR, and DSInternals to modify `ntds.dit` offline. Noisier, brief NTDS downtime, but it bypasses every validation layer. Any SID, any domain. Privilege escalation finally worked. But stopping NTDS on a production DC, even for 5 seconds, felt like a problem worth solving.
+
+Which led to DCShadow — the method I'm most proud of technically. Building a rogue Domain Controller from scratch in Python, complete with Kerberos authentication, GSS-API message protection, and hand-crafted NDR replication responses. Zero NTDS downtime, zero disk artifacts on the DC, any SID. The DC thinks it's just replicating normally with a peer.
+
+Three methods, three tradeoffs. DSInternals for reliability when downtime is acceptable. DRSUAPI for stealth cross-forest persistence with custom groups. DCShadow for zero-downtime privileged SID injection through native replication. Pick the right tool for the job.
 
 The tool is at [github.com/felixbillieres/pySIDHistory](https://github.com/felixbillieres/pySIDHistory), lab included. For authorized security testing only.
 
@@ -610,3 +690,6 @@ The tool is at [github.com/felixbillieres/pySIDHistory](https://github.com/felix
 | [DSInternals](https://github.com/MichaelGrafnetter/DSInternals) | Offline ntds.dit modification (v2 uses 4.14 for `Add-ADDBSidHistory`) |
 | [MS-SCMR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-scmr/) | Service Control Manager Remote Protocol (v2 service execution) |
 | [Impacket Developer Guide](https://cicada-8.medium.com/impacket-developer-guide-part-1-rpc-4df4fe6d79d7) | Extending impacket with custom RPC |
+| [MITRE ATT&CK T1207](https://attack.mitre.org/techniques/T1207/) | Rogue Domain Controller (DCShadow technique) |
+| [DCShadow](https://www.dcshadow.com/) | Original DCShadow research by Le Toux & Delpy |
+| [ShutdownRepo/dcshadow](https://github.com/ShutdownRepo/dcshadow) | Python DCShadow reference implementation |
