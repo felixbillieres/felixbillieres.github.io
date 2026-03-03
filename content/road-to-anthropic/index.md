@@ -13,6 +13,4 @@ When the time comes for me to look for a full-time position, applying there is s
 
 A series of vulnerability research articles on the Model Context Protocol (MCP) — protocol-level gaps, SDK implementation bugs, and the attack surface that comes with plugging AI assistants into external tools.
 
-{{< article link="/posts/mcp-svg-icon-xss-to-rce/" >}}
-
-{{< article link="/posts/mcp-ssrf-oauth-prm-discovery/" >}}
+{{< list limit=10 cardView=true where="Series" value="MCP Security Research" >}}
