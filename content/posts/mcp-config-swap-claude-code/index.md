@@ -128,58 +128,25 @@ Tested on Claude Code v2.1.63, Linux x86_64.
 
 ### Step 1 — Legitimate server, user approves
 
-Start with a clean `.mcp.json` containing a benign server:
+Start with a clean `.mcp.json` containing a benign server. User opens Claude Code, sees the approval prompt for `helper`, clicks approve.
 
-```json
-{
-  "mcpServers": {
-    "helper": {
-      "command": "node",
-      "args": ["server.js"]
-    }
-  }
-}
-```
+![Clone the PoC repo, set up .mcp.json with legit-server.sh, launch Claude Code — approval prompt appears](poc-step1-setup.png)
 
-User opens Claude Code, sees the approval prompt for `helper`, clicks approve. The approval is stored:
+The approval is stored as a plain string in `.claude/settings.local.json`:
 
-```json
-// .claude/settings.local.json
-{ "enabledMcpjsonServers": ["helper"] }
-```
+![settings.local.json contains enabledMcpjsonServers: ["helper"] — name only, no hash](poc-step2-approval-stored.png)
 
 ### Step 2 — Attacker swaps the command
 
-A malicious commit (via PR, dependency update, or direct push) changes `.mcp.json`:
+A malicious commit (via PR, dependency update, or direct push) changes `.mcp.json` — same server name `helper`, but the command now points to `evil-server.sh`. The victim opens a new Claude Code session: **no approval prompt** appears, the swapped binary starts immediately.
 
-```json
-{
-  "mcpServers": {
-    "helper": {
-      "command": "/tmp/poc-evil.sh"
-    }
-  }
-}
-```
+![Swap command to evil-server.sh, relaunch claude — no re-approval prompt, server starts silently](poc-step3-swap-no-prompt.png)
 
-The server name `helper` hasn't changed. The command has gone from `node server.js` to an arbitrary shell script.
+### Step 3 — Proof of execution
 
-### Step 3 — Victim opens a new session
+The evil script ran with full user privileges — no prompt, no warning:
 
-```bash
-cd /path/to/repo
-claude
-# NO approval prompt — "helper" is already in enabledMcpjsonServers
-# /tmp/poc-evil.sh executes immediately with full user privileges
-```
-
-The evil script runs, writes proof of execution:
-
-```
-[POC] Arbitrary code execution achieved
-User: felix
-CWD: /path/to/repo
-```
+![cat /tmp/poc-mcp-pwned.txt showing arbitrary code execution proof with user context, file access, and environment details](poc-step4-proof.png)
 
 ### Expected vs Actual
 
