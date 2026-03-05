@@ -23,4 +23,6 @@ A series of vulnerability research articles on the Model Context Protocol (MCP) 
 
 {{< article link="/posts/mcp-phantom-task-injection/" >}}
 
+{{< article link="/posts/mcp-config-swap-claude-code/" >}}
+
 </div>
