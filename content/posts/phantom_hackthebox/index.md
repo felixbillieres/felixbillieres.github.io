@@ -33,7 +33,7 @@ images: ["featured.png", "image.png", "forceChangePassword.png", "addAllowedToAc
 
 ## Overview
 
-**Phantom** is a **medium** difficulty Windows Active Directory machine that highlights Kerberos delegation exploitation. The machine presents several interesting attack vectors:
+Windows AD box focused on RBCD. The attack path goes through:
 
 - **Public SMB share** containing an email with a base64-encoded PDF
 - **Password spray** on domain users
@@ -56,8 +56,6 @@ images: ["featured.png", "image.png", "forceChangePassword.png", "addAllowedToAc
 ## Initial Reconnaissance
 
 ### Domain Discovery
-
-The first step is identifying the target machine and gathering information about the domain.
 
 ```bash
 elliot@exegol:~$ nxc smb 10.129.234.63 --generate-hosts-file hosts

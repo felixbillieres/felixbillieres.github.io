@@ -22,29 +22,27 @@ images: ["featured.png", "bloodhound-acl.png", "helpdesk-membership.png", "helen
 
 ## Executive Summary
 
-Redelegate is a complex Windows Active Directory domain controller exploitation chain that begins with anonymous FTP access leading to credential discovery through KeePass database cracking. The attack progresses through MSSQL enumeration, password spraying, privilege escalation via user password reset capabilities, and culminates in a sophisticated Kerberos constrained delegation attack to achieve domain administrator privileges.
+Anonymous FTP exposes a KeePass database, which kicks off a chain through MSSQL enumeration, password spraying, ACL abuse, and Kerberos constrained delegation to DA.
 
 ## Initial Reconnaissance
 
-The first step when tackling any machine is thorough reconnaissance. The goal is to understand what services are running, identify potential attack vectors, and gather as much information as possible about the target environment before attempting any exploitation.
-
 ### Host Discovery and Port Scanning
 
-First, NetExec quickly identifies the target and generates a hosts file for easier reference. Maintaining proper host resolution is essential in any domain environment.
+NetExec identifies the target and generates a hosts file:
 
 ```bash
 elliot@exegol:~$ nxc smb 10.129.234.50 --generate-hosts-file hosts
 SMB         10.129.234.50   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:redelegate.vl) (signing:True) (SMBv1:None) (Null Auth:True)
 ```
 
-The output immediately reveals a Windows Server 2022 Domain Controller in the "redelegate.vl" domain. The fact that null authentication is allowed on SMB is interesting - it might indicate exploitable misconfigurations.
+Windows Server 2022 DC in the `redelegate.vl` domain, with null auth allowed on SMB.
 
 ```bash
 elliot@exegol:~$ cat hosts
 10.129.234.50     DC.redelegate.vl redelegate.vl DC
 ```
 
-With proper DNS resolution set up for the domain, the next step is a comprehensive port scan using RustScan. This tool is much faster than traditional nmap for initial discovery, and the `--ulimit 5000` flag handles the large number of open ports that domain controllers typically have.
+Quick port scan with RustScan:
 
 ```bash
 elliot@exegol:~$ rustscan -a 10.129.234.50 --ulimit 5000
@@ -454,25 +452,10 @@ Security Identifiers (SIDs) uniquely identify domain objects. By brute-forcing R
 - **No special privileges needed**: Any authenticated user can perform SID lookups
 - **Attack surface mapping**: Provided targets for password spraying
 
-## Lessons Learned
+## Takeaways
 
-### For System Administrators:
-- **Never allow anonymous access** to sensitive services like FTP
-- **Implement strong password policies** and avoid password reuse
-- **Regular ACL audits** are crucial - the audit report showed this was "IN PROGRESS"
-- **Kerberos delegation privileges** should be granted sparingly and monitored
-- **Credential storage** should use proper access controls, not shared databases on anonymous FTP
-
-### For Penetration Testers:
-- **Start with reconnaissance** - FTP enumeration revealed the KeePass database
-- **Think like attackers** - Seasonal password patterns are common
-- **Leverage any authenticated access** - SQLGuest allowed domain enumeration
-- **ACL analysis is key** - BloodHound revealed the privilege escalation path
-- **Combine techniques** - Password resets + delegation privileges = domain compromise
-
-### Security Best Practices:
-- **Principle of Least Privilege**: Users should only have necessary permissions
-- **Regular auditing**: The audit report showed known issues that weren't fully fixed
-- **Secure credential storage**: KeePass databases need proper access controls
-- **Monitor for delegation abuse**: SeEnableDelegationPrivilege should be audited
-- **Multi-factor authentication**: Would have prevented some of these attacks
+- Anonymous FTP with a KeePass DB inside is basically game over. Credential storage matters.
+- Seasonal password patterns (`Winter2024!`) are still everywhere, and password spraying still works.
+- BloodHound found the ACL path instantly. The audit report even flagged delegation issues as "IN PROGRESS" but they were never fixed.
+- Any authenticated access is enough to enumerate the domain via SID brute force, even with `SQLGuest`.
+- `SeEnableDelegationPrivilege` is one of those permissions that's rarely audited but leads straight to DA.

@@ -3,7 +3,7 @@ title: "MCP SVG Icon Injection: From XSS to RCE Through the Protocol Spec"
 date: 2026-02-15
 draft: false
 description: "How a gap in the MCP specification allows malicious SVG icons to achieve cross-site scripting and remote code execution on Electron-based clients, with no user interaction required."
-summary: "A deep dive into a protocol-level vulnerability in the Model Context Protocol (MCP) specification where malicious SVG icons delivered via data: URIs can escalate from XSS to full RCE on Electron clients. Reported to Anthropic VDP, closed as Informative — disclosed here with full technical details."
+summary: "A deep dive into a protocol-level vulnerability in the Model Context Protocol (MCP) specification where malicious SVG icons delivered via data: URIs can escalate from XSS to full RCE on Electron clients. Reported to Anthropic VDP, closed as Informative. Disclosed here with full technical details."
 tags: ["mcp", "xss", "rce", "svg", "electron", "vulnerability-research", "responsible-disclosure", "bug-bounty"]
 categories: ["Vulnerability Research", "Bug Bounty"]
 series: ["MCP Security Research"]
@@ -53,7 +53,7 @@ The MCP specification (SEP-973, revision 2025-11-25) allows `data:image/svg+xml;
 
 The [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) is an open standard that allows AI assistants to interact with external tools and data sources. When an MCP client (like an IDE or chat interface) connects to an MCP server, the server responds with metadata including its name, description, available tools, and **icons**.
 
-Icons were added to the spec via [SEP-973](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/955) (merged September 2025). They appear in the `serverInfo` object during the `initialize` handshake and in each tool's metadata during the `tools/list` response. The client renders these icons in its UI — typically in a sidebar or tool list.
+Icons were added to the spec via [SEP-973](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/955) (merged September 2025). They appear in the `serverInfo` object during the `initialize` handshake and in each tool's metadata during the `tools/list` response. The client renders these icons in its UI, typically in a sidebar or tool list.
 
 The key detail: icons are rendered **automatically on connection**. There's no approval step, no preview, no "do you trust this icon?" dialog. The server sends an icon, the client displays it.
 
@@ -106,7 +106,7 @@ Effect:   Identical — JavaScript executes in the rendering context
 
 ## The Payload: SVG Animate Handler
 
-The payload is embedded inside a normal-looking SVG icon — a blue rounded square with a letter, the kind of icon you'd expect from a cloud monitoring tool:
+The payload is embedded inside a normal-looking SVG icon, a blue rounded square with a letter, the kind of icon you'd expect from a cloud monitoring tool:
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
@@ -120,7 +120,7 @@ The payload is embedded inside a normal-looking SVG icon — a blue rounded squa
 Why `<animate onbegin>` instead of `<script>` or `onload`?
 
 1. **Sanitizer bypass**: many sanitizers strip `<script>` tags and `onload` attributes but miss SVG animation event handlers like `onbegin`, `onend`, and `onrepeat`.
-2. **No visual change**: the animation is a no-op — it "animates" opacity from `1` to `1`. The icon looks perfectly normal.
+2. **No visual change**: the animation is a no-op, it "animates" opacity from `1` to `1`. The icon looks perfectly normal.
 3. **Immediate execution**: `onbegin` fires the instant the SVG enters the DOM. No delay, no click, no hover needed.
 
 For the RCE variant targeting Electron, the `onbegin` handler contains minified JavaScript that calls `require('child_process').exec()`:
@@ -147,38 +147,38 @@ This payload is base64-encoded and embedded in the SVG's `onbegin` attribute, th
 
 The attack follows the normal MCP connection flow. Nothing unusual happens from the user's perspective.
 
-**Step 1** — The attacker runs a malicious MCP server. It presents itself as a legitimate tool (e.g., "CloudMetrics Analytics") with real-looking tool schemas and descriptions. The only difference: the `serverInfo.icon` and each tool's `icon` field contain SVG icons with embedded JavaScript.
+**Step 1.** The attacker runs a malicious MCP server. It presents itself as a legitimate tool (e.g., "CloudMetrics Analytics") with real-looking tool schemas and descriptions. The only difference: the `serverInfo.icon` and each tool's `icon` field contain SVG icons with embedded JavaScript.
 
 ![Evil MCP server startup showing attack vectors and endpoints](./server-startup.png)
 *The malicious server starts up. It exposes multiple delivery vectors (base64 data URI, plain data URI, remote SVG) and callback endpoints for exfiltration.*
 
-**Step 2** — The victim adds the server to their MCP client. This is the standard workflow: edit `mcp.json`, pick from a registry, or click "Add MCP Server" in the IDE. Nothing unusual.
+**Step 2.** The victim adds the server to their MCP client. This is the standard workflow: edit `mcp.json`, pick from a registry, or click "Add MCP Server" in the IDE. Nothing unusual.
 
-**Step 3** — The client connects and sends `initialize`. The server responds with a standard-looking JSON-RPC response. The `serverInfo.icon` field contains the malicious SVG as a `data:image/svg+xml;base64,...` URI:
+**Step 3.** The client connects and sends `initialize`. The server responds with a standard-looking JSON-RPC response. The `serverInfo.icon` field contains the malicious SVG as a `data:image/svg+xml;base64,...` URI:
 
 ![Initialize response showing malicious base64 icon](./initialize-response.png)
-*Standard `initialize` response. The `serverInfo.icon` contains the malicious SVG encoded in base64 — exactly as the spec allows.*
+*Standard `initialize` response. The `serverInfo.icon` contains the malicious SVG encoded in base64, exactly as the spec allows.*
 
-**Step 4** — Decoding the base64 reveals the hidden JavaScript:
+**Step 4.** Decoding the base64 reveals the hidden JavaScript:
 
 ![Decoded SVG showing the animate onbegin payload](./decoded-svg.png)
-*The decoded SVG: a normal icon with an `<animate onbegin>` handler. The animation is a no-op (opacity 1 to 1) — `onbegin` fires the JavaScript immediately with zero visual change.*
+*The decoded SVG: a normal icon with an `<animate onbegin>` handler. The animation is a no-op (opacity 1 to 1), and `onbegin` fires the JavaScript immediately with zero visual change.*
 
-**Step 5** — The client calls `tools/list`. Each tool also carries a malicious icon with different delivery methods:
+**Step 5.** The client calls `tools/list`. Each tool also carries a malicious icon with different delivery methods:
 
 ![tools/list response with multiple payload delivery vectors](./tools-list.png)
 *Each tool uses a different icon delivery method: base64 data URI, URL-encoded data URI, and remote SVG URL. All achieve the same result.*
 
-**Step 6** — The client renders the icons. If it uses `innerHTML` to insert the decoded SVG into the DOM, the `<animate onbegin>` handler fires and JavaScript executes.
+**Step 6.** The client renders the icons. If it uses `innerHTML` to insert the decoded SVG into the DOM, the `<animate onbegin>` handler fires and JavaScript executes.
 
 ---
 
 ## Demonstration: Browser Client
 
-To validate the vulnerability without targeting a specific product, I built a minimal MCP client simulator that renders icons via `innerHTML` — the same pattern used by many React/Electron applications.
+To validate the vulnerability without targeting a specific product, I built a minimal MCP client simulator that renders icons via `innerHTML`, the same pattern used by many React/Electron applications.
 
 ![XSS alert firing in browser client simulator](./XSS.png)
-*The client simulator connects to the malicious server. The SVG icon triggers `alert()` immediately on render — no click, no interaction.*
+*The client simulator connects to the malicious server. The SVG icon triggers `alert()` immediately on render, with no click or interaction required.*
 
 ![Full browser client view showing XSS with connected tools](./xss-browser-full.png)
 *The client shows the server as connected with 3 tools. The XSS fires for every icon rendered via innerHTML. The log panel shows the full connection flow.*
@@ -208,7 +208,7 @@ This is an important finding: **Cursor is protected by its own implementation, n
 
 ## Demonstration: Electron RCE
 
-Since the goal is to demonstrate the protocol-level risk, I built a minimal Electron MCP client that renders icons the way the spec permits — using `innerHTML` for SVG data URIs, with `nodeIntegration: true` and `contextIsolation: false`.
+Since the goal is to demonstrate the protocol-level risk, I built a minimal Electron MCP client that renders icons the way the spec permits, using `innerHTML` for SVG data URIs, with `nodeIntegration: true` and `contextIsolation: false`.
 
 These Electron settings are insecure and not recommended, but they are found in real community MCP tools (as documented by CVE-2026-0757 for MCP Manager for Claude Desktop).
 
@@ -230,8 +230,8 @@ When the Electron client connects:
 
 With the RCE payload, the SVG silently executes `id > /tmp/mcp-vuln-07.txt` on the host:
 
-![Terminal showing RCE proof — id command output](./rce-proof.png)
-*The `id` command executes successfully on the host — full RCE confirmed as user `felix`.*
+![Terminal showing RCE proof: id command output](./rce-proof.png)
+*The `id` command executes successfully on the host, confirming full RCE as user `felix`.*
 
 The evil server receives the callback with command output:
 
@@ -256,7 +256,7 @@ Meanwhile, the Electron client looks completely normal:
 | **Scope** | oatpp-mcp specific | Dive/DeepChat specific | Any conformant MCP client |
 | **User interaction** | Config edit | View Mermaid output | **None** — fires on connect |
 
-The key difference: prior CVEs were implementation bugs in specific products. This finding targets a **gap in the protocol specification itself** — sanitization is optional, but rendering SVGs is encouraged.
+The key difference: prior CVEs were implementation bugs in specific products. This finding targets a **gap in the protocol specification itself**, where sanitization is optional but rendering SVGs is encouraged.
 
 ---
 
@@ -287,7 +287,7 @@ For defense in depth, consider:
 
 ## Conclusion
 
-This research demonstrates that the MCP icon field is a viable attack surface for XSS and, in the worst case, RCE. The vulnerability is not a bug in the protocol — it's a consequence of the spec's intentional flexibility around sanitization.
+This research demonstrates that the MCP icon field is a viable attack surface for XSS and, in the worst case, RCE. The vulnerability is not a bug in the protocol; it's a consequence of the spec's intentional flexibility around sanitization.
 
 The takeaway for client developers is straightforward: **never render SVG data URIs via `innerHTML`**. Use `<img>` tags, use DOMPurify, use Trusted Types. The spec says you MAY sanitize. You should treat that as MUST.
 

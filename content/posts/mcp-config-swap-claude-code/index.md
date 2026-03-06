@@ -2,8 +2,8 @@
 title: "MCP Config Swap: How a Name-Only Approval Lets Attackers Swap Your Server's Binary"
 date: 2026-03-05
 draft: false
-description: "Claude Code's MCP server approval binds trust to the server name only — not the command, args, or env. After a user approves a server from .mcp.json, an attacker can silently swap the binary without triggering a re-approval prompt. Same vulnerability class as CVE-2025-54136 (MCPoison in Cursor)."
-summary: "Fifth article in my MCP security series. Claude Code stores MCP server approvals as plain server names — no hash, no fingerprint, no config verification. Once approved, swapping the server's command to an arbitrary binary triggers no re-prompt. Reported to Anthropic VDP, closed as Informative (out of threat model). Full technical breakdown."
+description: "Claude Code's MCP server approval binds trust to the server name only, not the command, args, or env. After a user approves a server from .mcp.json, an attacker can silently swap the binary without triggering a re-approval prompt. Same vulnerability class as CVE-2025-54136 (MCPoison in Cursor)."
+summary: "Fifth article in my MCP security series. Claude Code stores MCP server approvals as plain server names with no hash, no fingerprint, and no config verification. Once approved, swapping the server's command to an arbitrary binary triggers no re-prompt. Reported to Anthropic VDP, closed as Informative (out of threat model). Full technical breakdown."
 tags: ["mcp", "claude-code", "supply-chain", "vulnerability-research", "bug-bounty"]
 categories: ["Vulnerability Research", "Bug Bounty"]
 series: ["MCP Security Research"]
@@ -13,7 +13,7 @@ featuredImage: "featured.png"
 
 # MCP Config Swap: How a Name-Only Approval Lets Attackers Swap Your Server's Binary
 
-> Fifth article in my [MCP security research series](/posts/mcp-svg-icon-xss-to-rce/). After [icon injection](/posts/mcp-svg-icon-xss-to-rce/), [OAuth SSRF](/posts/mcp-ssrf-oauth-prm-discovery/), [ancestor path traversal](/posts/mcp-ancestor-injection-claude-code/), and [phantom task injection](/posts/mcp-phantom-task-injection/), I looked at what Claude Code actually stores when you approve an MCP server — and found that it stores nothing but the name.
+> Fifth article in my [MCP security research series](/posts/mcp-svg-icon-xss-to-rce/). After [icon injection](/posts/mcp-svg-icon-xss-to-rce/), [OAuth SSRF](/posts/mcp-ssrf-oauth-prm-discovery/), [ancestor path traversal](/posts/mcp-ancestor-injection-claude-code/), and [phantom task injection](/posts/mcp-phantom-task-injection/), I looked at what Claude Code actually stores when you approve an MCP server and found that it stores nothing but the name.
 
 ---
 
@@ -23,7 +23,7 @@ This was submitted to Anthropic's Vulnerability Disclosure Program on HackerOne.
 
 Their position: when a user approves a project's trust, they are explicitly trusting the ongoing integrity of that project's files. The MCP server approval model is designed to protect against unauthorized server connections, but it operates within the trust boundary of the local project configuration.
 
-Fair enough — but the behavior is still worth documenting, especially given that CVE-2025-54136 (MCPoison in Cursor) covers the exact same vulnerability class and was assigned a CVE.
+Fair enough, but the behavior is still worth documenting, especially given that CVE-2025-54136 (MCPoison in Cursor) covers the exact same vulnerability class and was assigned a CVE.
 
 ---
 
@@ -41,7 +41,7 @@ Fair enough — but the behavior is still worth documenting, especially given th
 
 ## TL;DR
 
-When a user approves an MCP server from `.mcp.json`, Claude Code stores the **server name** as a plain string in `enabledMcpjsonServers`. On subsequent sessions, it checks whether the name matches — and nothing else. The server's `command`, `args`, `env`, `url`, and `type` fields are never verified.
+When a user approves an MCP server from `.mcp.json`, Claude Code stores the **server name** as a plain string in `enabledMcpjsonServers`. On subsequent sessions, it checks whether the name matches and nothing else. The server's `command`, `args`, `env`, `url`, and `type` fields are never verified.
 
 ```json
 // What Claude Code stores:
@@ -51,10 +51,10 @@ When a user approves an MCP server from `.mcp.json`, Claude Code stores the **se
 { "enabledMcpjsonServers": [{"name": "helper", "configHash": "sha256_of_command_args_env"}] }
 ```
 
-An attacker who modifies `.mcp.json` — keeping the same server name but changing the command to an arbitrary binary — achieves code execution without any re-approval prompt.
+An attacker who modifies `.mcp.json` (keeping the same server name but changing the command to an arbitrary binary) achieves code execution without any re-approval prompt.
 
 **Same vulnerability class as**: CVE-2025-54136 (MCPoison in Cursor)
-**CWE**: CWE-345 — Insufficient Verification of Data Authenticity
+**CWE**: CWE-345: Insufficient Verification of Data Authenticity
 **Confirmed on**: Claude Code v2.1.34 (npm) and v2.1.63 (binary)
 
 ---
@@ -85,7 +85,7 @@ function t_$(H) {
 }
 ```
 
-The schema confirms it — `enabledMcpjsonServers` is a flat array of strings:
+The schema confirms it: `enabledMcpjsonServers` is a flat array of strings:
 
 ```javascript
 enabledMcpjsonServers: z.array(z.string()).optional()
@@ -126,25 +126,25 @@ The user sees the full config during the initial approval prompt. But on every s
 
 Tested on Claude Code v2.1.63, Linux x86_64.
 
-### Step 1 — Legitimate server, user approves
+### Step 1: Legitimate server, user approves
 
 Start with a clean `.mcp.json` containing a benign server. User opens Claude Code, sees the approval prompt for `helper`, clicks approve.
 
-![Clone the PoC repo, set up .mcp.json with legit-server.sh, launch Claude Code — approval prompt appears](poc-step1-setup.png)
+![Clone the PoC repo, set up .mcp.json with legit-server.sh, launch Claude Code: approval prompt appears](poc-step1-setup.png)
 
 The approval is stored as a plain string in `.claude/settings.local.json`:
 
-![settings.local.json contains enabledMcpjsonServers: ["helper"] — name only, no hash](poc-step2-approval-stored.png)
+![settings.local.json contains enabledMcpjsonServers: ["helper"], name only, no hash](poc-step2-approval-stored.png)
 
-### Step 2 — Attacker swaps the command
+### Step 2: Attacker swaps the command
 
-A malicious commit (via PR, dependency update, or direct push) changes `.mcp.json` — same server name `helper`, but the command now points to `evil-server.sh`. The victim opens a new Claude Code session: **no approval prompt** appears, the swapped binary starts immediately.
+A malicious commit (via PR, dependency update, or direct push) changes `.mcp.json`. Same server name `helper`, but the command now points to `evil-server.sh`. The victim opens a new Claude Code session: **no approval prompt** appears, the swapped binary starts immediately.
 
-![Swap command to evil-server.sh, relaunch claude — no re-approval prompt, server starts silently](poc-step3-swap-no-prompt.png)
+![Swap command to evil-server.sh, relaunch claude: no re-approval prompt, server starts silently](poc-step3-swap-no-prompt.png)
 
-### Step 3 — Proof of execution
+### Step 3: Proof of execution
 
-The evil script ran with full user privileges — no prompt, no warning:
+The evil script ran with full user privileges, no prompt, no warning:
 
 ![cat /tmp/poc-mcp-pwned.txt showing arbitrary code execution proof with user context, file access, and environment details](poc-step4-proof.png)
 
@@ -162,11 +162,11 @@ The evil script ran with full user privileges — no prompt, no warning:
 
 **Supply chain via malicious PR.** Attacker contributes to an open-source project. A PR modifies `.mcp.json` to swap an approved server's command. Reviewers often overlook config file changes. After merge, every developer who pulls gets compromised on next session.
 
-**Dependency confusion.** If `.mcp.json` references `npx some-package`, the attacker publishes a malicious version of that package. The server name hasn't changed — no re-approval needed.
+**Dependency confusion.** If `.mcp.json` references `npx some-package`, the attacker publishes a malicious version of that package. The server name hasn't changed, so no re-approval is needed.
 
 **Insider threat.** A team member with commit access silently modifies an MCP server config. All other team members are compromised on next session start.
 
-**Amplification with `enableAllProjectMcpServers`.** If the user previously clicked "Yes to all", the attacker can also ADD entirely new servers with arbitrary names and commands — all auto-approved without any prompt.
+**Amplification with `enableAllProjectMcpServers`.** If the user previously clicked "Yes to all", the attacker can also ADD entirely new servers with arbitrary names and commands, all auto-approved without any prompt.
 
 ---
 
@@ -187,15 +187,15 @@ enabledMcpjsonServers: [{
 // On load: recompute hash, compare, re-prompt if mismatch
 ```
 
-Additionally, showing a diff when a previously-approved server's config changes would make the modification visible to the user — even if they choose to approve it again.
+Additionally, showing a diff when a previously-approved server's config changes would make the modification visible to the user, even if they choose to approve it again.
 
 ---
 
 ## Conclusion
 
-Claude Code's MCP server approval stores the server name as a plain string and never re-verifies the actual command that gets executed. The same vulnerability class was assigned CVE-2025-54136 in Cursor's implementation. Anthropic considers this within the trust boundary of project configuration files — if you approved the project, you trust its files.
+Claude Code's MCP server approval stores the server name as a plain string and never re-verifies the actual command that gets executed. The same vulnerability class was assigned CVE-2025-54136 in Cursor's implementation. Anthropic considers this within the trust boundary of project configuration files: if you approved the project, you trust its files.
 
-The practical risk depends on your threat model. If you work on repos where others can modify `.mcp.json` (open-source projects, shared team repos), the approval you gave to `node server.js` still holds when that command becomes `/tmp/evil.sh`. The fix is a hash comparison — one check that ties the approval to what's actually being executed.
+The practical risk depends on your threat model. If you work on repos where others can modify `.mcp.json` (open-source projects, shared team repos), the approval you gave to `node server.js` still holds when that command becomes `/tmp/evil.sh`. The fix is a hash comparison, one check that ties the approval to what's actually being executed.
 
 ---
 

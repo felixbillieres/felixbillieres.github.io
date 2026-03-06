@@ -2,7 +2,7 @@
 title: "pySIDHistory - Remote SID History Injection from Linux"
 date: 2026-02-17
 draft: false
-description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux — and why that wasn't enough, leading to the DSInternals method."
+description: "Building the first Python implementation of DRSAddSidHistory (MS-DRSR opnum 20) to inject SIDs into Active Directory's sIDHistory remotely from Linux, and why that wasn't enough, leading to the DSInternals method."
 summary: "The Hacker Recipes said remote SID History injection from Linux was impossible. pySIDHistory proves otherwise with two methods: DRSUAPI and DSInternals."
 tags: ["active-directory", "sid-history", "impacket", "drsuapi", "dsinternals", "ndr", "ldap", "persistence", "python", "red-team", "scmr"]
 categories: ["Active Directory", "Tools"]
@@ -19,13 +19,13 @@ Challenge accepted.
 
 ## So, what's sIDHistory?
 
-Quick version: every AD object has a [`sIDHistory`](https://learn.microsoft.com/en-us/windows/win32/adschema/a-sidhistory) attribute. It exists for domain migrations — when you move a user from Domain A to Domain B, their old SID lands in `sIDHistory` so they keep access to their old resources.
+Quick version: every AD object has a [`sIDHistory`](https://learn.microsoft.com/en-us/windows/win32/adschema/a-sidhistory) attribute. It exists for domain migrations. When you move a user from Domain A to Domain B, their old SID lands in `sIDHistory` so they keep access to their old resources.
 
 The fun part? At authentication time, **every SID in sIDHistory goes straight into the user's access token**. Same level as their real SID and group memberships. No distinction.
 
 So if you drop the [Domain Admins](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers) SID (`-512`) into some random user's `sIDHistory`... that user is now a Domain Admin. No group changes, no password resets, no visible modification in the admin tools. The privilege just appears.
 
-That's [T1134.005](https://attack.mitre.org/techniques/T1134/005/) — SID-History Injection. And until now, pulling it off required one of these:
+That's [T1134.005](https://attack.mitre.org/techniques/T1134/005/), SID-History Injection. And until now, pulling it off required one of these:
 
 | Technique | Constraint |
 |-----------|-----------|
@@ -41,7 +41,7 @@ The goal was to do it **remotely, from any platform (Linux, macOS, Windows), wit
 
 ## The wall: why "just LDAP-modify it" doesn't work
 
-The naive approach first. In Active Directory, every attribute in the schema has a [`systemOnly`](https://learn.microsoft.com/en-us/windows/win32/adschema/s-systemonly) flag. When it's set to `TRUE`, the attribute is entirely controlled by the system — no one can write to it, period. That's how `objectSid` works: locked at the schema level, immutable.
+The naive approach first. In Active Directory, every attribute in the schema has a [`systemOnly`](https://learn.microsoft.com/en-us/windows/win32/adschema/s-systemonly) flag. When it's set to `TRUE`, the attribute is entirely controlled by the system, and no one can write to it. Period. That's how `objectSid` works: locked at the schema level, immutable.
 
 `sIDHistory`? It's `systemOnly: FALSE`. Which means AD treats it as a regular, writable attribute. So the logical assumption is: as a Domain Admin, with full control over an object, a simple LDAP `MODIFY_ADD` with the SID to inject should work.
 
@@ -56,9 +56,9 @@ Even as Domain Admin. Even with explicit `WriteProperty` delegation on the attri
 The reason this fails is that Active Directory doesn't run a single access check when you modify an attribute — it runs **two**, and most people only know about the first one:
 
 {{< alert >}}
-**Layer 1 — the DSA/LDAP layer** is the one everyone is familiar with. It checks the [DACL](https://learn.microsoft.com/en-us/windows/win32/secauthz/dacls-and-aces) on the target object — do you have `WriteProperty` on `sIDHistory`? `GenericAll`? Are you a Domain Admin? If yes, you pass this layer. This is the classic permission model that you configure through ACLs, delegations, and Group Policy.
+**Layer 1: the DSA/LDAP layer** is the one everyone is familiar with. It checks the [DACL](https://learn.microsoft.com/en-us/windows/win32/secauthz/dacls-and-aces) on the target object — do you have `WriteProperty` on `sIDHistory`? `GenericAll`? Are you a Domain Admin? If yes, you pass this layer. This is the classic permission model that you configure through ACLs, delegations, and Group Policy.
 
-**Layer 2 — the SAM layer** sits behind the first one and enforces its own rules on attributes it considers "its own". These rules are **hardcoded in the Domain Controller's code** — not configurable through ACLs, GPOs, or anything else. Regardless of your AD permissions, the SAM layer has the final say on its attributes.
+**Layer 2: the SAM layer** sits behind the first one and enforces its own rules on attributes it considers "its own". These rules are **hardcoded in the Domain Controller's code** and not configurable through ACLs, GPOs, or anything else. Regardless of your AD permissions, the SAM layer has the final say on its attributes.
 {{< /alert >}}
 
 And the SAM layer's verdict on `sIDHistory` writes is asymmetric:
@@ -148,7 +148,7 @@ Translating this to [impacket](https://github.com/fortra/impacket)'s NDR framewo
 
 ---
 
-## Bug #1 — The missing union discriminant
+## Bug #1: The missing union discriminant
 
 The first `DRSAddSidHistory` class looked reasonable:
 
@@ -165,7 +165,7 @@ class DRSAddSidHistory(NDRCALL):
 
 The DC responded with `rpc_x_bad_stub_data`. Helpful.
 
-The issue: `pmsgIn` is declared with `[switch_is(dwInVersion)]` — a **non-encapsulated [NDR union](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rpce/b6090c2b-f44a-47a1-a13b-b82ade0137b2)**. On the wire, this needs an explicit discriminant tag before the union body. Without it, every field after `dwInVersion` is shifted by 4 bytes and the DC sees garbage.
+The issue: `pmsgIn` is declared with `[switch_is(dwInVersion)]`, which is a **non-encapsulated [NDR union](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rpce/b6090c2b-f44a-47a1-a13b-b82ade0137b2)**. On the wire, this needs an explicit discriminant tag before the union body. Without it, every field after `dwInVersion` is shifted by 4 bytes and the DC sees garbage.
 
 The fix is the same pattern impacket uses for `DRSGetNCChanges` — wrap it:
 
@@ -177,7 +177,7 @@ class DRS_MSG_ADDSIDREQ(NDRUNION):
 
 ---
 
-## Bug #2 — Credential fields that look like strings but aren't
+## Bug #2: Credential fields that look like strings but aren't
 
 Still `rpc_x_bad_stub_data`. Same error, different root cause.
 
@@ -217,7 +217,7 @@ Both bugs produce `rpc_x_bad_stub_data` with zero additional context. The only w
 
 ## The bug that almost killed the project
 
-NDR is fixed. Credential encoding is fixed. The request goes out and comes back with... `ERROR_INVALID_FUNCTION` (error code 1). Not a business logic error, not an access denied — just "invalid function". As if the DC doesn't know what opnum 20 is.
+NDR is fixed. Credential encoding is fixed. The request goes out and comes back with... `ERROR_INVALID_FUNCTION` (error code 1). Not a business logic error, not an access denied, just "invalid function". As if the DC doesn't know what opnum 20 is.
 
 Next step: check the server's capabilities. During [`DRSBind`](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/3ee529b1-23db-4996-948a-042f04998e91) (opnum 0), the DC returns its supported features in `DRS_EXTENSIONS_INT.dwFlags`. The flag [`DRS_EXT_ADD_SID_HISTORY`](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/3ee529b1-23db-4996-948a-042f04998e91) (0x00040000) means "opnum 20 supported".
 
@@ -251,9 +251,9 @@ Server DRS flags: 0x3fffff7f
 DRS_EXT_ADD_SID_HISTORY: PRESENT
 ```
 
-`0x3fffff7f` — nearly every flag set. The server supported opnum 20 the whole time.
+`0x3fffff7f`, nearly every flag set. The server supported opnum 20 the whole time.
 
-This was the most insidious of the three bugs because it wasn't a serialization issue — it was a logic error in response parsing that generated a false conclusion ("the server doesn't support this feature"). A conclusion that could have killed the entire project. A full day of debugging for a parsing oversight.
+This was the most insidious of the three bugs because it wasn't a serialization issue. It was a logic error in response parsing that generated a false conclusion ("the server doesn't support this feature"). A conclusion that could have killed the entire project. A full day of debugging for a parsing oversight.
 
 ---
 
@@ -261,17 +261,17 @@ This was the most insidious of the three bugs because it wasn't a serialization 
 
 With the plumbing finally working, the DC started returning *real* errors. Each one revealed a prerequisite that the [DsAddSidHistory documentation](https://learn.microsoft.com/en-us/windows/win32/ad/using-dsaddsidhistory) mentions in isolation but never ties together.
 
-**Error 8534** — `ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD`. Source and destination are in the same forest. `DRSAddSidHistory` is designed for cross-forest migrations — pointing it at a domain within the same forest makes no sense in that context, so the DC rejects it immediately. Fix: use a source domain in a separate forest.
+**Error 8534**, `ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD`. Source and destination are in the same forest. `DRSAddSidHistory` is designed for cross-forest migrations — pointing it at a domain within the same forest makes no sense in that context, so the DC rejects it immediately. Fix: use a source domain in a separate forest.
 
-**Error 8536** — `ERROR_DS_AUDIT_FAILURE` on the destination DC. Auditing isn't enabled. Microsoft requires that every SID injection be logged — it's a traceability safeguard baked into the API. Fix: `auditpol /set /category:"Account Management" /success:enable /failure:enable` on the destination DC.
+**Error 8536**, `ERROR_DS_AUDIT_FAILURE` on the destination DC. Auditing isn't enabled. Microsoft requires that every SID injection be logged. It's a traceability safeguard baked into the API. Fix: `auditpol /set /category:"Account Management" /success:enable /failure:enable` on the destination DC.
 
-**Error 5** — `ERROR_ACCESS_DENIED`. The source DC rejected the credentials. `DRSAddSidHistory` doesn't just modify the destination — it also contacts the source DC to verify that the source principal actually exists. It needs valid credentials for that remote domain. Fix: pass `--src-username`, `--src-password`, `--src-domain`.
+**Error 5**, `ERROR_ACCESS_DENIED`. The source DC rejected the credentials. `DRSAddSidHistory` doesn't just modify the destination. It also contacts the source DC to verify that the source principal actually exists. It needs valid credentials for that remote domain. Fix: pass `--src-username`, `--src-password`, `--src-domain`.
 
-**Error 8552** — Same audit failure, but on the *source* DC this time. Auditing must be enabled on **both** sides. Same `auditpol` command, run on DC2.
+**Error 8552**, same audit failure, but on the *source* DC this time. Auditing must be enabled on **both** sides. Same `auditpol` command, run on DC2.
 
-**Error 1376** — `ERROR_NO_SUCH_ALIAS`. Specific local groups are missing on the DCs. `DRSAddSidHistory` expects local groups named `DOMAIN$$$` (the domain name followed by three dollar signs) to exist on both DCs. In production, [ADMT](https://learn.microsoft.com/en-us/windows/win32/ad/active-directory-migration-tool-overview) creates them automatically during migrations. In a lab built from scratch, they don't exist. Fix: `net localgroup LAB1$$$ /add` on both DCs.
+**Error 1376**, `ERROR_NO_SUCH_ALIAS`. Specific local groups are missing on the DCs. `DRSAddSidHistory` expects local groups named `DOMAIN$$$` (the domain name followed by three dollar signs) to exist on both DCs. In production, [ADMT](https://learn.microsoft.com/en-us/windows/win32/ad/active-directory-migration-tool-overview) creates them automatically during migrations. In a lab built from scratch, they don't exist. Fix: `net localgroup LAB1$$$ /add` on both DCs.
 
-**Error 0** — **It worked.**
+**Error 0**: **It worked.**
 
 All of these prerequisites are documented by Microsoft — but scattered across the `DsAddSidHistory` docs, the ADMT documentation, and separate KB articles. Never together, never in order. Each one discovered the hard way.
 
@@ -298,7 +298,7 @@ SMB  192.168.56.11  445  DC2  NETLOGON  READ         Logon server share
 SMB  192.168.56.11  445  DC2  SYSVOL    READ         Logon server share
 ```
 
-No `(Pwn3d!)`. No `READ,WRITE` on `ADMIN$`. The SID is in the attribute — confirmed with `--query` — but the access token doesn't reflect it. `user1` is still a normal user.
+No `(Pwn3d!)`. No `READ,WRITE` on `ADMIN$`. The SID is in the attribute (confirmed with `--query`) but the access token doesn't reflect it. `user1` is still a normal user.
 
 Days of NDR serialization bugs, prerequisite errors, and MS-DRSR documentation. The RPC call succeeded. The SID was written. And none of it mattered. A perfectly functional gun that only fires blanks.
 
@@ -306,9 +306,9 @@ Days of NDR serialization bugs, prerequisite errors, and MS-DRSR documentation. 
 
 Two fundamental constraints make this approach a dead end for privilege escalation:
 
-**Constraint #1 — DRSUAPI is cross-forest only.** `DRSAddSidHistory` is designed for domain *migrations*. Injecting a SID from your own domain into your own domain doesn't make sense in that context — the DC rejects it with error 8534. The SID *has* to come from another forest.
+**Constraint #1: DRSUAPI is cross-forest only.** `DRSAddSidHistory` is designed for domain *migrations*. Injecting a SID from your own domain into your own domain doesn't make sense in that context, so the DC rejects it with error 8534. The SID *has* to come from another forest.
 
-**Constraint #2 — [SID filtering](https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/).** When a user authenticates across a forest trust, the destination DC inspects the PAC and **strips any SID with a RID below 1000**. That's Domain Admins (512), Enterprise Admins (519), krbtgt (502) — every single privileged group. Even with `TREAT_AS_EXTERNAL` set on the trust and SID History explicitly enabled, Windows still filters these at the boundary. It's a security feature, not a misconfiguration.
+**Constraint #2: [SID filtering](https://dirkjanm.io/active-directory-forest-trusts-part-one-how-does-sid-filtering-work/).** When a user authenticates across a forest trust, the destination DC inspects the PAC and **strips any SID with a RID below 1000**. That's Domain Admins (512), Enterprise Admins (519), krbtgt (502), basically every single privileged group. Even with `TREAT_AS_EXTERNAL` set on the trust and SID History explicitly enabled, Windows still filters these at the boundary. It's a security feature, not a misconfiguration.
 
 So the DRSUAPI method works perfectly at the protocol level — the SID gets written into `sIDHistory` exactly as intended. But the only SIDs you can usefully inject cross-forest are unprivileged ones (RID > 1000), which aren't interesting for privilege escalation. The very SIDs you *want* to inject are the ones the trust strips out.
 
@@ -350,11 +350,11 @@ Attacker (Linux)                              Domain Controller
 
 **The brief downtime:** Stopping NTDS means the DC is unavailable for a few seconds. The SMB connection also drops (since SMB auth goes through AD). The tool handles this with automatic reconnection and polling — it waits for the result file to appear, reconnecting as needed until NTDS is back.
 
-This is noisier than DRSUAPI. It stops a critical service, installs a module, writes to disk. But it works on *any* SID — same-domain, privileged, anything. No trust required, no SID filtering.
+This is noisier than DRSUAPI. It stops a critical service, installs a module, writes to disk. But it works on *any* SID: same-domain, privileged, anything. No trust required, no SID filtering.
 
 ### The actual privilege escalation
 
-Same lab, same `user1`, same `Password123!`. But this time, injecting Domain Admins of **the same domain** — something DRSUAPI flat-out refuses:
+Same lab, same `user1`, same `Password123!`. But this time, injecting Domain Admins of **the same domain**, something DRSUAPI flat-out refuses:
 
 ```bash
 python3 main.py -d lab1.local -u da-admin -p 'Password123!' --dc-ip 192.168.56.10 \
@@ -413,15 +413,15 @@ SMB  192.168.56.10  445  DC1  Guest:501:aad3b435b51404ee...:31d6cfe0d16ae931b73c
 SMB  192.168.56.10  445  DC1  DefaultAccount:503:aad3b435b51404ee...:31d6cfe0d16ae931b73c59d7e0c089c0:::
 ```
 
-`(Pwn3d!)`. `ADMIN$: READ,WRITE`. SAM dumped. A standard domain user — no group changes, no password reset, no visible modification in ADUC — is now a full Domain Admin through nothing but a single `sIDHistory` entry.
+`(Pwn3d!)`. `ADMIN$: READ,WRITE`. SAM dumped. A standard domain user, no group changes, no password reset, no visible modification in ADUC, is now a full Domain Admin through nothing but a single `sIDHistory` entry.
 
 ---
 
 ## That's a wrap
 
-This started because someone wrote "there's no way to do this from Linux." Two methods later, here we are — DRSUAPI for stealth cross-forest injection, and DSInternals for when you need to inject any SID regardless of RID or domain boundaries.
+This started because someone wrote "there's no way to do this from Linux." Two methods later, here we are. DRSUAPI for stealth cross-forest injection, and DSInternals for when you need to inject any SID regardless of RID or domain boundaries.
 
-Each method exists because the previous one had a hard limitation. DRSUAPI can't do same-domain or privileged SIDs? Fine — stop NTDS and modify the database directly.
+Each method exists because the previous one had a hard limitation. DRSUAPI can't do same-domain or privileged SIDs? Fine, stop NTDS and modify the database directly.
 
 The code's at [github.com/felixbillieres/pySIDHistory](https://github.com/felixbillieres/pySIDHistory) — lab included if you want to break things safely. Have fun, stay legal, and don't be the reason your SOC has a bad day.
 

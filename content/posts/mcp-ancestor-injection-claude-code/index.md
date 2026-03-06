@@ -3,7 +3,7 @@ title: "MCP Ancestor Injection: How a .mcp.json in /tmp/ Hijacks Your Claude Cod
 date: 2026-03-03
 draft: false
 description: "Claude Code walks from your project directory all the way to the filesystem root looking for .mcp.json files. No ownership check, no boundary. On shared systems, dropping a .mcp.json in /tmp/ injects MCP servers into any project opened from a subdirectory."
-summary: "Third article in my MCP security series. Claude Code's .mcp.json discovery walks from CWD to filesystem root with no boundary check and no file ownership verification. On multi-user Linux systems, any user can drop /tmp/.mcp.json to inject MCP servers into another user's Claude Code session. Not reported to Anthropic — here's why, and the full technical breakdown."
+summary: "Third article in my MCP security series. Claude Code's .mcp.json discovery walks from CWD to filesystem root with no boundary check and no file ownership verification. On multi-user Linux systems, any user can drop /tmp/.mcp.json to inject MCP servers into another user's Claude Code session. Not reported to Anthropic. Here's why, and the full technical breakdown."
 tags: ["mcp", "claude-code", "path-traversal", "vulnerability-research", "bug-bounty"]
 categories: ["Vulnerability Research", "Bug Bounty"]
 series: ["MCP Security Research"]
@@ -12,7 +12,7 @@ featuredImage: "featured.png"
 
 # MCP Ancestor Injection: How a .mcp.json in /tmp/ Hijacks Your Claude Code Session
 
-> Third article in my [MCP security research series](/posts/mcp-svg-icon-xss-to-rce/). After exploring [icon injection](/posts/mcp-svg-icon-xss-to-rce/) and [OAuth SSRF](/posts/mcp-ssrf-oauth-prm-discovery/), I looked at how Claude Code discovers MCP server configurations — and found that the search path has no upper boundary at all.
+> Third article in my [MCP security research series](/posts/mcp-svg-icon-xss-to-rce/). After exploring [icon injection](/posts/mcp-svg-icon-xss-to-rce/) and [OAuth SSRF](/posts/mcp-ssrf-oauth-prm-discovery/), I looked at how Claude Code discovers MCP server configurations, and found that the search path has no upper boundary at all.
 
 ---
 
@@ -23,11 +23,11 @@ I chose not to submit this to Anthropic's VDP. The core reason: **the user still
 Unlike a full approval bypass, the MCP server from the ancestor directory triggers the standard approval dialog. The user can see the server name and reject it. A triager would reasonably argue that the prompt is the mitigation, and it's working as intended.
 
 There are other defensible arguments a triager could make:
-- **"Who develops from /tmp/?"** — Fair point. Most developers work from `~/projects`. The `/tmp/` scenario is an edge case, mostly relevant on shared university servers or CI/CD runners.
-- **"This follows standard directory traversal patterns"** — Node.js walks up for `node_modules`, npm for `.npmrc`, Python for `pyproject.toml`. Upward config discovery is a well-established convention.
-- **"Environment-specific, out of scope"** — The HackerOne policy excludes *"environment-specific settings to bypass permission prompts."* Placing a file in `/tmp/` could be stretched into that carveout.
+- **"Who develops from /tmp/?"** Fair point. Most developers work from `~/projects`. The `/tmp/` scenario is an edge case, mostly relevant on shared university servers or CI/CD runners.
+- **"This follows standard directory traversal patterns"** Node.js walks up for `node_modules`, npm for `.npmrc`, Python for `pyproject.toml`. Upward config discovery is a well-established convention.
+- **"Environment-specific, out of scope"** The HackerOne policy excludes *"environment-specific settings to bypass permission prompts."* Placing a file in `/tmp/` could be stretched into that carveout.
 
-That said, the behavior is worth documenting. The walk goes to the **filesystem root** with no ownership check, and the injected server appears indistinguishable from a legitimate project-scoped one. If you're on a shared system and wondering why Claude Code is asking about an MCP server you never configured — this is probably why.
+That said, the behavior is worth documenting. The walk goes to the **filesystem root** with no ownership check, and the injected server appears indistinguishable from a legitimate project-scoped one. If you're on a shared system and wondering why Claude Code is asking about an MCP server you never configured, this is probably why.
 
 ---
 
@@ -70,7 +70,7 @@ MCP servers in Claude Code come from five config sources, loaded in this priorit
 | **Project** | **`.mcp.json` in project tree** | **Yes** |
 | Dynamic | `--mcp-config` CLI flag | No |
 
-Only the **Project** scope requires user approval — which makes sense, since `.mcp.json` is committed to the repo and could come from anyone.
+Only the **Project** scope requires user approval, which makes sense, since `.mcp.json` is committed to the repo and could come from anyone.
 
 The question is: how does Claude Code determine which `.mcp.json` files belong to "the project"?
 
@@ -124,7 +124,7 @@ There's also an asymmetry between read and write operations:
 | Config loader | Walks **all ancestors** to root | Reading active servers |
 | `mcp add/remove` | Reads **CWD-level only** | Modifying servers |
 
-This means an ancestor-injected server **cannot be removed** through the normal `claude mcp remove` command. It doesn't exist in the project's `.mcp.json` — it lives in a parent directory the user might not even be aware of.
+This means an ancestor-injected server **cannot be removed** through the normal `claude mcp remove` command. It doesn't exist in the project's `.mcp.json`. It lives in a parent directory the user might not even be aware of.
 
 ---
 
@@ -178,7 +178,7 @@ claude
 
 Claude Code walks: `/tmp/innocent-project/` → `/tmp/` → finds `/tmp/.mcp.json` → loads the `"backdoor"` server.
 
-The approval prompt appears — for a server the user never configured:
+The approval prompt appears, for a server the user never configured:
 
 ![Claude Code prompting about "backdoor" server from ancestor .mcp.json](ancestor-prompt-backdoor.png)
 
@@ -192,7 +192,7 @@ cat /tmp/poc-ancestor-pwned.txt
 
 ![Proof of execution from ancestor-injected MCP server](ancestor-proof.png)
 
-The server ran, confirmed the CWD is the innocent project, and accessed the victim's Claude credentials (451 bytes). The source is explicitly `/tmp/.mcp.json` — a world-writable directory.
+The server ran, confirmed the CWD is the innocent project, and accessed the victim's Claude credentials (451 bytes). The source is explicitly `/tmp/.mcp.json`, a world-writable directory.
 
 ---
 
@@ -200,13 +200,13 @@ The server ran, confirmed the CWD is the innocent project, and accessed the vict
 
 Even though the prompt appears (which is why I didn't report it), there are scenarios where this crosses a line:
 
-**Bypass via `enableAllProjectMcpServers`.** If the user has ever clicked "Use this and all future MCP servers" (option 1) for *any* project under `/tmp/`, the `enableAllProjectMcpServers: true` flag auto-approves all servers — including ancestor-injected ones. No prompt at all.
+**Bypass via `enableAllProjectMcpServers`.** If the user has ever clicked "Use this and all future MCP servers" (option 1) for *any* project under `/tmp/`, the `enableAllProjectMcpServers: true` flag auto-approves all servers, including ancestor-injected ones. No prompt at all.
 
 **Social engineering.** The server name is attacker-controlled. Naming it `"eslint"` or `"prettier"` or `"typescript-language-server"` instead of `"backdoor"` makes it look like a legitimate development tool. Most developers would click "Use this MCP server" without thinking twice.
 
 **CI/CD runners.** Build systems often run in `/tmp/` or shared workspace directories. If Claude Code is used in CI/CD pipelines (via `claude -p`), headless mode skips the interactive prompt entirely.
 
-**The remove asymmetry.** Even if the user notices something wrong, `claude mcp remove backdoor` won't work — it only looks at the CWD-level `.mcp.json`, not ancestor directories. The user has to manually find and delete `/tmp/.mcp.json`, which they might not know to look for.
+**The remove asymmetry.** Even if the user notices something wrong, `claude mcp remove backdoor` won't work. It only looks at the CWD-level `.mcp.json`, not ancestor directories. The user has to manually find and delete `/tmp/.mcp.json`, which they might not know to look for.
 
 ---
 
@@ -247,9 +247,9 @@ if (dirStat.mode & 0o002) {
 
 ## Conclusion
 
-The `.mcp.json` discovery walk in Claude Code has no upper boundary and no file ownership verification. It will happily load MCP server configurations from `/tmp/`, `/var/shared/`, or any other ancestor directory — treating them as project-scoped configs indistinguishable from ones committed to the repo.
+The `.mcp.json` discovery walk in Claude Code has no upper boundary and no file ownership verification. It will happily load MCP server configurations from `/tmp/`, `/var/shared/`, or any other ancestor directory, treating them as project-scoped configs indistinguishable from ones committed to the repo.
 
-Is it a critical vulnerability? No — the approval prompt still fires in the default case. Is it a design gap that can be exploited under the right conditions? Yes — especially on shared systems, in CI/CD pipelines, or when combined with the blanket `enableAllProjectMcpServers` flag.
+Is it a critical vulnerability? No. The approval prompt still fires in the default case. Is it a design gap that can be exploited under the right conditions? Yes, especially on shared systems, in CI/CD pipelines, or when combined with the blanket `enableAllProjectMcpServers` flag.
 
 The fix is three lines of code. Until then, if you see an MCP server prompt for something you didn't configure, check your parent directories.
 

@@ -2,8 +2,8 @@
 title: "MCP SSRF via OAuth PRM Discovery: How a 401 Turns Your Client Into a Proxy"
 date: 2026-02-27
 draft: false
-description: "A malicious MCP server can force any connecting client — including Claude Desktop and Claude Code — to send HTTP requests to arbitrary internal URLs by injecting a crafted resource_metadata parameter in a 401 response. Both the Python and TypeScript SDKs are affected."
-summary: "Second article in my MCP security series. A malicious MCP server returns a 401 with a crafted WWW-Authenticate header pointing resource_metadata at any URL it wants. The MCP SDK fetches that URL without origin validation — blind SSRF, affects both Python and TypeScript SDKs, Claude Desktop, and Claude Code. Reported to Anthropic VDP, closed as duplicate. Full technical details disclosed here."
+description: "A malicious MCP server can force any connecting client (including Claude Desktop and Claude Code) to send HTTP requests to arbitrary internal URLs by injecting a crafted resource_metadata parameter in a 401 response. Both the Python and TypeScript SDKs are affected."
+summary: "Second article in my MCP security series. A malicious MCP server returns a 401 with a crafted WWW-Authenticate header pointing resource_metadata at any URL it wants. The MCP SDK fetches that URL without origin validation, resulting in blind SSRF that affects both Python and TypeScript SDKs, Claude Desktop, and Claude Code. Reported to Anthropic VDP, closed as duplicate. Full technical details disclosed here."
 tags: ["mcp", "ssrf", "oauth", "vulnerability-research", "responsible-disclosure", "bug-bounty", "python", "typescript"]
 categories: ["Vulnerability Research", "Bug Bounty"]
 series: ["MCP Security Research"]
@@ -13,7 +13,7 @@ images: ["featured.png", "poc-overview.png", "canary-hit.png", "client-logs.png"
 
 # MCP SSRF via OAuth PRM Discovery: How a 401 Turns Your Client Into a Proxy
 
-> Second article in my [MCP security research series](/posts/mcp-svg-icon-xss-to-rce/). After looking at the icon rendering surface, I dug into the OAuth authentication layer — and found a way to turn any MCP client into a blind SSRF proxy with a single HTTP header.
+> Second article in my [MCP security research series](/posts/mcp-svg-icon-xss-to-rce/). After looking at the icon rendering surface, I dug into the OAuth authentication layer and found a way to turn any MCP client into a blind SSRF proxy with a single HTTP header.
 
 ---
 
@@ -28,8 +28,8 @@ This was submitted to Anthropic's Vulnerability Disclosure Program and closed as
 1. [TL;DR](#tldr)
 2. [Background: OAuth in MCP](#background-oauth-in-mcp)
 3. [The Vulnerability](#the-vulnerability-no-origin-validation-before-fetch)
-4. [Vulnerable Code — Python SDK](#vulnerable-code--python-sdk)
-5. [Vulnerable Code — TypeScript SDK](#vulnerable-code--typescript-sdk)
+4. [Vulnerable Code: Python SDK](#vulnerable-code--python-sdk)
+5. [Vulnerable Code: TypeScript SDK](#vulnerable-code--typescript-sdk)
 6. [Attack Flow](#attack-flow)
 7. [Proof of Concept](#proof-of-concept)
 8. [Chaining to a Second Target](#chaining-to-a-second-target)
@@ -56,7 +56,7 @@ Both the Python and TypeScript SDKs are affected. Claude Desktop, Claude Code, a
 
 ## Background: OAuth in MCP
 
-The MCP specification added OAuth 2.0 support for authenticating clients to servers. The flow follows [RFC 9728 — OAuth 2.0 Protected Resource Metadata](https://www.rfc-editor.org/rfc/rfc9728).
+The MCP specification added OAuth 2.0 support for authenticating clients to servers. The flow follows [RFC 9728: OAuth 2.0 Protected Resource Metadata](https://www.rfc-editor.org/rfc/rfc9728).
 
 Here's how the discovery phase works in the normal, legitimate case:
 
@@ -66,7 +66,7 @@ Here's how the discovery phase works in the normal, legitimate case:
 4. Client fetches that JSON document to discover the OAuth endpoints
 5. Client proceeds with the OAuth dance
 
-This discovery step — fetching the `resource_metadata` URL — is where the vulnerability lives.
+This discovery step (fetching the `resource_metadata` URL) is where the vulnerability lives.
 
 The spec says the `resource_metadata` URL should be on the same server as the MCP endpoint. The SDK never enforces that.
 
@@ -87,7 +87,7 @@ The validation code exists — `_validate_resource_match()` checks that the PRM 
 
 ---
 
-## Vulnerable Code — Python SDK
+## Vulnerable Code: Python SDK
 
 ### `mcp/client/auth/utils.py` — URL extraction with no origin check
 
@@ -118,11 +118,11 @@ for url in prm_discovery_urls:  # includes the unvalidated attacker URL
         self.context.auth_server_url = str(prm.authorization_servers[0])  # ← chained SSRF
 ```
 
-The validation runs after the fetch — too late. And `prm.authorization_servers[0]` feeds into a **second** fetch, opening the door to chained SSRF (more on that below).
+The validation runs after the fetch, which is too late. And `prm.authorization_servers[0]` feeds into a **second** fetch, opening the door to chained SSRF (more on that below).
 
 ---
 
-## Vulnerable Code — TypeScript SDK
+## Vulnerable Code: TypeScript SDK
 
 ### `packages/client/src/client/auth.ts` — URL parsing without origin check
 
@@ -157,10 +157,10 @@ Same pattern as the Python SDK: parse header, store URL, fetch URL. No origin ch
 └──────────────────────────────┘
 ```
 
-The server never needs to complete the OAuth flow or respond with valid MCP data. The SSRF fires on the very first connection attempt — the attacker just needs someone to add the server to their config.
+The server never needs to complete the OAuth flow or respond with valid MCP data. The SSRF fires on the very first connection attempt; the attacker just needs someone to add the server to their config.
 
-![PoC overview — three terminals: rogue server, canary, victim client](./poc-overview.png)
-*The full PoC: rogue server on port 8080, canary on port 8888, victim client connecting. The client was only configured with port 8080 — but port 8888 receives a request.*
+![PoC overview: three terminals showing rogue server, canary, and victim client](./poc-overview.png)
+*The full PoC: rogue server on port 8080, canary on port 8888, victim client connecting. The client was only configured with port 8080, but port 8888 receives a request.*
 
 ---
 
@@ -197,7 +197,7 @@ python victim_client.py -s http://localhost:8080
 ### Client logs — the SDK fetches the injected URL
 
 ![Client logs showing the SDK making a GET to the canary URL](./client-logs.png)
-*The SDK extracted `resource_metadata` from the 401 header and sent a GET to `localhost:8888` — a URL the client was never configured to contact.*
+*The SDK extracted `resource_metadata` from the 401 header and sent a GET to `localhost:8888`, a URL the client was never configured to contact.*
 
 ```
 httpcore.http11: receive_response_headers.complete
@@ -210,7 +210,7 @@ httpx: HTTP Request: GET http://localhost:8888/ssrf-proof "HTTP/1.0 200 OK"
 ### Canary confirms the hit
 
 ![Canary server logs showing SSRF hit with MCP protocol headers](./canary-hit.png)
-*The canary logs the incoming request. The `mcp-protocol-version` header is the SDK's fingerprint — proof that this request came from the MCP OAuth discovery flow.*
+*The canary logs the incoming request. The `mcp-protocol-version` header is the SDK's fingerprint, proof that this request came from the MCP OAuth discovery flow.*
 
 ```
 --- SSRF HIT ---
@@ -232,7 +232,7 @@ For a cleaner demonstration, `proof_standalone.py` calls the vulnerable SDK func
 
 ## Chaining to a Second Target
 
-If the first SSRF target returns valid-looking PRM JSON, the attack chains further. The SDK takes `authorization_servers[0]` from the response and fetches `<url>/.well-known/oauth-authorization-server` — a second blind SSRF to a completely different internal host.
+If the first SSRF target returns valid-looking PRM JSON, the attack chains further. The SDK takes `authorization_servers[0]` from the response and fetches `<url>/.well-known/oauth-authorization-server`, a second blind SSRF to a completely different internal host.
 
 ```
 Rogue server → 401 with resource_metadata="http://attacker-prm.com/"
@@ -267,7 +267,7 @@ python malicious_mcp_server.py -t "http://10.0.0.50:9200/_cluster/health"
 python malicious_mcp_server.py -t "http://localhost:6379/"
 ```
 
-The SSRF is **blind by default** — the rogue server doesn't see the response. But cloud metadata responses often come back as the OAuth discovery body, and in verbose logging mode (common during development), credentials can leak directly into logs. The chained variant is even more effective: if the internal service returns JSON, the SDK processes it and may expose fields through error messages or follow-up requests.
+The SSRF is **blind by default**, meaning the rogue server doesn't see the response. But cloud metadata responses often come back as the OAuth discovery body, and in verbose logging mode (common during development), credentials can leak directly into logs. The chained variant is even more effective: if the internal service returns JSON, the SDK processes it and may expose fields through error messages or follow-up requests.
 
 ---
 
@@ -275,7 +275,7 @@ The SSRF is **blind by default** — the rogue server doesn't see the response. 
 
 Unlike the [icon sanitization gap](/posts/mcp-svg-icon-xss-to-rce/) where the spec deliberately uses `MAY`, the spec is explicit here: the `resource_metadata` URL **MUST** be hosted on the same server as the MCP endpoint.
 
-The SDK developers knew this — `_validate_resource_match()` exists precisely for that purpose. It's a sequencing error: the validation runs on the response body after the request completes, instead of on the URL before it's fetched.
+The SDK developers knew this. `_validate_resource_match()` exists precisely for that purpose. It's a sequencing error: the validation runs on the response body after the request completes, instead of on the URL before it's fetched.
 
 ```python
 # Current (broken):
@@ -294,7 +294,7 @@ validate_response_body()      # defense in depth
 
 ### Option 1: Origin validation before fetch
 
-The straightforward fix — validate that the URL shares the same scheme, host, and port as the MCP server before adding it to the fetch list:
+The straightforward fix: validate that the URL shares the same scheme, host, and port as the MCP server before adding it to the fetch list:
 
 ```python
 def build_protected_resource_metadata_discovery_urls(
@@ -336,7 +336,7 @@ BLOCKED_NETWORKS = [
 ]
 ```
 
-Note: IP blocklisting alone is insufficient — an attacker with a public hostname that DNS-rebinds to a private IP can bypass it. Origin validation is the correct primary fix.
+Note: IP blocklisting alone is insufficient. An attacker with a public hostname that DNS-rebinds to a private IP can bypass it. Origin validation is the correct primary fix.
 
 ---
 
@@ -344,7 +344,7 @@ Note: IP blocklisting alone is insufficient — an attacker with a public hostna
 
 One header, one connection attempt, blind SSRF. No OAuth flow completed, no MCP tools invoked, no user interaction beyond adding the server to their config.
 
-The fix is straightforward — validate the URL origin before fetching — and the validation logic already exists in the codebase, just in the wrong order.
+The fix is straightforward: validate the URL origin before fetching. The validation logic already exists in the codebase, just in the wrong order.
 
 Both articles in this series point to the same broader pattern: the MCP ecosystem is moving fast, the attack surface is growing, and security assumptions that hold in trusted environments break down the moment you connect to an untrusted server. If you're building on the MCP SDKs, treat every server as hostile by default.
 
