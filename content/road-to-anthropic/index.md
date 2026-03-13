@@ -25,4 +25,6 @@ A series of vulnerability research articles on the Model Context Protocol (MCP) 
 
 {{< article link="/posts/mcp-config-swap-claude-code/" >}}
 
+{{< article link="/posts/mcp-oauth-metadata-credential-theft/" >}}
+
 </div>
