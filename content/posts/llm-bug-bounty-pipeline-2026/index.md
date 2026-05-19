@@ -1,5 +1,5 @@
 ---
-title: "Configuration Beats Capability: Six Axes for an LLM Bug-Bounty Pipeline"
+title: "Studying LLM Workflows Until They Actually Find Cool Bugs"
 date: 2026-05-19
 draft: false
 description: "A technical, story-driven deep dive into the architecture of an LLM-driven bug bounty pipeline (YesWeHack + HackerOne, web + AD + CTF). Six configuration axes that empirically separate hunters who find from hunters who don't: deterministic validation, context discipline, the four-layer harness, the workflow funnel, model routing, and defensive surface. With sourced numbers, real research links, design tradeoffs, and an honest before-and-after between a kitchen-sink first version and the sharp rewrite."
@@ -9,7 +9,7 @@ categories: ["Bug Bounty", "AI", "Vulnerability Research"]
 featuredImage: "featured.png"
 ---
 
-# Configuration Beats Capability: Six Axes for an LLM Bug-Bounty Pipeline
+# Studying LLM Workflows Until They Actually Find Cool Bugs
 
 > **A short note before the article starts.** This pipeline is a live system, not a closed product. It has no public CVE and no documented bounty attributed to it yet. The hunting results belong in the next parts of this series, once they exist on disk and on platform dashboards. What this article *does* document is the architecture and its stress-test baseline: 30/30 must-reject cases passed on the validator anti-cheat suite, 19/19 in-scope vs out-of-scope resolution on the scope MCP, 15/15 adversarial cases on the scope guard, 4/7 PROVEN on the Juice Shop unauthenticated subset. Treat the rest as a snapshot of where the work sits today, with the output numbers landing in part two.
 
