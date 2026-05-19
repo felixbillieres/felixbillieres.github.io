@@ -39,7 +39,7 @@ I keep coming back to one sentence after running this pipeline for six months:
 
 > *They do not have better models. They have better configurations.*
 
-Sit with the public numbers for a while and that sentence stops sounding like opinion. Two researchers can use the same `o3`, the same Sonnet 4.6, the same Gemini 2.5 Pro, and produce results that differ by an order of magnitude. The mechanism is not the model. It is the system around it.
+Sit with the public numbers for a while and that sentence stops sounding like opinion. Two researchers can use the same GPT-5.5, the same Claude Opus 4.7, the same Gemini 3.1 Pro (the trio currently fighting for the top of the reasoning and coding benchmarks as of May 2026) and produce results that differ by an order of magnitude. The mechanism is not the model. It is the system around it.
 
 A few numbers before we go anywhere else:
 
