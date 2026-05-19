@@ -1,5 +1,5 @@
 ---
-title: "Studying LLM Workflows Until They Actually Find Cool Bugs"
+title: "Configuration Beats Capability: Six Axes for an LLM Bug-Bounty Pipeline"
 date: 2026-05-19
 draft: false
 description: "A technical, story-driven deep dive into the architecture of an LLM-driven bug bounty pipeline (YesWeHack + HackerOne, web + AD + CTF). Six configuration axes that empirically separate hunters who find from hunters who don't: deterministic validation, context discipline, the four-layer harness, the workflow funnel, model routing, and defensive surface. With sourced numbers, real research links, design tradeoffs, and an honest before-and-after between a kitchen-sink first version and the sharp rewrite."
@@ -9,9 +9,9 @@ categories: ["Bug Bounty", "AI", "Vulnerability Research"]
 featuredImage: "featured.png"
 ---
 
-# Studying LLM Workflows Until They Actually Find Cool Bugs
+# Configuration Beats Capability: Six Axes for an LLM Bug-Bounty Pipeline
 
-> **A short note before the article starts.** This pipeline is a live system that I keep building against real targets. The architecture and the numbers in this post are the state at the time of writing, not a final product. I am running fresh tests every week and I will publish part two, three, and so on, as the design evolves. Expect updates on the chain-finder phase, the variant-analysis seeding loop, the ORM-leak MCP, and the multi-LLM alloy work in particular. Treat the article as a snapshot of where the work currently sits, not as a closed reference.
+> **A short note before the article starts.** This pipeline is a live system, not a closed product. It has no public CVE and no documented bounty attributed to it yet. The hunting results belong in the next parts of this series, once they exist on disk and on platform dashboards. What this article *does* document is the architecture and its stress-test baseline: 30/30 must-reject cases passed on the validator anti-cheat suite, 19/19 in-scope vs out-of-scope resolution on the scope MCP, 15/15 adversarial cases on the scope guard, 4/7 PROVEN on the Juice Shop unauthenticated subset. Treat the rest as a snapshot of where the work sits today, with the output numbers landing in part two.
 
 > Two weeks ago I wrote [Prompting for Security Research](/posts/prompting-for-cybersecurity-2026/), which covers the work that happens inside the prompt: XML structuring, CWE-specialized prompts, adversarial verification, few-shot calibration, hybrid LLM-plus-Semgrep architectures. This article is about the layer above: the hooks, the subagents, the MCPs, the scope guards, the deterministic validators, the workflow funnel, and the cost discipline that turn good prompts into something usable in a real bug bounty session.
 
@@ -27,9 +27,8 @@ featuredImage: "featured.png"
 6. [Axis 4: the workflow funnel](#axis-4-the-workflow-funnel)
 7. [Axis 5: cost discipline and model routing](#axis-5-cost-discipline-and-model-routing)
 8. [Axis 6: the defensive surface of the pipeline](#axis-6-the-defensive-surface-of-the-pipeline)
-9. [Where the 2026 bounties actually live](#where-the-2026-bounties-actually-live)
-10. [What is still missing](#what-is-still-missing)
-11. [Sources](#sources)
+9. [What is still missing](#what-is-still-missing)
+10. [Sources](#sources)
 
 ---
 
@@ -45,11 +44,11 @@ A few numbers before we go anywhere else:
 
 - Claude alone on real-world vulnerability detection: **roughly 14% true positive rate** across 800k lines of code and eleven applications ([Semgrep, 2025](https://semgrep.dev/blog/2025/can-llms-detect-idors-understanding-the-boundaries-of-ai-reasoning/)). Not usable in production.
 - Same Claude wired into a hybrid with Semgrep first: **61% precision and a 90% recall improvement on IDOR** ([Semgrep, AI-powered detection](https://semgrep.dev/blog/2025/ai-powered-detection-with-semgrep/)). Twenty-seven percentage points of false-positive rate removed, with no model change.
-- Sean Heelan, the same `o3`, the same ksmbd target: **8% true positive rate at 27k tokens of context, 1% at 100k** ([Heelan, on finding CVE-2025-37899](https://sean.heelan.io/2025/05/22/how-i-used-o3-to-find-cve-2025-37899-a-remote-zeroday-vulnerability-in-the-linux-kernels-smb-implementation/)). Performance divided by eight just by enlarging the prompt.
+- Sean Heelan, the same `o3`, the same ksmbd target: **8 successful trajectories out of 100 at 27k tokens of context, 1 out of 100 at 100k** ([Heelan, on finding CVE-2025-37899](https://sean.heelan.io/2025/05/22/how-i-used-o3-to-find-cve-2025-37899-a-remote-zeroday-vulnerability-in-the-linux-kernels-smb-implementation/)). A success rate at pass-100, with a signal-to-noise ratio of roughly 1:50 at the working depth. Useful trajectories divided by eight just by enlarging the prompt.
 - XBOW on the same Sonnet 4.0: 57.5% solve rate solo, **68.8% when randomly alternated with Gemini 2.5 Pro inside the same thread** ([XBOW Alloy Agents](https://xbow.com/blog/alloy-agents)). Plus eleven absolute points from one orchestration trick.
 - Google's [Naptime](https://projectzero.google/2024/06/project-naptime.html): GPT-4 Turbo goes from **0.05 to 1.00** on the CyberSecEval2 buffer-overflow set by switching from one long trajectory to twenty short independent ones.
 
-The pattern that keeps showing up across all of these numbers is the same: what separates a working LLM hunting setup from one that produces slop is rarely the foundation model. It is the system around the model. The model is mostly fungible. The configuration is not.
+The pattern that keeps showing up across all of these numbers is the same: what separates a working LLM hunting setup from one that produces slop is rarely the foundation model taken in isolation. Raw capability is the cheapest variable to switch. Any operator can buy a frontier model this quarter. The configuration around it is what compounds, and that includes the policy that decides which model goes where: Sonnet for bulk hunting, Opus for chain construction, two cross-provider models alternated inside the same thread for the eleven points XBOW reports on alloy. Capability is a commodity input. The orchestration of capabilities is not.
 
 The rest of this article is six axes I keep coming back to. Each axis has the story that pushed me to take it seriously, the research that grounds it, and how I encode it in the current pipeline.
 
@@ -85,13 +84,15 @@ V1 assumed that stacking more capability horizontally would compound into more p
 
 ### What I built next (call it V2)
 
-The rewrite started with caps, not features. Before I wrote a line of code I decided three numbers:
+The rewrite started with caps, not features. Three caps I committed to before writing a line of V2:
 
-- **Four to six slash commands.** No more.
-- **Eight to twelve auto-triggered skills.** No more.
-- **Four to six concurrent subagents.** No more.
+- **Four to six slash commands.** Past my V1 ceiling of twenty-seven, descriptions overlapped and the agent burned tokens picking. The four-to-six band is what my pipeline tolerated cleanly; six is the practical limit, not a theorem.
+- **Eight to twelve auto-triggered skills.** Same mechanism, slightly higher band because skill descriptions discriminate on path globs as well as text. Twelve is where adherence visibly broke on my catalog.
+- **Four to six concurrent subagents.** The upper bound is anchored in [chudi.dev's published incident](https://chudi.dev/blog/bug-bounty-automation-architecture), where ten concurrent hunters got banned in minutes and quality crashed before that. Four is where I run today.
 
-These caps are not arbitrary. The four-hunter ceiling comes straight from a published failure: [chudi.dev's IP-ban story](https://chudi.dev/blog/bug-bounty-automation-architecture) where ten concurrent hunters got banned in minutes and the quality crashed before that. The twelve-skill ceiling came from watching my own V1 paralysis at twenty-seven. The two-hundred-line configuration ceiling came from [Anthropic's published guidance on effective harnesses](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) plus my own measurement: rule adherence visibly drops past it.
+Two of these are personal measurements; one is a documented third-party failure. None are universal laws, but they are the only published numbers I am aware of and they all point at the same order of magnitude.
+
+A fourth implicit cap, on the configuration file itself: two hundred lines. This is my own empirical measurement on this pipeline; rule adherence visibly drops past that point. [Anthropic's effective-harnesses guidance](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) makes the related but distinct point that complex agent harnesses fragment past a couple of hundred *features*. It does not prescribe a line count for configuration files.
 
 The second big shift was removing embeddings entirely. [Transilience reported 96.2% on the XBOW benchmark with Sonnet 4.6 using markdown files only, no vector store](https://github.com/transilienceai/communitytools). That was the data point that broke V1's design assumption. Until I exceed roughly five hundred validated findings, git-versioned markdown plus filesystem-backed evidence is strictly cheaper and at least as informative as anything I would build with embeddings.
 
@@ -198,7 +199,7 @@ def is_cheating(proof):
     return None
 ```
 
-Concretely this means every XSS validator launches Chromium without `--disable-web-security`, every alert match is on a fresh sixteen-plus character nonce instead of the dictionary word `XSS`, and any `javascript:` payload claim must be accompanied by a logged click event. I run thirty must-reject cases in CI on every validator change. If any one PROVENs, the build fails. Without that suite, validators silently rot.
+Thirty must-reject cases run in CI on every validator change. If any one PROVENs, the build fails. Without that suite, validators silently rot.
 
 ### The blind validator
 
@@ -272,7 +273,7 @@ Five files. Identity plus anti-FP system prompt, threat model, scoped code, expl
 
 ### The anti-false-positive clause is not stylistic
 
-Every methodology that produces real findings in 2025 and 2026 contains some version of these clauses, often verbatim. Every methodology that produces slop omits them:
+Heelan's published methodology, the Anthropic and Mozilla Firefox playbook, and XBOW's BH25 deck all place some version of these clauses at the top of the system prompt:
 
 > *It is better to report no vulnerabilities than to report false positives or hypotheticals.*
 
@@ -280,7 +281,7 @@ Every methodology that produces real findings in 2025 and 2026 contains some ver
 
 > *Do not report hypothetical vulnerabilities.*
 
-These are not personality. They are a measurable lever. Heelan reports that removing them drives the false-positive rate up by tens of points on the same task. They sit at the top of the configuration file in V2, not buried inside an instruction.
+Heelan measured what happens when they are removed: the false-positive rate on the same ksmbd target jumps by tens of points. These clauses are a lever with a number attached, not a stylistic preference. They sit at the top of the configuration file in V2, not buried inside an instruction.
 
 ### Pass at k beats long chain of thought
 
@@ -458,24 +459,19 @@ There is no `hunt-everything`. That skill was in V1 and it was a constant source
 
 ### Layer 4: subagents as the execution boundary
 
-Subagents are where actual hunting happens, each in an isolated context. The orchestrator agent's frontmatter:
+Subagents are where actual hunting happens, each in an isolated context. The orchestrator agent's frontmatter compresses to six load-bearing fields:
 
 ```yaml
 ---
 name: orchestrator
-description: "Main coordinator for bug bounty hunting missions. NEVER hunts itself. Parses scope, plans phases, delegates to specialized subagents, applies five quality gates before forwarding findings to validator."
+description: "Main coordinator. NEVER hunts itself. Parses scope, plans phases, applies five quality gates before forwarding findings to validator."
 model: claude-opus-4-7
-effort: xhigh
-maxTurns: 200
-mcpServers:
-  bb-scope:     { type: stdio, command: python3, args: ["mcp/bb-scope/server.py"] }
-  bb-validator: { type: stdio, command: python3, args: ["mcp/bb-validator/server.py"] }
-hooks:
-  PreToolUse:  ".claude/hooks/scope_guard.py"
-  PostToolUse: ".claude/hooks/post_tool_use.py"
-color: red
+allowed-tools: [Task, Read, Write, mcp__bb-scope__*, mcp__bb-validator__*]
+hooks: { PreToolUse: scope_guard.py, PostToolUse: post_tool_use.py }
 ---
 ```
+
+The full frontmatter (mcpServers, maxTurns, effort, color) lives in the repo. The architectural point is that `allowed-tools` routes capabilities by subagent: the orchestrator gets `Task` and the validator MCP, never the network. Hunters get the inverse.
 
 The roster I run:
 
@@ -534,60 +530,18 @@ This phase costs roughly $10 to $15 per run and runs in about fifteen minutes. T
 A typical session timeline:
 
 ```
-T+0:00  /hunt <target>
-        SessionStart loads scope and memory, provisions Exegol.
-        UserPromptSubmit detects target type, injects variant-analysis seeds.
-        Orchestrator parses scope, plans phases.
-
-T+0:00  /auth-bootstrap runs asynchronously in parallel.
-        Playwright auto-signup for 2+ accounts (IDOR and BOLA need them).
-        TOTP scrape and JWT keeper daemon.
-        manifest.json shared with other skills.
-
-T+0:05  recon-runner (Haiku, 4 to 8 minutes).
-        subfinder, chaos, gau, alterx into resolved.txt.
-        dnsx, httpx, katana, jsluice into endpoints.jsonl.
-        scope.json is the single source of truth.
-
-T+0:15  app-mapper (Sonnet).
-        Six Haddix questions.
-        Heat map: upload, auth, admin, 3rd-party, APIs, error pages.
-        Multi-tenancy gate (blocking if needed).
-
-T+0:25  Four web-hunters in parallel (Sonnet).
-        Hunter 1: OAuth and JWT (Doyensec six-test matrix).
-        Hunter 2: IDOR and BOLA (two sessions, swap object ids).
-        Hunter 3: SSRF (trusted CDN, parser confusion, IMDS, redirect-loop).
-        Hunter 4: GraphQL (introspection, nested IDOR, aliasing bypass).
-        Rotate five times through remaining classes.
-        Funnel notes -> leads -> primitives -> findings.
-
+T+0:00  /hunt <target>. SessionStart loads scope, /auth-bootstrap in parallel.
+T+0:05  recon-runner (Haiku, 4 to 8 min). Resolved hosts and endpoints.
+T+0:15  app-mapper (Sonnet). Heat map, multi-tenancy gate.
+T+0:25  Four web-hunters in parallel (Sonnet, one vuln class each).
 T+2:00  chain-finder (Opus, single call, $10 to $15, 15 min).
-        Input: findings >= 0.5 plus leads plus app-map plus chains-db.
-        Output: ranked chain candidates.
-
 T+2:30  exploit-dev (Opus, top 1 to 3 chains, isolated worktree).
-        Single-packet attack via Burp Turbo Intruder on sensitive endpoints.
-        Python sandbox for payload craft.
-
-T+3:00  validator (Sonnet, BLIND, evidence only).
-        Class-specific oracle per finding.
-        Negative control mandatory.
-        Reproducibility >= N per class.
-        confidence = formula -> validated/*.json if >= 0.85.
-
-T+3:30  reporter (Sonnet, output style enforced).
-        Draft, CVSS v3.1 and v4.0, CWE, VRT P-rating.
-        h1-brain dedup against 3600+ disclosed reports.
-        Mandatory "AI-assisted" tag (curl, Bugcrowd, HackerOne 2026 policies).
-        Never "0day" or "critical" in title (Shubs lesson).
-
+T+3:00  validator (Sonnet, BLIND, evidence only, confidence formula).
+T+3:30  reporter (Sonnet, output style enforced, h1-brain dedup).
 T+3:35  STOP. Single human review gate. No auto-submit.
 ```
 
 A note on cost. Hard caps per session are technically straightforward to wire into the scope-guard hook (a budget environment variable that the hook reads on every tool call, exit two on overrun), and you can route phase-by-phase to keep most of the work on the cheap models. In practice I have been running this pipeline on the 200 euro per month Claude Code subscription and I have not hit a wall yet. Your mileage will depend on how often you run pass-at-k campaigns and how much Opus you let through on chain-finding.
-
-A note on the model names. The landscape is moving fast. By the time this post lands, Opus 4.7 is the reasoning workhorse, GPT-5.5 is a credible cross-provider partner for alloy, and Claude Mythos is on the horizon. The routing rules in axis 5 below are the shape of the answer. The specific model names will rotate every couple of months.
 
 ### Why one human gate is exactly the right number
 
@@ -607,9 +561,11 @@ Cross-target primitives are the only permanent state. Everything else is target-
 
 ## Axis 5: cost discipline and model routing
 
+A note on what model routing implies for the thesis. The fact that Haiku, Sonnet, and Opus are not interchangeable in this pipeline does not contradict "configuration beats capability". It is what gives the thesis its teeth. Each model is a commodity you can buy off the shelf; the routing policy decides which commodity goes where, and the policy is what compounds across sessions. The differential between models becomes a lever the moment you treat it as a configuration decision rather than a vendor choice.
+
 LLM bug bounty only pays if `bounty - LLM_cost > 0`. The math is tighter than it looks. The published AIxCC numbers from 2025 are the cleanest demonstration I know of.
 
-[Trail of Bits's Buttercup placed second at AIxCC](https://blog.trailofbits.com/2025/08/09/trail-of-bits-buttercup-wins-2nd-place-in-aixcc-challenge/) (a three million dollar prize) running non-reasoning Sonnet 4 plus GPT-4.1 only, at roughly $181 per CWE point. Competitors using heavy reasoning models paid five to ten times more per point and ranked lower. The headline lesson is that non-reasoning Sonnet is the right default, Opus is for the small number of phases that actually need it, and reasoning is not always better. It is always more expensive.
+[Trail of Bits's Buttercup placed second at AIxCC](https://blog.trailofbits.com/2025/08/09/trail-of-bits-buttercup-wins-2nd-place-in-aixcc-challenge/) (a three million dollar prize) running non-reasoning Sonnet 4 plus GPT-4.1 only, at roughly $181 per CWE point. This was competitive with Theori's $151 and meaningfully below Team Atlanta's $263 on the same scoreboard. The headline lesson is not that Buttercup was an order of magnitude cheaper than the field; it is that a non-reasoning Sonnet baseline already sits in the right cost neighborhood as the rest of the AIxCC finalists, without paying the reasoning premium. Reasoning is not always better. It is always more expensive.
 
 [Team Atlanta won AIxCC](https://team-atlanta.github.io/blog/post-afc/) by running through 143 continuous hours without crashing. Four of seven finalists crashed before finish. Stability beat sophistication, and the [Shellphish retrospective on seven critical failures](https://support.shellphish.net/blog/2025/08/22/shellphish-x-aixcc-pm/) is required reading for anyone planning a long-running pipeline. Atlanta also documented a quiet but important point: their cost telemetry caught a silent provider regression mid-competition, *before* output quality flagged it. Cost observability is a quality signal, not just a billing concern.
 
@@ -663,12 +619,6 @@ if LAST_3.count(key) >= 3:
 
 This single check has saved me an estimated $20 to $30 per session on tools that occasionally fail-and-retry indefinitely. The cost is one hash and one list count per tool call.
 
-### Daily prompt CI
-
-Atlanta's retrospective also warns about silent provider regressions: a foundation-model update that subtly degrades quality without changing the API contract. The defense is a daily CI run against a small frozen benchmark (a subset of Juice Shop challenges, one GOAD smoke run, a few CTF web challenges). Pass-fail per case, cost per case, tokens per case. If the pass rate drops or the cost rises overnight, you find out from telemetry before you find out from a four-hundred-dollar production session that produced nothing.
-
-I have not fully wired daily CI yet. It is on the V1 list. Cost is roughly $5 to $10 per day for the benchmark; the value is catching a ten to twenty percent regression before it hits production.
-
 ### Tradeoffs
 
 Opus is not cacheable across every boundary; check current pricing before assuming caching saves the same fraction as on Sonnet. Haiku has lower instruction-following on multi-step reasoning. It is right for recon and formatting, wrong for tasks with nested conditionals, and routing it badly costs more time than money. Budget caps must be non-cascading. The [Shellphish retrospective](https://support.shellphish.net/blog/2025/08/22/shellphish-x-aixcc-pm/) documents exactly this failure: a single shared budget cap blew up, taking every other agent down with it through a shared kill switch. Caps must be per-purpose.
@@ -697,32 +647,19 @@ The [Meta and AI Alliance "Rule of Two"](https://about.fb.com/news/2025/11/rule-
 
 ### PreToolUse enforces egress whitelisting
 
-The egress whitelist is small. Only target domains explicitly in scope, plus a fixed list of well-known support domains (NVD, CVE, GitHub, PortSwigger, OWASP, and so on). Any other domain exits two. The relevant fragment of `settings.json`:
+The egress whitelist is small. Only target domains explicitly in scope, plus a fixed list of well-known support domains (NVD, CVE, GitHub, PortSwigger, OWASP, and so on). Any other domain exits two. The shape of the `settings.json` allow block:
 
 ```json
 "allow": [
   "Bash(docker exec exegol-BugBounty bash -lc *)",
-  "Bash(docker start exegol-BugBounty)",
-  "Bash(rg *)", "Bash(jq *)", "Bash(grep *)", "Bash(find *)",
-  "Bash(python3 *.py)", "Bash(python3 -m *)", "Bash(pytest *)",
-  "WebFetch(domain:hackerone.com)",
-  "WebFetch(domain:yeswehack.com)",
-  "WebFetch(domain:bugcrowd.com)",
-  "WebFetch(domain:intigriti.com)",
+  "Bash(rg *)", "Bash(jq *)", "Bash(python3 *.py)",
   "WebFetch(domain:nvd.nist.gov)",
-  "WebFetch(domain:cve.org)",
   "WebFetch(domain:github.com)",
-  "WebFetch(domain:portswigger.net)",
-  "WebFetch(domain:owasp.org)",
-  "WebFetch(domain:hacktricks.xyz)",
-  "mcp__bb-scope__*",
-  "mcp__bb-validator__*",
-  "mcp__playwright__*",
-  "mcp__exegol-mcp__*",
-  "mcp__bloodhound__*",
-  "mcp__h1-brain__*"
+  "mcp__bb-scope__*", "mcp__bb-validator__*"
 ]
 ```
+
+Six platform domains (HackerOne, YesWeHack, Bugcrowd, Intigriti, PortSwigger, OWASP) and six MCPs (scope, validator, Playwright, Exegol, BloodHound, h1-brain) round out the full list. Target domains are added by the scope MCP at session start, not hardcoded.
 
 The matching `deny` block explicitly forbids `curl` and `wget` direct invocation. Every external HTTP request must go through the audited `WebFetch` permission, the Playwright MCP, or an explicit pentest tool whose target has already been validated. There is no `curl https://...` shortcut, because that is exactly the path a target-supplied instruction would try to take.
 
@@ -742,25 +679,19 @@ The system prompt instructs the model to treat content inside `<data>...</data>`
 
 ### Credentials never live in environment variables the agent can read
 
-The [Cline supply chain compromise of December 2025](https://snyk.io/blog/cline-supply-chain-attack-prompt-injection-github-actions/), where roughly four thousand developer machines were hit through a GitHub Actions issue title prompt-injecting an AI triage bot, taught one very specific lesson. Credentials must not be in environment variables that the agent can dump.
+The [Cline supply chain compromise](https://snyk.io/blog/cline-supply-chain-attack-prompt-injection-github-actions/) (vulnerable GitHub Actions workflow introduced in December 2025, weaponized in February 2026 with roughly four thousand downloads during the exposure window via prompt-injection on an AI triage bot) taught one very specific lesson. Credentials must not be in environment variables that the agent can dump.
 
 Concretely in V2: bug bounty API tokens live in `~/.config/bugbounty/secrets.env`, mode 600, owned by the operator. The `Read(./.env*)` and `Read(~/.config/bugbounty/secrets*)` patterns are in the `deny` block. The MCP that needs them reads them at process start, never re-reads, never echoes them. The agent never sees `process.env`; if it asks, it gets a redacted set.
 
 ### Destructive payloads and coercion tools are deny-listed
 
-The wrapper performs AD pentest, which means tools like `ntlmrelayx`, `responder`, `mitm6`, `PetitPotam`, and `Coercer` are *available* in the underlying container. They are explicitly *denied* at the permission level:
+The wrapper performs AD pentest, which means tools like `ntlmrelayx`, `responder`, `mitm6`, `PetitPotam`, and `Coercer` are *available* in the underlying container. They are explicitly *denied* at the permission level, alongside `rm -rf`, raw `curl`, and `wget`:
 
 ```json
 "deny": [
-  "Bash(ntlmrelayx.py *)",
-  "Bash(responder *)",
-  "Bash(mitm6 *)",
-  "Bash(*PetitPotam*)",
-  "Bash(*Coercer*)",
-  "Bash(*coerce_plus*)",
-  "Bash(rm -rf *)",
-  "Bash(curl *)",
-  "Bash(wget *)"
+  "Bash(ntlmrelayx.py *)", "Bash(responder *)", "Bash(mitm6 *)",
+  "Bash(*PetitPotam*)", "Bash(*Coercer*)",
+  "Bash(rm -rf *)", "Bash(curl *)", "Bash(wget *)"
 ]
 ```
 
@@ -769,49 +700,6 @@ These need authorized lab use, never an unattended agent run.
 ### Tradeoffs
 
 The trifecta cannot be fully escaped for an offensive agent. The goal of this axis is to reduce blast radius, not to claim immunity. Adaptive prompt-injection attacks bypass static filters; the design pattern (per-subagent property partitioning) is more durable than any specific filter, but it requires care to maintain. Egress whitelist drift is a real failure mode. Every six months the list needs review, because ad-hoc domain additions silently widen the surface.
-
----
-
-## Where the 2026 bounties actually live
-
-The flip side of "configuration beats capability" is "class selection beats coverage." The bounty pool concentrates in a handful of emerging classes in 2026, most of them under-exploited. This section is the one a senior hunter without an LLM workflow can read profitably on its own.
-
-The [PortSwigger Top 10 Web Hacking Techniques of 2025](https://portswigger.net/research/top-10-web-hacking-techniques-of-2025), with my read on ROI for an LLM-assisted pipeline:
-
-| Position | Technique | Author | Bounty range | Under-exploited |
-|---|---|---|---|---|
-| 1 | [Successful Errors SSTI](https://github.com/vladko312/Research_Successful_Errors) | Korchagin | $1k to $10k | Yes, strongly |
-| 2 | [ORM Leaking](https://www.elttam.com/blog/leaking-more-than-you-joined-for/) | Brown / Elttam | $500 to $15k | Yes, massively |
-| 3 | [SSRF redirect loops](https://slcyber.io/assetnote-security-research-center/novel-ssrf-technique-involving-http-redirect-loops) | Shubs | $5k to $30k+ | Yes |
-| 4 | Unicode normalization NFC/NFKC | Barnett | $1k to $10k | Partly |
-| 5 | [SOAPwn .NET WSDL](https://labs.watchtowr.com/soapwn-pwning-net-framework-applications-through-http-client-proxies-and-wsdl/) | Bazydło | Niche enterprise jackpot | n/a |
-| 6 | [Cross-site ETag length leak](https://blog.arkark.dev/2025/12/26/etag-length-leak) | Kaneko | $2k to $15k | Yes |
-| 7 | [Next.js stale elixir](https://zhero-web-sec.github.io/research-and-things/nextjs-cache-and-chains-the-stale-elixir) | zhero | $5k to $50k (six-figure cumulative) | Already hunted hard |
-| 8 | XSS-Leak cross-origin redirects | Abello | Niche | Yes |
-| 9 | HTTP/2 CONNECT smuggling | flomb | $5k to $50k+ | Spec / infra |
-| 10 | [Parser Differentials (meta-class)](https://www.youtube.com/watch?v=Dq_KVLXzxH8) | joernchen | Universal | The framework |
-
-The top three for a pipeline operator (combining impact, probability, bounty range, and under-exploitation):
-
-1. **ORM filter leak** (position 2). The character-by-character leak through expressive ORM filters. Applicable to roughly sixty percent of modern bug bounty targets that expose a search or filter API. No dedicated tool exists, which is a market gap. Affected stacks: Beego v2.3.8 still vulnerable, plus Strapi, Directus, Prisma, ActiveRecord. The [elttam writeup](https://www.elttam.com/blog/leaking-more-than-you-joined-for/) is the canonical reference.
-
-2. **SSRF redirect-loop chainer** (position 3). Multiplies the ROI of *every* blind SSRF already in the funnel. Shubs walks through how a blind SSRF becomes a full-response read via timing, status, and error reconstruction across cascaded redirects. The encoding is mechanical: any blind SSRF primitive triggers an automatic attempt at redirect-loop full-response and IMDS credential extraction.
-
-3. **Indirect prompt injection on LLM-integrated apps** (OWASP LLM01). Bounties from $2k to $30k or more; [OpenAI's program pays up to $100k for severe cases](https://platform.openai.com/), Anthropic's up to $15k. Few hunters are competent. [EchoLeak CVE-2025-32711, M365 Copilot zero-click](https://www.hackthebox.com/blog/cve-2025-32711-echoleak-copilot-vulnerability) is the canonical proof. The Lethal Trifecta framing tells you exactly where to hunt: any app with an untrusted input source (RAG documents, email, web fetch), sensitive data, and external egress is a candidate.
-
-A handful of other classes worth a skill:
-
-- **HTTP/2 dual-stack desync** ([Kettle's *HTTP/1.1 Must Die*](https://portswigger.net/research/http1-must-die)). 24M+ Cloudflare-fronted sites exposed on a single vector. $350k+ paid out. Distinguishing a real desync from HTTP pipelining is the discipline ([Squidhacker, November 2025](https://squidhacker.com/2025/11/http-request-smuggling-in-2025-how-to-distinguish-real-desync-vulnerabilities-from-http-request-pipelining-and-stop-wasting-everyones-time/)).
-- **WebSocket Turbo Intruder races**. Released by [PortSwigger in September 2025](https://portswigger.net/research/websocket-turbo-intruder-unearthing-the-websocket-goldmine). Hunter adoption is under ten percent. State-machine bugs over WebSockets (chat token reuse, room desync, presence bypass) are wide open.
-- **OAuth mutable claims**. Apps that key user identity on `email` or `name` instead of `sub`. If the identity provider lets the user change their email, instant ATO. Microsoft Entra has the historical examples.
-- **GraphQL nested IDOR**. Each level of a query can have its own authorization check or none. `viewer { account(id:X) { ssn } }` can bypass a check on `account` direct.
-- **GHA workflow injection on public repos**. `pull_request_target` and `issue_comment` with user-controlled inputs in `run:` blocks. [tj-actions/changed-files (CVE-2025-30066, 23k repos affected, March 2025)](https://unit42.paloaltonetworks.com/github-actions-supply-chain-attack/) is the canonical case.
-- **MCP server enumeration and STDIO RCE**. The catalog at [vulnerablemcp.info](https://vulnerablemcp.info/) is a good starting point. My own [MCP security series](/posts/mcp-svg-icon-xss-to-rce/) on this blog covers six concrete cases.
-- **Slopsquatting recon**. Nineteen-point-seven percent of LLM-suggested package names do not exist. Forty-three percent repeatability rate. Pre-register the hallucinated names on PyPI and npm. The `huggingface-cli` typosquat ([fake, 30k downloads](https://socket.dev/blog/slopsquatting-how-ai-hallucinations-are-fueling-a-new-class-of-supply-chain-attacks)) is the canonical incident.
-
-The skill catalog is shaped exactly around this list: five tier-S skills for the highest-ROI emerging classes, plus seven core hunting skills as the baseline.
-
-For LLM applications themselves, the [OWASP LLM Top 10 of 2025](https://owasp.org/www-project-top-10-for-large-language-model-applications/) is the map. LLM01 (prompt injection) and LLM08 (vector and embedding weaknesses, new in 2025) are the two with the highest payout density right now.
 
 ---
 
@@ -903,7 +791,7 @@ Every claim in this article is sourced. Grouped by axis so you can fan out from 
 - Manus, [Context Engineering for AI Agents](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) (July 2025).
 - Anthropic: [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents), [Claude Code skills documentation](https://docs.anthropic.com/en/docs/claude-code/skills), [hooks documentation](https://docs.anthropic.com/en/docs/claude-code/hooks), [settings reference](https://docs.anthropic.com/en/docs/claude-code/settings), [prompt caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching).
 - [CHAP, NDSS LAST-X 2026](https://www.ndss-symposium.org/wp-content/uploads/lastx2026-42.pdf).
-- [Lost in the Middle, Stanford and MIT, 2023](https://arxiv.org/abs/2307.03172).
+- [Lost in the Middle, Stanford, UC Berkeley, and Samaya AI, 2023](https://arxiv.org/abs/2307.03172).
 - [CWE-specialized prompting, +18% accuracy](https://arxiv.org/abs/2408.02329).
 - [ZeroFalse, CWE-specialized false-positive reduction](https://arxiv.org/html/2510.02534).
 - [MAPTA](https://arxiv.org/html/2508.20816v1).
