@@ -35,7 +35,7 @@ featuredImage: "featured.png"
 
 ## The thesis: configuration beats capability
 
-I keep coming back to one sentence after running this pipeline for six months:
+Every time I look at the recent wave of zero-days disclosed by AI systems (the twelve OpenSSL CVEs from AISLE in January, the twenty-two Firefox vulnerabilities from the Mozilla and Anthropic audit in March, the two hundred from XBOW's DockerHub experiment), I come back to the same sentence:
 
 > *They do not have better models. They have better configurations.*
 
@@ -61,7 +61,7 @@ The cleanest way to understand what works is to look at what does not. Below is 
 
 ### What I had (call it V1)
 
-V1 was the version of the pipeline I trusted for the first half of 2025. On paper it looked solid. Concretely, it had:
+V1 was the version of the pipeline I started using around September 2025 and trusted through the early months of 2026. On paper it looked solid. Concretely, it had:
 
 - **Twenty-seven slash commands.** A command for nearly every offensive activity I could name: recon, web pentest, API, GraphQL, OAuth-SSO, race conditions, supply chain, binary exploitation, infra and cloud, mobile, exploit-dev, n-day to zero-day, CVE-to-RCE escalation, agentic workflows, CTF, report-writer, debrief, validate, and so on. Each one had its own auto-trigger description.
 - **A 74k vulnerability knowledge base.** Disclosed HackerOne reports, ExploitDB, CISA KEV, HTB write-ups, classified by CWE. A custom MCP server exposed queries against this base.
