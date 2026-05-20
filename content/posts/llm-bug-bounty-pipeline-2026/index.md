@@ -11,7 +11,7 @@ featuredImage: "featured.png"
 
 # Studying LLM Workflows Until They Actually Find Cool Bugs
 
-> **A short note before the article starts.** This pipeline is a live system, not a closed product. It has no public CVE and no documented bounty attributed to it yet. The hunting results belong in the next parts of this series, once they exist on disk and on platform dashboards. What this article *does* document is the architecture and its stress-test baseline: 30/30 must-reject cases passed on the validator anti-cheat suite, 19/19 in-scope vs out-of-scope resolution on the scope MCP, 15/15 adversarial cases on the scope guard, 4/7 PROVEN on the Juice Shop unauthenticated subset. Treat the rest as a snapshot of where the work sits today, with the output numbers landing in part two.
+> **A short note before the article starts.** This pipeline is a live system that I'm actively experimenting on. There are a thousand and one ways to build something like this, and what follows is not implementation advice — it's a retex of where the work sits today and the choices I made along the way.
 
 > Two weeks ago I wrote [Prompting for Security Research](/posts/prompting-for-cybersecurity-2026/), which covers the work that happens inside the prompt: XML structuring, CWE-specialized prompts, adversarial verification, few-shot calibration, hybrid LLM-plus-Semgrep architectures. This article is about the layer above: the hooks, the subagents, the MCPs, the scope guards, the deterministic validators, the workflow funnel, and the cost discipline that turn good prompts into something usable in a real bug bounty session.
 
