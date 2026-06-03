@@ -1,5 +1,5 @@
 ---
-title: "Retex: An MCP Purple Team at FIC 2026"
+title: "Orchestrating a Purple Team with MCPs @ FIC 2026"
 date: 2026-06-03
 draft: false
 description: "Retex of my FIC 2026 talk on an MCP-orchestrated purple team: an R&D project, born during my second year of apprenticeship, that runs attack scenarios in a GOAD lab, checks whether detection fires, mines the logs, writes a rule, tests it, and confirms coverage, all at machine speed."
@@ -9,7 +9,7 @@ categories: ["Events", "AI"]
 featuredImage: "featured.png"
 ---
 
-# Retex: An MCP Purple Team at FIC 2026
+# Orchestrating a Purple Team with MCPs @ FIC 2026
 
 This year I was invited to give a talk at FIC 2026, the biggest cybersecurity event in Europe. The subject was a project I had been building over a few months, and the kind of thing I rarely get to present in person, so this is a short retex of both the talk and the work behind it.
 
@@ -19,7 +19,7 @@ I am in my second year of apprenticeship, working as a level 3 SOC analyst. The 
 
 It started as an ARC. An ARC is a semester R&D project my team runs: one topic, or a few, spread over roughly four and a half months, totally free in scope. The only requirement is that the work helps improve our overall detection posture. It does not matter what the subject is as long as it moves that needle. That kind of runway, four and a half months to chase an idea wherever it goes, is rare, and it is exactly what let this one exist.
 
-I also have to be honest about where the idea came from. I had been digging into MCP on my own for a while, mostly on the offensive and research side, and I had written a fair amount about it on this blog. The ARC was the moment that personal curiosity turned into something concrete and useful at work. Taking a topic I had only explored for fun and shipping it into a real detection workflow was, for me, the best part of the whole thing.
+I had been digging into MCP on my own for a while, mostly on the offensive and research side, and I had written a fair amount about it on this blog. The ARC was the moment that personal curiosity turned into something concrete and useful at work. Taking a topic I had only explored for fun and shipping it into a real detection workflow was, for me, the best part of the whole thing.
 
 ## From ExegolMCP to a full architecture
 
