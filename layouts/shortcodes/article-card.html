@@ -1,0 +1,5 @@
+{{ $link := .Get "link" }}
+{{ $target := index (first 1 (where .Site.AllPages "RelPermalink" $link)) 0 }}
+{{ with $target }}
+  {{ partial "article-link/card.html" . }}
+{{ end }}

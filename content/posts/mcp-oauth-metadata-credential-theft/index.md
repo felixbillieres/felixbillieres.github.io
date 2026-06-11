@@ -3,7 +3,7 @@ title: "MCP OAuth Metadata Bypass: How a Malicious Server Steals Your Credential
 date: 2026-03-13
 draft: false
 description: "The MCP Python and TypeScript SDKs never validate the issuer field in OAuth Authorization Server Metadata nor check that token/registration endpoints share the discovery URL's origin, allowing a malicious MCP server to redirect the entire OAuth token exchange to attacker-controlled endpoints."
-summary: "Sixth article in my MCP security series. A malicious MCP server can poison OAuth Authorization Server Metadata to redirect token exchange, client registration, and PKCE verifiers to attacker-controlled endpoints — while the user sees a legitimate identity provider login page. The Python and TypeScript SDKs skip RFC 8414 Section 3.3 issuer validation and perform no endpoint origin checks. Reported to Anthropic VDP, closed as duplicate of an existing tracked issue. Full technical breakdown and PoC."
+summary: "Sixth article in my MCP security series. A malicious MCP server can poison OAuth Authorization Server Metadata to redirect token exchange, client registration, and PKCE verifiers to attacker-controlled endpoints while the user sees a legitimate identity provider login page. The Python and TypeScript SDKs skip RFC 8414 Section 3.3 issuer validation and perform no endpoint origin checks. Reported to Anthropic VDP, closed as duplicate of an existing tracked issue. Full technical breakdown and PoC."
 tags: ["mcp", "oauth", "credential-theft", "vulnerability-research", "responsible-disclosure", "bug-bounty", "python", "typescript"]
 categories: ["Vulnerability Research", "Bug Bounty"]
 series: ["MCP Security Research"]
