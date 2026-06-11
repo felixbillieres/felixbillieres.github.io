@@ -1,11 +1,14 @@
 ---
-title: "Road to Anthropic"
+title: "Road to M.A.N.G.O"
 description: "A collection of projects and learnings in AI security, ML and offensive security research"
+aliases: ["/road-to-anthropic/"]
 ---
 
-I've been closely following Anthropic's work on AI safety and security — their research on red teaming, model vulnerabilities, and initiatives like the Fellows program genuinely resonate with what I care about in offensive security.
+**M.A.N.G.O** — Mistral, Anthropic, NVIDIA, Google, OpenAI.
 
-When the time comes for me to look for a full-time position, applying there is something I'd really like to do. In the meantime, this section serves as a personal log of everything I build, learn and explore at the intersection of AI and security — a running record of hands-on experience I can point back to.
+Most of my time goes into research: building AI tooling, offensive security and pentesting through complex automated pipelines, and steadily leveling up in machine learning along the way.
+
+When the time comes to look for a full-time position, I want to join a research lab that sits at the intersection of pentest, offensive security, AI and research — surrounded by genuinely talented people. The labs above are where I'd love to end up. In the meantime, this section serves as a personal log of everything I build, learn and explore in that space — a running record of hands-on experience I can point back to.
 
 ---
 
