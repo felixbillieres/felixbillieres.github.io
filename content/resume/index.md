@@ -3,7 +3,7 @@ title: "Resume"
 layout: page
 description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 4th year student at École 2600."
 featuredImage: "featured.png"
-images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
+images: ["featured.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 **[Download Resume (PDF)](/resume.pdf)**
 ---
@@ -46,6 +46,15 @@ images: ["featured.png", "certifications/CRTO-1.png", "certifications/CWES.png",
 ---
 
 ## Certifications & Achievements
+
+### May 2026
+
+#### COAE (HTB Certified Offensive AI Expert) - HackTheBox
+![COAE Certificate](./certifications/COAE.png)
+
+**Skills**: AI Red Teaming, Prompt Injection, LLM Application Attacks, Adversarial Machine Learning, AI Infrastructure Exploitation
+
+---
 
 ### December 2025
 
@@ -203,4 +212,4 @@ Contributing to documentation and techniques for Active Directory exploitation, 
 | **LinkedIn** | [Felix Billieres](https://linkedin.com/in/felixbillieres) |
 | **RootMe** | [Elliot_Belt](https://www.root-me.org/Elliot_Belt) |
 
-*Last updated: January 2026*
+*Last updated: June 2026*
