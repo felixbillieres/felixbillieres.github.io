@@ -3,7 +3,7 @@ title: "Resume"
 layout: page
 description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 4th year student at École 2600."
 featuredImage: "featured.png"
-images: ["featured.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
+images: ["featured.png", "certifications/Trusted.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 **[Download Resume (PDF)](/resume.pdf)**
 ---
@@ -46,6 +46,15 @@ images: ["featured.png", "certifications/COAE.png", "certifications/CRTO-1.png",
 ---
 
 ## Certifications & Achievements
+
+### June 2026
+
+#### Trusted - Mini Pro Lab - HackTheBox
+![Trusted Certificate](./certifications/Trusted.png)
+
+**Skills**: Web Application Attacks, Active Directory Enumeration and Attacks, DLL Hijacking, Abusing Active Directory Trusts, Situational Awareness, Lateral Movement, Local Privilege Escalation
+
+---
 
 ### May 2026
 
