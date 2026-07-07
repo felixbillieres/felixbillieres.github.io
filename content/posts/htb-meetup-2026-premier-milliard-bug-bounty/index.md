@@ -1,5 +1,5 @@
 ---
-title: "How to Make Your First Billion in Bug Bounty (Easily): My HTB Meetup 2026 Talk"
+title: "How to Make Your First Billion in Bug Bounty (Easily)"
 date: 2026-06-25
 draft: false
 description: "The full slide deck and a slide-by-slide technical breakdown of my HackTheBox Meetup 2026 talk, given a few days before leHack. The topic: how to integrate and optimize an AI pipeline for bug bounty so it actually finds real bugs instead of producing slop. Every technical slide is unpacked here with snippets, concrete numbers, and a pile of external resources you can spider out from: deterministic oracles, context discipline, pass at k, cross-provider alloy, per-class specialization, task difficulty assessment, and YAML decision trees."
