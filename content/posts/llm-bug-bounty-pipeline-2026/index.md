@@ -610,14 +610,14 @@ The budget cap is read by the scope-guard hook on every tool call. Overrun exits
 A common failure mode is the agent calling the same tool with identical arguments three times in a row. The kill switch:
 
 ```python
-# pseudo-code in PreToolUse hook
+# In orchestrator rules (planned as PreToolUse hook in V2.1)
 LAST_3 = state.get("last_3_tool_calls", [])
 key = hash((tool_name, json.dumps(tool_input)))
 if LAST_3.count(key) >= 3:
     deny("tool-loop detected: identical (tool, args) 3x consecutive")
 ```
 
-This single check has saved me an estimated $20 to $30 per session on tools that occasionally fail-and-retry indefinitely. The cost is one hash and one list count per tool call.
+This check is currently encoded as a behavioral rule in the orchestrator agent (`orchestrator.md`: *"Tool-loop kill: if same tool+args called 3× consecutive → kill session"*) rather than a deterministic hook. Promoting it to a PreToolUse hook is on the V2.1 list. The estimated $20 to $30 per session saving is from the orchestrator enforcing it; a hook would make it unconditional.
 
 ### Tradeoffs
 
@@ -711,12 +711,12 @@ If the article stopped here it would imply the pipeline is finished. It is not. 
 
 - The four-layer harness, hooks deterministic, settings.json hardened.
 - A scope MCP, fast-pathed against [arkadiyt/bounty-targets-data](https://github.com/arkadiyt/bounty-targets-data) for YesWeHack and HackerOne, with `validate_target` consumed by the scope guard hook.
-- A validator MCP with seven deterministic engines (canary file, headless XSS, OOB callback, timing statistical, response diff, crash sanitizer, CVE existence) and a thirty-case anti-cheat test suite gating CI.
-- Eight subagents (`orchestrator`, `recon-runner`, `app-mapper`, `web-hunter`, `ad-hunter`, `chain-finder`, `exploit-dev`, `validator`, `reporter`).
-- Sixteen skills (five tier-S emerging-class plus eleven core BB and AD).
+- A validator MCP with nine deterministic engines (canary file, headless XSS, OOB callback, timing statistical, boolean and error-based SQLi, SSTI, IDOR, OAuth/JWT, race conditions, CVE existence) and a 39-case anti-cheat test suite gating CI.
+- Nine subagents (`orchestrator`, `recon-runner`, `app-mapper`, `web-hunter`, `ad-hunter`, `chain-finder`, `exploit-dev`, `validator`, `reporter`).
+- Seventeen skills (five tier-S emerging-class plus twelve core BB and AD).
 - An enforced output style for reports (mandatory "AI-assisted" tag, CVSS v3.1 and v4.0, no "0day" in title, h1-brain dedup hook).
 - The lifecycle hooks described above.
-- End-to-end stress tests: scope-guard 15/15 adversarial pass; Juice Shop subset 4/7 PROVEN without auth; scope MCP 19/19 in-scope vs out-of-scope resolved; validator anti-cheat 30/30 must-reject.
+- End-to-end stress tests: scope-guard 15/15 adversarial pass; Juice Shop subset 4/7 PROVEN without auth; scope MCP 19/19 in-scope vs out-of-scope resolved; validator anti-cheat 39/39 must-reject.
 
 A note on naming before the next two sections. The before-and-after section earlier in this article called the kitchen-sink first attempt V1 and the current shipped pipeline V2. The roadmap below is therefore numbered from V2. "V2.1" is the next iteration in flight, "V3" is the longer-term work that needs more architectural changes.
 
