@@ -3,7 +3,7 @@ title: "Resume"
 layout: page
 description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 4th year student at École 2600."
 featuredImage: "featured.png"
-images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.png", "certifications/Tea.png", "certifications/Tengu.png", "certifications/Trusted.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
+images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.png", "certifications/Puppet.png", "certifications/Tea.png", "certifications/Tengu.png", "certifications/Trusted.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 **[Download Resume (PDF)](/resume.pdf)**
 ---
@@ -56,6 +56,13 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 
 #### Intercept - Mini Pro Lab - HackTheBox
 ![Intercept Certificate](./certifications/Intercept.png)
+
+---
+
+#### Puppet - Mini Pro Lab - HackTheBox
+![Puppet Certificate](./certifications/Puppet.png)
+
+**Skills**: Enumeration, Active Directory Enumeration and Attacks, Exploiting DevOps Infrastructure, Local Privilege Escalation, Lateral Movement, Situational Awareness, C2 Operations
 
 ---
 
