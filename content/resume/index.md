@@ -52,10 +52,14 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 #### Heron - Mini Pro Lab - HackTheBox
 ![Heron Certificate](./certifications/Heron.png)
 
+**Skills**: Enumeration, Active Directory Enumeration and Attacks, Lateral Movement, Local Privilege Escalation, Situational Awareness
+
 ---
 
 #### Intercept - Mini Pro Lab - HackTheBox
 ![Intercept Certificate](./certifications/Intercept.png)
+
+**Skills**: Active Directory Enumeration and Attacks, Abusing NTLM Relay Attacks, Abusing Authentication Coercion Attacks, Active Directory Certificate Service Abuse
 
 ---
 
@@ -69,12 +73,16 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 #### Tea - Mini Pro Lab - HackTheBox
 ![Tea Certificate](./certifications/Tea.png)
 
+**Skills**: Active Directory Enumeration and Attacks, Gitea Actions, Abusing Misconfigurations in Common Services, Windows Technologies Like LAPS and WSUS
+
 ---
 
 ### June 2026
 
 #### Tengu - Pro Lab - HackTheBox
 ![Tengu Certificate](./certifications/Tengu.png)
+
+**Skills**: Active Directory Attacks, Pivoting Into Internal Networks, MSSQL Attacks, Kerberos Attacks, DPAPI Operations
 
 ---
 
@@ -113,6 +121,8 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 #### University CTF 2025: Tinsel Trouble - HackTheBox
 ![University CTF 2025 Certificate](./certifications/UniCTF2025-1.png)
 
+**Result**: 35th out of 1014 teams with Phreaks2600, 34/34 challenges solved, 15,475 points
+
 ---
 
 ### October 2025
@@ -147,6 +157,8 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 
 #### University CTF 2024: Binary Badlands - HackTheBox
 ![University CTF 2024 Certificate](./certifications/UniCTF2024-1.png)
+
+**Result**: 4th out of 1128 teams with Phreaks2600, 48/49 challenges solved, 30,300 points
 
 ---
 
