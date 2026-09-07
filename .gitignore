@@ -51,3 +51,8 @@ Thumbs.db
 *.log
 .cache/
 
+
+# Artefacts de compilation LaTeX
+*.aux
+*.out
+*.log

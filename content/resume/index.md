@@ -1,7 +1,7 @@
 ---
 title: "Resume"
 layout: page
-description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 4th year student at École 2600."
+description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 5th year student at École 2600."
 featuredImage: "featured.png"
 images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.png", "certifications/Puppet.png", "certifications/Tea.png", "certifications/Tengu.png", "certifications/Trusted.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
@@ -9,6 +9,16 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 ---
 
 ## Professional Experience
+
+### Offensive Security Researcher & AI Integration @ [Exegol](https://exegol.com)
+*Remote*  
+*September 2025 - Present*
+
+- AI integration within the Exegol ecosystem: research and development of AI-powered offensive security tooling
+- Offensive security tooling development and Active Directory offensive training programs
+- Security audits and penetration testing (web, internal, Active Directory)
+- Technical content creation: documentation, training material, and labs
+- Listed among the [Exegol community contributors](https://exegol.com/community), and contributor to [ThePorgs/Exegol-MCP](https://github.com/ThePorgs/Exegol-MCP)
 
 ### Purple Teamer
 *September 2025 - Present*
@@ -40,7 +50,7 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 
 ## Education
 
-**4th Year Cybersecurity Student @ École 2600**  
+**5th Year Cybersecurity Student @ École 2600**  
 *Specializing in offensive security with strong foundations from CTF competitions with Phreaks 2600*
 
 ---
@@ -217,15 +227,15 @@ Active bug bounty hunting across various programs, identifying and reporting sec
 
 ### Open Source Projects
 
-#### AuditMapper v2
-**[AuditMapper v2](https://github.com/felixbillieres/AuditMapperV2)** - Security Assessment Suite
+#### pyKerberloss
+**[pyKerberloss](https://github.com/felixbillieres/pyKerberloss)** - KerberLoss (CVE-2026-25177) Audit & Exploitation
 
-Comprehensive penetration testing toolkit presented at WineRump conference in Bordeaux. Features include:
-- Host management with vulnerability tracking
-- Active Directory mindmap renderer
-- Config generators (Kerberos, proxychains, /etc/hosts)
-- Kanban & time tracking for security assessments
-- Live reporting and export capabilities
+Python tool for auditing and exploiting Unicode SPN collisions in Active Directory. Invisible characters are stored in `servicePrincipalName` but dropped during LDAP filter evaluation, so a colliding SPN passes the uniqueness check yet resolves to the attacker's account at ticket request, enabling service hijacking or an NTLM downgrade. Audit, check, hijack and cleanup modes.
+
+#### pyResetNightmare
+**[pyResetNightmare](https://github.com/felixbillieres/pyResetNightmare)** - ResetNightmare (CVE-2026-27912) Exploit
+
+Python tool that resets the password of any Active Directory account without knowing the current one, by spoofing a controlled account's `userPrincipalName` to match the target's `sAMAccountName` and abusing the RFC 3244 Kerberos Set-Password operation.
 
 #### Exegol MCP
 **[Exegol MCP](https://github.com/ThePorgs/Exegol-MCP)** - Model Context Protocol integration for Exegol
@@ -262,4 +272,4 @@ Contributing to documentation and techniques for Active Directory exploitation, 
 | **LinkedIn** | [Felix Billieres](https://linkedin.com/in/felixbillieres) |
 | **RootMe** | [Elliot_Belt](https://www.root-me.org/Elliot_Belt) |
 
-*Last updated: June 2026*
+*Last updated: September 2026*

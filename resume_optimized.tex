@@ -7,7 +7,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[top=1cm, bottom=1cm, left=1.5cm, right=1.5cm]{geometry}
+\usepackage[top=0.8cm, bottom=0.8cm, left=1.3cm, right=1.3cm]{geometry}
 \usepackage{enumitem}
 \usepackage{titlesec}
 \usepackage{hyperref}
@@ -30,13 +30,13 @@
 
 % Section formatting
 \titleformat{\section}{\Large\bfseries\color{headercolor}}{}{0em}{}[\titlerule]
-\titlespacing*{\section}{0pt}{6pt}{3pt}
+\titlespacing*{\section}{0pt}{4pt}{2pt}
 
 \titleformat{\subsection}{\large\bfseries}{}{0em}{}
-\titlespacing*{\subsection}{0pt}{3pt}{2pt}
+\titlespacing*{\subsection}{0pt}{2pt}{1pt}
 
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{3pt}
+\setlength{\parskip}{2pt}
 \setlist{nosep, leftmargin=10pt}
 
 % Custom command for experience entries
@@ -94,8 +94,8 @@
 %-------------------------
 \section{Education}
 
-\textbf{4th Year Cybersecurity Student} \hfill \textit{2022 - 2026} \\
-\textit{École 2600, Paris, France} --- Specializing in offensive security with strong foundations from CTF competitions (Phreaks 2600)
+\textbf{5th Year Cybersecurity Student} \hfill \textit{2022 - 2027} \\
+\textit{École 2600, Paris, France}: Specializing in offensive security with strong foundations from CTF competitions (Phreaks 2600)
 
 %-------------------------
 % Two-column layout
@@ -105,22 +105,26 @@
 
 \subsection*{2026}
 \begin{itemize}
-\item \textbf{COAE} --- HackTheBox (May)
+\item \textbf{Heron, Intercept, Puppet, Tea, Trusted}: HackTheBox Mini Pro Labs (Jun-Jul)
+\item \textbf{Tengu Prolab}: HackTheBox (Jun)
+\item \textbf{COAE}: HackTheBox (May)
 \end{itemize}
 
 \subsection*{2025}
 \begin{itemize}
-\item \textbf{CRTO Training Modules} --- Zero-Point Security (Dec)
-\item \textbf{Mythical Mini Pro Lab} --- HackTheBox (Dec)
-\item \textbf{Rastalabs Prolab} --- HackTheBox (Oct)
-\item \textbf{CWES} --- HackTheBox (Sept)
-\item \textbf{Zephyr Prolab} --- HackTheBox (Aug)
+\item \textbf{CRTO Training Modules}: Zero-Point Security (Dec)
+\item \textbf{Mythical Mini Pro Lab}: HackTheBox (Dec)
+\item \textbf{University CTF 2025}: 35th/1014 with Phreaks2600 (Dec)
+\item \textbf{Rastalabs Prolab}: HackTheBox (Oct)
+\item \textbf{CWES}: HackTheBox (Sept)
+\item \textbf{Zephyr Prolab}: HackTheBox (Aug)
 \end{itemize}
 
 \subsection*{2024}
 \begin{itemize}
-\item \textbf{PNPT} --- TCM Security (Nov)
-\item \textbf{Attacking \& Defending AD} --- Altered Security (Jun)
+\item \textbf{University CTF 2024}: 4th/1128 with Phreaks2600 (Dec)
+\item \textbf{PNPT}: TCM Security (Nov)
+\item \textbf{Attacking \& Defending AD}: Altered Security (Jun)
 \end{itemize}
 
 \subsection*{Platform Statistics}
@@ -133,17 +137,20 @@
 
 \section{Open Source Projects}
 
-\textbf{AuditMapper v2} --- \href{https://github.com/felixbillieres/AuditMapperV2}{GitHub} \\
-Security assessment suite presented at WineRump Bordeaux. Host management, AD mindmap renderer, config generators, Kanban \& time tracking.
+\textbf{pyKerberloss}: \href{https://github.com/felixbillieres/pyKerberloss}{GitHub} \\
+KerberLoss (CVE-2026-25177): Unicode SPN collisions in Active Directory, enabling service hijacking.
 
-\textbf{Exegol MCP} --- \href{https://github.com/ThePorgs/Exegol-MCP}{GitHub} \\
-Model Context Protocol integration for Exegol. Custom pentest tools for reconnaissance, Active Directory, and web security.
+\textbf{pyResetNightmare}: \href{https://github.com/felixbillieres/pyResetNightmare}{GitHub} \\
+ResetNightmare (CVE-2026-27912): UPN spoofing on Kerberos change-password for account takeover.
 
-\textbf{pySIDHistory} --- \href{https://github.com/felixbillieres/pySIDHistory}{GitHub} \\
-Python tool for SID History manipulation in Active Directory from Linux hosts.
+\textbf{Exegol MCP}: \href{https://github.com/ThePorgs/Exegol-MCP}{GitHub} \\
+MCP integration for Exegol: custom pentest tools for reconnaissance, Active Directory, and web security.
 
-\textbf{pyGoldenGMSA} --- \href{https://github.com/felixbillieres/pyGoldenGMSA}{GitHub} \\
-Python tool for gMSA exploitation in Active Directory environments.
+\textbf{pySIDHistory}: \href{https://github.com/felixbillieres/pySIDHistory}{GitHub} \\
+SID History manipulation in Active Directory from Linux.
+
+\textbf{pyGoldenGMSA}: \href{https://github.com/felixbillieres/pyGoldenGMSA}{GitHub} \\
+gMSA exploitation in Active Directory environments.
 
 \end{minipage}
 \hfill
@@ -151,25 +158,27 @@ Python tool for gMSA exploitation in Active Directory environments.
 
 \section{Community Involvement}
 
-\textbf{Speaker --- FIC 2026} \\
+\textbf{Speaker: FIC 2026} \\
 Talk on an MCP-orchestrated purple team: autonomous attack simulation, detection engineering, and rule validation at scale.
 
-\textbf{Speaker --- HackTheBox Meetup 2026} \\
+\textbf{Speaker: HackTheBox Meetup 2026} \\
 Talk on agentic AI workflows that sharpen model reasoning over real-world targets: context grounding, retrieval-augmented enumeration, and iterative tool-driven feedback loops.
 
-\textbf{Speaker --- WineRump 2025} \\
+\textbf{Speaker: WineRump 2025} \\
 Presented AuditMapper, a BloodHound-style mapper for internal audits: interactive note-taking and engagement automation.
 
-\textbf{Phreaks 2600 --- Board Member} \\
+\textbf{Phreaks 2600: Board Member} \\
 Project management, CTF creator (Web, Forensics, Pwn), workshop developer for advanced training labs.
 
-\textbf{The Hacker Recipes --- Contributor} \\
-\href{https://thehacker.recipes}{thehacker.recipes} --- Contributions on Active Directory exploitation, web security, and pentest documentation.
+\textbf{The Hacker Recipes: Contributor} \\
+\href{https://thehacker.recipes}{thehacker.recipes}: Contributions on Active Directory exploitation, web security, and pentest documentation.
 
 \textbf{Bug Bounty Hunter} \\
 Active vulnerability research and responsible disclosure across multiple programs.
 
 \section{Technical Skills}
+
+\textbf{R\&D:} Unfamiliar stack, undocumented protocol, a tool that does not exist yet. I can make it happen.
 
 \textbf{Specializations:} Active Directory Exploitation, Web Application Security, Bug Bounty Hunting, Red Team Operations
 
