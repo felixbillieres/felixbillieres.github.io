@@ -729,9 +729,11 @@ certipy auth -pfx admin.pfx -dc-ip 10.15.10.20 -domain darshan.lab \
 # Authenticated to '10.15.10.20' as: u:DARSHAN\Administrator
 ```
 
-That is `DARSHAN\Administrator`, except an LDAP shell cannot pull a file off `C$` by itself. Retro's note for the last step just says "add another account", and the standard way to turn a `DARSHAN\Administrator` LDAP shell into a file read fits it exactly: drop a controlled account into `Domain Admins` for a moment, read `C:\flags\flag12.txt` over SMB as that account, then take it straight back out. I do not have his exact commands, so I will leave it at the shape rather than invent the specifics.
+That is `DARSHAN\Administrator`, except an LDAP shell cannot pull a file off `C$` by itself. The last step is the standard bridge: from the shell, drop a controlled account into `Domain Admins` for a moment, read `C:\flags\flag12.txt` over SMB as that now-privileged account, then take it straight back out of the group. Retro walked me through this and handed over the artefacts so I could follow along, which is the only reason this cross-domain half is in the post at all: teamwork makes the dream work.
 
 The one thing worth stating plainly, since I got it wrong the first time: nothing was a standing Domain Admin. My earlier "root$ was a Domain Admin all along" was fiction from thin notes. The privilege was a temporary group membership held for a single read and reverted, which is also why cleanup mattered.
+
+I am going to get Retro's full notes as soon as I can and come back to tighten this whole darshan section, exact accounts and commands included, rather than leave any of it at the level of "roughly this".
 
 12/12 at 19:50.
 
