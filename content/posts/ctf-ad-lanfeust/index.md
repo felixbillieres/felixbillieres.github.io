@@ -10,7 +10,7 @@ featuredImage: "featured.png"
 images: ["featured.png", "map-checkpoint-01.png", "portal-form.png", "flag01-pdf.png", "webconfig-pfx.png", "flag03-spider.png", "flag06-hebus.png", "chain-04.png", "chain-08.png", "chain-12.png", "final-map.png"]
 ---
 
-On 18 September 2026 I had the luck to spend a day on an Active Directory CTF built by [mpgn](https://x.com/mpgn_x64), with a few friends. I had already been to two of his NetExec workshops, [LeHack 2025](../lehack2025-netexec-comprehensive/) and [BarbHack 2024](../barbhack-ctf-2024-netexec-workshop/), and this one had a different shape. Not a workshop with an instructor walking the room, but a timed run: gates open at 11:00 CEST, close at 23:00, twelve checkpoints unlocking one after the other, 500 points each.
+On 18 September 2026 I had the luck to spend a day on an Active Directory CTF built by [mpgn](https://x.com/mpgn_x64) together with [Maël Rolland](https://www.linkedin.com/in/mael-rolland/), with a few friends. I had already been to two of his NetExec workshops, [LeHack 2025](../lehack2025-netexec-comprehensive/) and [BarbHack 2024](../barbhack-ctf-2024-netexec-workshop/), and this one had a different shape. Not a workshop with an instructor walking the room, but a timed run: gates open at 11:00 CEST, close at 23:00, twelve checkpoints unlocking one after the other, 500 points each.
 
 The whole thing was dressed as [Lanfeust de Troy](https://en.wikipedia.org/wiki/Lanfeust), the Arleston and Tarquin comic series.
 
@@ -741,7 +741,7 @@ That is `DARSHAN\Administrator`. From there the flag on the DC's `C$` is a plain
 
 ## Thanks
 
-Big thanks to mpgn for building this one, and more generally to everyone who puts these labs together. Twelve chained checkpoints, a custom IIS app with a deliberate sink, a WDAC policy, a real second forest and a Linux box behind SSSD: none of that work is visible from the outside, and there is a lot of it. Same for the platform, the map and the progressive unlocking, which did more for the pacing of the day than I expected.
+Big thanks to [mpgn](https://x.com/mpgn_x64) and [Maël Rolland](https://www.linkedin.com/in/mael-rolland/), who built this one together, and more generally to everyone who puts these labs together. Twelve chained checkpoints, a custom IIS app with a deliberate sink, a WDAC policy, a real second forest and a Linux box behind SSSD: none of that work is visible from the outside, and there is a lot of it. Same for the platform, the map and the progressive unlocking, which did more for the pacing of the day than I expected.
 
 And thanks to Retro, Hatsu and Mr.NOODLE, who were on it all day and made it a genuinely fun one.
 
