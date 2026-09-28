@@ -1,5 +1,5 @@
 ---
-title: "Pwning VulnCicada with Exegol Studio: from an NFS leak to ESC8 over Kerberos relaying"
+title: "Pwning VulnCicada with Exegol Studio"
 date: 2026-09-28
 draft: false
 description: "My VulnCicada run in Exegol Studio: an NFS leak, a password in an image, and an ADCS investigation, with notes on monitor mode, Atlas and the help I needed along the way."
