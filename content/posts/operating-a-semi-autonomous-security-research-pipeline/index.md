@@ -2,8 +2,8 @@
 title: "Operating a Semi-Autonomous Security Research Pipeline Without Turning It Into a Scanner"
 date: 2026-10-05
 draft: false
-description: "Notes on a long-running AI-assisted security research pipeline: durable memory, short sessions, scoped tools, provider routing, evidence, Discord updates and human approval."
-summary: "How the pipeline keeps research state, selects provider capacity, records evidence and routes updates to Discord while retaining human control over scope and reporting."
+description: "An AI-assisted security research pipeline with durable leads, quota-aware pacing, scoped tools, evidence-first handoffs, low-noise operations and human approval."
+summary: "How one control plane preserves leads and evidence, paces provider capacity, routes second opinions and keeps operator updates useful."
 featuredImage: "featured.png"
 images: ["featured.png"]
 tags: ["agentic", "ai", "bug-bounty", "vulnerability-research", "security-automation", "context-engineering", "mcp", "llm", "architecture"]
@@ -50,15 +50,17 @@ The pipeline routes work by the quality of the question rather than treating eve
 
 The exact vendors and prices are deliberately not the point: both change faster than the architecture. The durable rule is to attach a budget to the question, preserve the usage record, and stop spending when the evidence yield drops.
 
-That is also why I avoid a huge swarm of agents. More parallel sessions can mean more correlated mistakes, more duplicate work and more unreviewable output. The goal is to spend generously on evidence and stingily on speculation.
+That is also why I avoid a huge swarm of agents. More parallel sessions can mean more correlated mistakes, more duplicate work and more unreviewable output. The coordinator receives a *ceiling* on sessions, not a target it must fill. The goal is to spend generously on evidence and stingily on speculation.
 
 ## Provider and model selection
 
 The pipeline uses more than one provider, but it does not pick one once and let that choice leak indefinitely into every child session. A provider and a reasoning tier are selected when a session starts; the decision is recorded with the investigation so I can later answer a mundane but essential question: *which quota produced this work?*
 
-My current operating window is intentionally personal. During my Paris working hours (08:00–19:00), the default path uses Codex. Claude capacity is reserved for outside that window, where it can work on a different queue without competing with the sessions I am actively supervising. Outside working hours, the scheduler can alternate providers when that gives a genuinely fresh review; a provider reporting a quota wall is parked until its known reset rather than retried blindly.
+The default coordinator is on Codex. A cycle reads its observed weekly quota before planning and sets a ceiling of one to three sequential sessions. When consumption is well ahead of elapsed time, the continuous loop waits between cycles; when behind, it can use more slots. The operational aim is to approach the end of the weekly window with most of the Codex allowance used, not exhaust it several days early. An absent or expired quota observation means a conservative cadence, not an imaginary fresh allowance. None of this guarantees that enough worthwhile leads will exist to use the whole window.
 
-This is not a claim that one model is universally better. It is capacity planning around two subscription windows and one human operator. It leaves me a predictable interactive path during the day, makes unattended time useful at night, and prevents one successful loop from consuming every available window at once.
+Claude is also my personal subscription. Automatic Claude use requires both an off-hours window and fresh readings below locally chosen headroom thresholds for its short and weekly windows. At the time of writing, the autonomous threshold is 70% used for each. These are *my reserve settings*, not provider limits or a claim about either model's capability. A deliberate operator window can override the automatic reserve. It can pin Codex, pin Claude, or allow both on one programme until a stated end time; that choice covers the coordinator and workers. It does not override the programme's scope, traffic constraints or the providers' actual limits.
+
+This is not a claim that one model is universally better. It is capacity planning around two subscriptions and one human operator. It preserves an interactive Claude reserve while letting Codex carry most of the autonomous load. The control plane distinguishes that *weekly allowance* from a session's *context window*: the former governs launch cadence; the latter governs which relevant facts should be placed in the prompt. Automatic per-session context compaction is not yet part of this implementation.
 
 Within the selected provider, the model tier follows the task: lightweight work for organisation and mapping, a standard tier for a bounded investigation, and deep reasoning only for hard source analysis, continuation or adversarial refutation. A pacing rule can step work down when a provider’s allowance is being consumed faster than its window elapses. Escalation goes the other way only after the cheaper session leaves a precise unresolved question.
 
@@ -67,21 +69,26 @@ The hand-off contains a compact factual brief: what was observed, what was ruled
 {{< mermaid >}}
 %%{init: {'theme':'base','themeVariables':{'background':'#ffffff','fontSize':'15px','primaryColor':'#dbeafe','primaryTextColor':'#0f172a','primaryBorderColor':'#1e40af','lineColor':'#334155','textColor':'#0f172a'}}}%%
 flowchart TD
-    Q[New bounded question] --> T{Task type}
-    T -->|mapping or organisation| L[Light tier]
-    T -->|bounded investigation| S[Standard tier]
-    T -->|hard continuation or refutation| D[Deep tier]
-    L --> W{Operator window}
-    S --> W
-    D --> W
-    W -->|08:00 to 19:00 Paris| C[Codex default]
-    W -->|outside that window| A[Claude capacity or provider alternation]
-    C --> K{Quota and pacing healthy?}
-    A --> K
-    K -->|yes| R[Start isolated session]
-    K -->|no| P[Park until reset or use eligible fallback]
-    R --> O[Record provider, tier and outcome]
+    O{Explicit operator window?}
+    O -->|yes| M[Pin target and provider choice<br/>across coordinator and workers]
+    O -->|no| Q[Read observed Codex weekly usage<br/>and time to reset]
+    Q --> C[Set cycle ceiling: 1 to 3 sessions<br/>plus inter-cycle pacing]
+    C --> P[Codex coordinator writes a plan]
+    M --> P2[Coordinator on selected provider]
+    P --> D{Evidence-backed dispatch?}
+    P2 --> D
+    D -->|no| N[Record why no session starts]
+    D -->|yes| T{Task depth}
+    T -->|first pass| L[Light or standard model]
+    T -->|qualified continuation| H[Deeper model]
+    L --> R{Provider eligible now?}
+    H --> R
+    R -->|yes| S[Start one bounded investigation]
+    R -->|no| W[Wait, or retain the lead for later]
+    S --> E[Record provider, evidence and outcome]
 {{< /mermaid >}}
+
+The planner chooses *questions*; the launch policy enforces *capacity*. A manual choice wins over automatic pacing, while the deterministic scope and human-reporting gates remain in force either way.
 
 ## Requirements
 
@@ -101,22 +108,27 @@ Google Project Zero’s Naptime work is a useful mental model here: the agent is
 {{< mermaid >}}
 %%{init: {'theme':'base','themeVariables':{'background':'#ffffff','fontSize':'15px','primaryColor':'#dbeafe','primaryTextColor':'#0f172a','primaryBorderColor':'#1e40af','lineColor':'#334155','textColor':'#0f172a'}}}%%
 flowchart TB
-    H[Human operator<br/>scope review · risk decisions · final submission]
-    P[Policy and scope sources]
-    E[Evidence store<br/>durable artifacts]
-    S[(Durable control plane<br/>scope · memory · plans · outcomes · audit trail)]
-    C[Coordinator<br/>selects bounded questions]
-    R[Research session<br/>one hypothesis]
-    V[Refuter and policy triage<br/>challenge the claim]
+    H[Human operator<br/>scope · priorities · final submission]
+    P[Programme policies and<br/>positive scope lists]
+    Q[Provider quota observations<br/>and operator window]
+    S[(Durable control plane<br/>memory · leads · plans · findings · outbox)]
+    C[Coordinator<br/>rank discriminating questions]
+    R[Research session<br/>one bounded hypothesis]
+    E[Evidence store<br/>raw artifacts and pointers]
+    V[Refutation and policy triage]
+    D[Discord signal surface<br/>alerts · digest · review]
 
     P --> S
-    E <--> S
+    Q --> C
     H <--> S
     S --> C
     C --> R
     R --> E
+    E --> S
     R --> V
     V --> S
+    S --> D
+    D --> H
 {{< /mermaid >}}
 
 The diagram is deliberately boring. That is a compliment. The durable control plane is the centre; models are workers around it. Discord or another chat surface is an interface to the state, not the state itself. A transcript is diagnostic material, not the canonical record.
@@ -133,7 +145,8 @@ It is not one giant “agent memory” blob. The data is separated by the questi
 | Observations | Typed facts: programme, asset, kind, value, source, confidence and first/last-seen timestamps | What do we know exists? |
 | Attempts | Surface, technique, parameter fingerprint plus readable structured parameters, outcome, closing property, evidence reference and policy/scope snapshot | Was this exact question already settled, and why? |
 | Open gaps and lessons | Typed dependency or reusable rule, scoped to a programme, a technology, a vulnerability class or globally | What is blocked, and what knowledge transfers safely? |
-| Investigations and usage | One row per bounded lead with provider, token/usage accounting, evidence yield and stop reason | What is running, what did it consume, and did it learn anything? |
+| Investigations and usage | One row per session with provider, usage accounting, evidence yield and stop reason | What ran, what did it consume, and did it learn anything? |
+| Investigation leads | Hypothesis, surface, state, evidence pointer, next discriminating test or reopening condition | Which promising question deserves continuation rather than being mistaken for a finding or discarded as a negative? |
 | Findings and decisions | Finite state, evidence pointer, scope/duplicate gates, plus an append-only audit decision log | Who approved a consequential transition, and when? |
 | Outbox | A durable message, severity, routing metadata and delivery timestamp | Was an operator update generated and actually delivered? |
 
@@ -146,6 +159,7 @@ Lessons are invalidated rather than silently overwritten. Scope changes are vers
 flowchart LR
     Policy[Policy and scope<br/>rules · constraints · versions]
     Memory[Research memory<br/>observations · attempts · gaps · lessons]
+    Leads[Lead ledger<br/>hypothesis · evidence · next test]
     Work[Investigation ledger<br/>plan · provider · usage · stop reason]
     Review[Finding lifecycle<br/>candidate · review · approval]
     Audit[Audit and delivery<br/>decisions · tasks · outbox]
@@ -153,6 +167,7 @@ flowchart LR
     Policy --> Work
     Memory --> Work
     Work --> Memory
+    Work <--> Leads
     Work --> Review
     Review --> Audit
     Audit --> Work
@@ -160,11 +175,11 @@ flowchart LR
 
 ## Research cycles
 
-The pipeline runs in small cycles. Each cycle re-reads durable state, writes a plan, executes a limited number of sessions, records the outcomes, and stops. The next cycle starts from recorded facts rather than the previous model’s increasingly long conversation.
+The pipeline runs in discrete cycles. Each cycle re-reads durable state, writes a plan, executes at most its capacity ceiling, records outcomes, and stops. A session is bounded by its *question and evidence contract*; it is not necessarily a short wall-clock call. The next cycle starts from recorded facts rather than the previous model’s increasingly long conversation.
 
 {{< mermaid >}}
 %%{init: {'theme':'base','themeVariables':{'background':'#ffffff','fontSize':'15px','primaryColor':'#dbeafe','primaryTextColor':'#0f172a','primaryBorderColor':'#1e40af','lineColor':'#334155','textColor':'#0f172a'}}}%%
-flowchart LR
+flowchart TD
     A[Policies and scope] --> C[Coordinator]
     B[Memory and prior evidence] --> C
     C --> D[Written plan]
@@ -172,15 +187,19 @@ flowchart LR
     E -- no --> F[Record why it is blocked]
     E -- yes --> G[One bounded session]
     G --> H[Evidence + structured outcome]
-    H --> I{Candidate?}
-    I -- no --> J[Store closing property]
-    I -- yes --> K[Independent refuter]
+    H --> I{What did the evidence establish?}
+    I -- negative --> J[Store closing property]
+    I -- unresolved but testable --> U[Save lead, evidence and next test]
+    I -- dependency missing --> Z[Pause lead with reopening condition]
+    I -- impact observed --> K[Independent refutation]
     K --> L{Survives?}
     L -- no --> J
     L -- yes --> M[Policy and report triage]
     M --> N[Human review queue]
     N --> B
     J --> B
+    U --> B
+    Z --> B
     F --> B
 {{< /mermaid >}}
 
@@ -247,6 +266,29 @@ The most valuable field in a negative result is the *closing property*. “LFI t
 
 This is also why a generic pile of “similar CVEs” does not help much. It is retrieval without a decision boundary. A useful memory entry is tied to a surface, a mechanism, an evidence standard, and a reason to reopen it.
 
+## A lead is a first-class result
+
+A useful lead is neither a reportable finding nor a failed experiment. It is a hypothesis with an evidence pointer and a next observation that could discriminate between competing explanations. Earlier versions of the pipeline could leave such work buried in an `inconclusive` note. A separate lead ledger now makes it visible to the next coordinator and to me, without inflating the finding queue.
+
+{{< mermaid >}}
+%%{init: {'theme':'base','themeVariables':{'background':'#ffffff','fontSize':'15px','primaryColor':'#dbeafe','primaryTextColor':'#0f172a','primaryBorderColor':'#1e40af','lineColor':'#334155','textColor':'#0f172a'}}}%%
+stateDiagram-v2
+    [*] --> Active: hypothesis + next test
+    Active --> Paused: missing prerequisite
+    Paused --> Active: reopening condition met
+    Active --> Escalated: precise second-opinion request queued
+    Escalated --> Active: answer changes the next test
+    Active --> Validated: primitive independently supported
+    Active --> Closed: discriminating test refutes it
+    Paused --> Closed: evidence rules it out
+    Validated --> [*]: separate finding review
+    Closed --> [*]
+{{< /mermaid >}}
+
+These are conceptual paths, not a claim that every transition is automated today. In particular, `escalated` records a queued request; it does **not** mean a second provider is running, and its answer is not yet automatically reconciled back into the lead. A queued question is deduplicated by its investigation cell, and revisions preserve the earlier question. A lead without a next test is paused with a reopening condition rather than repeatedly redispatched. A validated primitive still has to pass the separate finding and human-review process.
+
+This is where cross-provider work can be valuable: a stronger or simply different model receives the observation, the benign alternative, the exact unresolved question and the minimum proof standard. It should not inherit a long persuasive transcript. I have not yet claimed an automatic improvement in finding yield; that needs replayable evaluation cases, including promising leads that never become reports.
+
 ## Skills
 
 Skills are not a collection of magic prompts. They are reusable operating procedures with a narrow responsibility. The useful pattern is a small set of skills, invoked at specific points in the investigation:
@@ -309,28 +351,24 @@ flowchart LR
 
 ## Discord updates
 
-Discord is how I see the system while I am away from the VPS: cycle recaps, heartbeats, blocked dependencies, provider quota events, escalations, and findings that have survived the earlier gates. A candidate gets its own discussion thread only once it is meaningful enough to review. That is deliberately different from streaming every model thought into a channel and asking a human to reconstruct the state from chat history.
+Discord is how I see the system while I am away from the VPS. It is not a transcript feed. Routine cycle starts, ordinary negative results and successful scratch-space cleanup are kept in logs and durable state; they no longer generate an immediate post. Actionable leads, errors, escalation requests, findings and genuine disk pressure do. A candidate gets its own discussion thread only once it is meaningful enough to review.
 
 The bot is intentionally thin. Agents do not send Discord messages directly. They write a durable outbox item and structured state to the database; the bot renders that state, posts the update, and records delivery. Operator decisions travel back as audited transitions or queued tasks, rather than an informal message being mistaken for authorisation. If Discord is unavailable, the research record and pending messages remain intact. If an agent stops, the last durable state is still visible.
 
 {{< mermaid >}}
 %%{init: {'theme':'base','themeVariables':{'background':'#ffffff','fontSize':'15px','primaryColor':'#dbeafe','primaryTextColor':'#0f172a','primaryBorderColor':'#1e40af','lineColor':'#334155','textColor':'#0f172a'}}}%%
-sequenceDiagram
-    participant A as Research session
-    participant D as Durable control plane
-    participant B as Discord bot
-    participant H as Human operator
-
-    A->>D: outcome, evidence pointer, outbox update
-    B->>D: poll pending updates and review state
-    D-->>B: typed update / finding state
-    B-->>H: recap, alert or review thread
-    H->>B: explicit decision or question
-    B->>D: audited transition or queued task
-    D-->>A: next authorised work item
+flowchart TD
+    A[Session or watchdog event] --> S[(Structured state and evidence pointer)]
+    S --> K{Needs attention now?}
+    K -->|candidate · error · actionable lead| O[Durable outbox item]
+    K -->|ordinary negative · routine cleanup| D[Three-hour programme digest<br/>only when activity changed]
+    D --> O
+    O --> B[Discord bot posts and records delivery]
+    B --> H[Human sees concise signal]
+    H -->|explicit review decision| S
 {{< /mermaid >}}
 
-That separation makes notifications useful. The bot can report that a loop is healthy but barren, that a provider is cooling down, or that human review is now the bottleneck. It is an operational dashboard with a conversation surface, not an agent remote-control button.
+The digest summarises activity per programme, open and paused leads, pending second opinions, and findings awaiting review. It emits nothing for an unchanged programme. The watchdog silently removes only eligible stale session scratch directories; an actual capacity problem becomes an alert. That separation keeps Discord useful as an operational dashboard with a conversation surface, not an agent remote-control button.
 
 ## Human review
 
@@ -365,7 +403,7 @@ This model matches the governance emphasis in the [NIST AI Risk Management Frame
 
 It is tempting to frame multi-provider use as an intelligence competition. In practice it is an operations problem.
 
-Different providers have different context limits, tool integrations, working-hour constraints, rate windows, cost models and failure modes. A reliable pipeline therefore routes work at session creation, records usage, and treats provider credentials as process-local authority.
+Different providers have different context limits, tool integrations, working-hour constraints, rate windows, cost models and failure modes. A reliable pipeline therefore routes work at session creation, records usage, and treats provider credentials as process-local authority. The default coordinator and worker do not have to share a provider, but an explicit single-provider operator window covers both so it cannot hide consumption of the other subscription.
 
 Three rules matter more than chasing a single benchmark winner:
 
@@ -374,6 +412,8 @@ Three rules matter more than chasing a single benchmark winner:
 3. **Hand off facts.** A fresh provider is useful because it is not anchored by the previous model’s narrative. Give it measurements, controls, the unresolved question and the proof standard rather than pages of reasoning to agree with.
 
 That last pattern is closely aligned with the broader “brain and hands” separation described in Anthropic’s discussion of [managed agents](https://www.anthropic.com/engineering/managed-agents): sessions, harnesses and execution environments are separable components. Keeping them separable makes failures diagnosable.
+
+The second-opinion queue is intentionally separate from lead storage. Saving or marking a lead for escalation does not promise an immediate expensive run. The worker that drains that queue can be paused—for example while a manually pinned single-programme window is in force—without losing the question. Before broad reactivation, older queued items need evidence- and freshness-based triage; otherwise a backlog can turn into a token-burning retry loop.
 
 ## Operations and observability
 
@@ -385,12 +425,14 @@ That last pattern is closely aligned with the broader “brain and hands” sepa
 - Did the session actually make a target request?
 - Did it produce evidence and a valid outcome?
 - Is the review queue full?
-- Is the loop still producing new reportable findings, or merely activity?
+- Is the loop still producing new evidence, qualified leads or reportable findings, or merely activity?
 - Which provider capacity was consumed?
 
-The pipeline records plans, session logs, outcome files, evidence pointers, queue state and usage. It also emits heartbeats so silence is distinguishable from a dead scheduler. This is less glamorous than the agent itself, but it is the difference between a system you can improve and a system you can only hope is running.
+The pipeline records plans, session logs, outcome files, evidence pointers, queue state and usage. System-service health and a low-noise digest distinguish a quiet but healthy pipeline from a broken one without a Discord message for every cycle start. This is less glamorous than the agent itself, but it is the difference between a system you can improve and a system you can only hope is running.
 
-One especially useful metric is **evidence yield**, not session count. A focused loop should stop when it keeps launching work without producing new reportable candidates, subject to a tiered budget. Negative evidence is valuable; infinite negative evidence is just expensive repetition.
+One especially useful metric is **evidence yield**, not session count. The current continuous loop has tiered barren-cycle and per-programme budget stops, but its yield stop still counts new reportable findings rather than qualified leads. That is a known limitation, not a solved optimisation: a future rule should credit a lead only when it contains *new evidence and a discriminating next test*. Counting raw `inconclusive` outcomes would reward noise.
+
+The next context-engineering step is similarly empirical. I want to measure how much policy, memory, prior attempts and evidence each role actually receives, then retrieve detailed history only when a question needs it. Programme rules must remain complete. The change should be judged on trace quality and evidence gained per unit of allowance, not merely on shorter prompts. [Anthropic's context-engineering guidance](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) and [OpenAI's agent-evaluation workflow](https://developers.openai.com/api/docs/guides/agent-evals) are useful reference points, but this part remains an evaluation plan rather than a deployed claim.
 
 ## What stays manual
 
@@ -412,12 +454,15 @@ The architecture is mostly a collection of scars.
 | Failure mode | Design response |
 |---|---|
 | A model replays a known-negative payload family. | Store the exact mechanism and closing property, not just a label. |
-| A long conversation loses the key precondition. | Use short sessions and hand off structured facts. |
+| A long conversation loses the key precondition. | Use bounded-question sessions and hand off structured facts. |
 | A candidate is technically interesting but not reportable. | Separate candidate, refuter, policy triage and human review states. |
 | A session crashes after doing useful work. | Require durable evidence and a machine-readable outcome contract. |
-| A loop keeps running because activity looks like progress. | Track evidence yield and barren cycles. |
+| A loop keeps running because activity looks like progress. | Bound barren cycles and programme spend; evaluate a qualified-lead yield signal next. |
 | A new browser or MCP path is added. | Treat it as a new authority boundary and test scope enforcement again. |
 | A provider configuration leaks into child sessions. | Choose providers locally at session start and keep credentials outside the research workspace. |
+| An inconclusive but promising observation disappears. | Keep a lead ledger with evidence, next test or reopening condition, separate from findings. |
+| A continuous loop empties a weekly allowance too early. | Pace launches against observed quota and time to reset; keep an explicit human override. |
+| Routine operational events bury urgent messages. | Send actionable events immediately and aggregate ordinary activity in a periodic digest. |
 
 None of these are model problems. They are systems problems. That is encouraging: systems problems are the part we can test, version, observe and improve.
 
@@ -445,6 +490,8 @@ For me, the value of the pipeline is continuity. A useful result, a failed attem
 - [Google Project Zero: Project Naptime](https://projectzero.google/2024/06/project-naptime.html)
 - [Anthropic: Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
 - [Anthropic: Scaling managed agents: decoupling the brain from the hands](https://www.anthropic.com/engineering/managed-agents)
+- [Anthropic: Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+- [OpenAI: Agent evals](https://developers.openai.com/api/docs/guides/agent-evals)
 - [Cassim Khouani, aka Aituglo](https://aituglo.com/)
 - [YesWeHack: Building an LLM for Bug Bounty, interview with Aituglo](https://www.yeswehack.com/community/llms-bug-bounty-interview-aituglo)
 - [ProjectDiscovery: Watching agents work](https://projectdiscovery.io/blog/watching-agents-work-a-behavioral-audit-of-offensive-security-llm-runs)
