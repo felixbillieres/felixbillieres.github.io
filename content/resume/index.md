@@ -3,7 +3,7 @@ title: "Resume"
 layout: page
 description: "Cybersecurity professional specializing in offensive security, SOC analysis, and bug bounty hunting. 5th year student at École 2600."
 featuredImage: "featured.png"
-images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.png", "certifications/Puppet.png", "certifications/Tea.png", "certifications/Tengu.png", "certifications/Trusted.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
+images: ["featured.png", "grehack-2026.png", "certifications/Heron.png", "certifications/Intercept.png", "certifications/Puppet.png", "certifications/Tea.png", "certifications/Tengu.png", "certifications/Trusted.png", "certifications/COAE.png", "certifications/CRTO-1.png", "certifications/CWES.png", "certifications/Mythical_page-0001.jpg", "certifications/RastaLabs-1.png", "certifications/UniCTF2024-1.png", "certifications/UniCTF2025-1.png", "certifications/Zephyr-1.png", "certifications/PNPT.png", "certifications/CRTP.png", "certifications/bug_bounty.png", "certifications/training_Phreaks.png"]
 ---
 **[Download Resume (PDF)](/resume.pdf)**
 ---
@@ -14,7 +14,7 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 *Remote*  
 *September 2025 - Present*
 
-- AI integration within the Exegol ecosystem: research and development of AI-powered offensive security tooling
+- Lead developer of [Exegol Studio](https://exegol.com/studio), an AI-ready Integrated Hacking Environment built as a VS Code extension for offensive security workflows
 - Offensive security tooling development and Active Directory offensive training programs
 - Security audits and penetration testing (web, internal, Active Directory)
 - Technical content creation: documentation, training material, and labs
@@ -202,6 +202,14 @@ images: ["featured.png", "certifications/Heron.png", "certifications/Intercept.p
 ---
 
 ## Community Involvement
+
+### Speaker: GreHack 2026
+
+Presented *Fake It Till You Make It*: reverse-engineering KerberLoss (CVE-2026-25177), from a Unicode SPN collision to end-to-end Kerberos service hijacking in Active Directory.
+
+![Presenting KerberLoss at GreHack 2026](./grehack-2026.png)
+
+---
 
 ### Phreaks 2600
 
